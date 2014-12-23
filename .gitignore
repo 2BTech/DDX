@@ -1,0 +1,4 @@
+NoGit/
+*.user
+*.user.*
+**/.DS_Store
