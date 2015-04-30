@@ -17,8 +17,25 @@
 ################################################################################
 
 
-TEMPLATE = subdirs
+#-------------------------------------------------
+#
+# Project created by QtCreator 2015-04-29T16:35:09
+#
+#-------------------------------------------------
 
-SUBDIRS += \
-    DDX-gui \	# GUI, data export
-    DDX-daemon	# Data collection, instrument setup & communication, uploading, logging
+QT       += core \
+			serialport
+
+QT       -= gui
+
+TARGET = DDX-daemon
+CONFIG   += console
+CONFIG   -= app_bundle
+
+TEMPLATE = app
+
+
+SOURCES += main.cpp
+
+HEADERS += \
+    ../DDX-gui/constants.h
