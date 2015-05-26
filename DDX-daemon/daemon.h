@@ -21,7 +21,9 @@
 
 #include <QObject>
 #include <QTextStream>  // For outputting to stdout
+#include <QCoreApplication>  // For loading command line arguments
 #include <QDateTime>
+#include <QSettings>
 #include "../DDX-gui/constants.h"
 
 class Daemon : public QObject
@@ -30,6 +32,9 @@ class Daemon : public QObject
 public:
 	explicit Daemon(QObject *parent = 0);
 	~Daemon();
+	
+	QStringList args;
+	QSettings *settings;
 
 signals:
 
@@ -40,6 +45,7 @@ public slots:
 	// TODO: void notify(const QVariant &msg);  // Pump out a desktop notification and/or email notification (See snorenotify)
 
 private:
+	void loadDefaultSettings();
 	QTextStream *qout;  // stdout wrapper
 };
 

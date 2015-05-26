@@ -36,4 +36,5 @@ SOURCES += main.cpp\
         mainwindow.cpp
 
 HEADERS  += mainwindow.h \
-    constants.h
+    constants.h \
+    ../NoGit/private_constants.h

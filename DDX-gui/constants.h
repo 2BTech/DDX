@@ -16,7 +16,6 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 

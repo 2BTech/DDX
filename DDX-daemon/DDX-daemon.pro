@@ -41,4 +41,8 @@ SOURCES += main.cpp \
 
 HEADERS += \
     ../DDX-gui/constants.h \
-    daemon.h
+    daemon.h \
+    ../NoGit/private_constants.h
+
+DISTFILES += \
+    DaemonCommandLineArguments.txt

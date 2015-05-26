@@ -1,0 +1,2 @@
+-l:  Enable full logging to file
+-reconfigure:  Load default settings on startup

@@ -19,16 +19,18 @@
 #include "daemon.h"
 
 Daemon::Daemon(QObject *parent) : QObject(parent) {
+	// Load command line arguments
+	args = ((QCoreApplication*) parent)->arguments();
+	
 	// Open stdout stream for logging
-#ifdef LOGGING_ENABLE_STDOUT
 	qout = new QTextStream(stdout);
-#endif
-	// TODO: Save to file if flag is true (see init)
 }
+
 
 Daemon::~Daemon() {
 
 }
+
 
 void Daemon::log(const QVariant &msg) {
 	QString finalMsg = QDateTime::currentDateTime().toString("[yyyy/MM/dd HH:mm:ss.zzz] ");
@@ -38,21 +40,48 @@ void Daemon::log(const QVariant &msg) {
 #endif
 }
 
-void Daemon::init() {
-	// TODO
-	log("[Insert initialization code here]");
 
-	// Determine whether log should be saved to file (look for a flag in the command parser)
+void Daemon::init() {
+	// Load settings
+	settings = new QSettings(parent());
+	if ( ! settings->contains("SettingsResetOn")
+		 || args.contains("-reconfigure")) loadDefaultSettings();
+	else log(QString("Loading settings last reset on ").append(settings->value("SettingsResetOn").toString()));
+
+	// Determine whether log should be saved to file
+	if (args.contains("-l") || settings->value("logging/AlwaysLogToFile").toBool()) {
+		// TODO
+		// Also, consider adding the option to show the console rather than hide it
+	}
 
 	// Load preferences
+
+	// Load and unload the instrument specification file to test it
 
 	// Check for other daemon instances
 
 	// Look for open GUI instance
 
-	// Check for updates (once a week, even if app is running - figure that out)
+	// Check for updates 
+	// (once a week, also for instrument specifications, even if app is running,
+	// figure that out)
 
 	// Set up email notifications?  Twitter uploading?
+	
+	// Set up as system service (platform-dependent)
 
 	// Try connecting to instruments
+}
+
+
+void Daemon::loadDefaultSettings() {
+	log("Loading default settings");
+	settings->setValue("SettingsResetOn",
+					   QDateTime::currentDateTime().toString("yyyy/MM/dd HH:mm:ss"));
+	
+	// Logging
+	settings->setValue("logging/AlwaysLogToFile", false);
+	
+	settings->sync();
+	// TODO: Emit a "settings changed" signal
 }
