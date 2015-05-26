@@ -23,6 +23,7 @@ Daemon::Daemon(QObject *parent) : QObject(parent) {
 #ifdef LOGGING_ENABLE_STDOUT
 	qout = new QTextStream(stdout);
 #endif
+	// TODO: Save to file if flag is true (see init)
 }
 
 Daemon::~Daemon() {
@@ -38,5 +39,20 @@ void Daemon::log(const QVariant &msg) {
 }
 
 void Daemon::init() {
+	// TODO
 	log("[Insert initialization code here]");
+
+	// Determine whether log should be saved to file (look for a flag in the command parser)
+
+	// Load preferences
+
+	// Check for other daemon instances
+
+	// Look for open GUI instance
+
+	// Check for updates (once a week, even if app is running - figure that out)
+
+	// Set up email notifications?  Twitter uploading?
+
+	// Try connecting to instruments
 }

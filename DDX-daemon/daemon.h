@@ -35,7 +35,9 @@ signals:
 
 public slots:
 	void init();
-	void log(const QVariant &msg);
+	void log(const QVariant &msg);  // Print a low-info log message
+	// TODO: void report(const QVariant &msg);  // Send a message which should be saved to disk or inserted into the data log somehow
+	// TODO: void notify(const QVariant &msg);  // Pump out a desktop notification and/or email notification (See snorenotify)
 
 private:
 	QTextStream *qout;  // stdout wrapper
