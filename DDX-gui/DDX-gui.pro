@@ -28,6 +28,7 @@ QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = DDX-gui
+CONFIG   += c++11
 TEMPLATE = app
 
 

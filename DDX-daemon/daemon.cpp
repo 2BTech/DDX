@@ -16,22 +16,27 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
+#include "daemon.h"
 
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
-
-// GENERAL PURPOSE INDICATIVES
-#define VERSION_FULL_TEXT "0.1"
-
-
-// LOGGING
-#ifdef ENABLE_DEBUG
-#define LOGGING_ENABLE_PRINT_ALL  // Comment to disable printing of all but errors
+Daemon::Daemon(QObject *parent) : QObject(parent) {
+	// Open stdout stream for logging
+#ifdef LOGGING_ENABLE_STDOUT
+	qout = new QTextStream(stdout);
 #endif
-#define LOGGING_ENABLE_STDOUT  // Comment to disable printing of log messages to stdout
+}
 
+Daemon::~Daemon() {
 
-// PLATFORM SPECIALIZATION
+}
 
+void Daemon::log(const QVariant &msg) {
+	QString finalMsg = QDateTime::currentDateTime().toString("[yyyy/MM/dd HH:mm:ss.zzz] ");
+	finalMsg.append(msg.toString());
+#ifdef LOGGING_ENABLE_STDOUT
+	*qout << finalMsg << endl;
+#endif
+}
 
-#endif // CONSTANTS_H
+void Daemon::init() {
+	log("[Insert initialization code here]");
+}

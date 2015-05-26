@@ -29,13 +29,16 @@ QT       += core \
 QT       -= gui
 
 TARGET = DDX-daemon
+CONFIG   += c++11
 CONFIG   += console
 CONFIG   -= app_bundle
 
 TEMPLATE = app
 
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    daemon.cpp
 
 HEADERS += \
-    ../DDX-gui/constants.h
+    ../DDX-gui/constants.h \
+    daemon.h

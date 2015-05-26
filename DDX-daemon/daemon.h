@@ -16,22 +16,29 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
+#ifndef DAEMON_H
+#define DAEMON_H
 
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#include <QObject>
+#include <QTextStream>  // For outputting to stdout
+#include <QDateTime>
+#include "../DDX-gui/constants.h"
 
-// GENERAL PURPOSE INDICATIVES
-#define VERSION_FULL_TEXT "0.1"
+class Daemon : public QObject
+{
+	Q_OBJECT
+public:
+	explicit Daemon(QObject *parent = 0);
+	~Daemon();
 
+signals:
 
-// LOGGING
-#ifdef ENABLE_DEBUG
-#define LOGGING_ENABLE_PRINT_ALL  // Comment to disable printing of all but errors
-#endif
-#define LOGGING_ENABLE_STDOUT  // Comment to disable printing of log messages to stdout
+public slots:
+	void init();
+	void log(const QVariant &msg);
 
+private:
+	QTextStream *qout;  // stdout wrapper
+};
 
-// PLATFORM SPECIALIZATION
-
-
-#endif // CONSTANTS_H
+#endif // DAEMON_H

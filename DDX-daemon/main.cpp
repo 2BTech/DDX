@@ -17,11 +17,26 @@
  ******************************************************************************/
 
 #include <QCoreApplication>
+#include <QTextStream>  // Temporary debug console output
+#include <QTimer>  // For calling init() after exec()
+#include "../DDX-gui/constants.h"
+#include "daemon.h"
 
 
 int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
-	
+
+	QCoreApplication::setOrganizationName("2B Technologies");
+	QCoreApplication::setOrganizationDomain("twobtech.com");
+	QCoreApplication::setApplicationName("DDX");
+	QCoreApplication::setApplicationVersion(VERSION_FULL_TEXT);
+
+	Daemon daemon(&a);
+
+	daemon.log("2B DDX " VERSION_FULL_TEXT);
+
+	// Begin execution
+	QTimer::singleShot(0, &daemon, &Daemon::init);
 	return a.exec();
 }
