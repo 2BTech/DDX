@@ -40,7 +40,20 @@ void Daemon::log(const QVariant &msg) {
 #endif
 }
 
-
+/*!
+ * \brief Daemon::init
+ * Initializes the daemon.  This includes:
+ * - Loading saved settings (or resetting to defaults)
+ * - Opening log files if necessary
+ * - Checking for other daemon instances
+ * - Testing the integrity of the instrument specification file
+ * - Looking for a GUI instance
+ * - Checking for updates to the DDX or the instrument specification file
+ * - Installing as service
+ * - Try connecting to any existing instrument profiles
+ * This function is scheduled to occur immediately after initial event
+ * loop processing in main().
+ */
 void Daemon::init() {
 	// Load settings
 	settings = new QSettings(parent());
@@ -53,12 +66,10 @@ void Daemon::init() {
 		// TODO
 		// Also, consider adding the option to show the console rather than hide it
 	}
-
-	// Load preferences
+	
+	// Check for other daemon instances
 
 	// Load and unload the instrument specification file to test it
-
-	// Check for other daemon instances
 
 	// Look for open GUI instance
 
