@@ -1,0 +1,7 @@
+2015/5/27:  Ideas for instrument profiles.  Have three separate files:
+- standard:  Downloaded from 2B.  Basic configuration of all files
+- custom:  Maintains any custom profiles developed by 2B for specific customers
+- generated:  Saves the profiles generated for specific instruments
+When an instrument is detected, the application will search for a compatible profile first in generated,
+then in custom, and finally in standard.  If the instrument was not in generated,an entry for it will
+be added to generated.

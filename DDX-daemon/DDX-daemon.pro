@@ -45,4 +45,5 @@ HEADERS += \
     ../NoGit/private_constants.h
 
 DISTFILES += \
-    DaemonCommandLineArguments.txt
+    DaemonCommandLineArguments.txt \
+    DevNotes.txt
