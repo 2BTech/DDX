@@ -55,7 +55,19 @@ void Daemon::log(const QVariant &msg) {
  * loop processing in main().
  */
 void Daemon::init() {
-	// Load settings
+	/*!
+	 * \brief Load settings
+	 * Settings are set to their default values at startup when one of these
+	 * conditions is met:
+	 * - No settings have been set (determined by searching for the setting
+	 *   "SettingsResetOn")
+	 * - The daemon is launched with the "-reconfigure" argument
+	 * Note that the "Default Settings" GUI button simply removes
+	 * "SettingsResetOn" the forces a full application restart.
+	 * \sa Daemon::loadDefaultSettings
+	 */
+	// TODO:  Add a see also to the above comment about the GUI's option which
+	// removes "SettingsResetOn"
 	settings = new QSettings(parent());
 	if ( ! settings->contains("SettingsResetOn")
 		 || args.contains("-reconfigure")) loadDefaultSettings();
@@ -87,6 +99,7 @@ void Daemon::init() {
 
 void Daemon::loadDefaultSettings() {
 	log("Loading default settings");
+	settings->clear();
 	settings->setValue("SettingsResetOn",
 					   QDateTime::currentDateTime().toString("yyyy/MM/dd HH:mm:ss"));
 	
