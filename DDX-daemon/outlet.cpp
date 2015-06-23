@@ -16,25 +16,13 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#include "outlet.h"
 
-// GENERAL PURPOSE INDICATIVES
-#define VERSION_FULL_TEXT "0.0"
+Outlet::Outlet(QObject *parent) : QObject(parent) {
+	
+}
 
+Outlet::~Outlet() {
+	
+}
 
-// LOGGING
-#ifdef ENABLE_DEBUG
-#define LOGGING_ENABLE_PRINT_ALL  // Comment to disable printing of all but errors
-#endif
-#define LOGGING_ENABLE_STDOUT  // Comment to disable printing of log messages to stdout
-
-
-// PLATFORM SPECIALIZATION
-
-
-// BUFFERING
-#define BUFFER_SIZE	1024
-
-
-#endif // CONSTANTS_H

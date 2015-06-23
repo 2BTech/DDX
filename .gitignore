@@ -3,4 +3,4 @@ NoGit/
 *.user.*
 **/.DS_Store
 *.autosave
-build_
+build-*

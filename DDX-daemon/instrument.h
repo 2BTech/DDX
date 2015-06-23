@@ -16,25 +16,22 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#ifndef INSTRUMENT_H
+#define INSTRUMENT_H
 
-// GENERAL PURPOSE INDICATIVES
-#define VERSION_FULL_TEXT "0.0"
+#include <QObject>
+#include <QTextStream>
 
+class Instrument : public QObject
+{
+	Q_OBJECT
+public:
+	explicit Instrument(QObject *parent = 0);
+	~Instrument();
+	
+signals:
+	
+public slots:
+};
 
-// LOGGING
-#ifdef ENABLE_DEBUG
-#define LOGGING_ENABLE_PRINT_ALL  // Comment to disable printing of all but errors
-#endif
-#define LOGGING_ENABLE_STDOUT  // Comment to disable printing of log messages to stdout
-
-
-// PLATFORM SPECIALIZATION
-
-
-// BUFFERING
-#define BUFFER_SIZE	1024
-
-
-#endif // CONSTANTS_H
+#endif // INSTRUMENT_H
