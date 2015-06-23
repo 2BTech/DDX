@@ -92,6 +92,9 @@ void Daemon::init() {
 	// Set up email notifications?  Twitter uploading?
 	
 	// Set up as system service (platform-dependent)
+	setupService();
+	
+	while(true){};
 
 	// Try connecting to instruments
 }
@@ -108,4 +111,10 @@ void Daemon::loadDefaultSettings() {
 	
 	settings->sync();
 	// TODO: Emit a "settings changed" signal
+}
+
+void Daemon::setupService() {
+	QIcon icon(":/icons/icon32");
+	trayIcon = new QSystemTrayIcon(icon, this);
+	trayIcon->show();
 }

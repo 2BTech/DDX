@@ -25,7 +25,8 @@
 
 QT       += core \
 			serialport \
-			bluetooth
+			bluetooth \
+			widgets # For tray icons & messages
 
 QT       -= gui
 
@@ -38,18 +39,16 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    daemon.cpp \
-    instrument.cpp \
-    outlet.cpp
+    daemon.cpp
 
 HEADERS += \
     ../DDX-gui/constants.h \
     daemon.h \
-    ../NoGit/private_constants.h \
-    instrument.h \
-    outlet.h
+    ../NoGit/private_constants.h
 
 DISTFILES += \
     DaemonCommandLineArguments.txt \
     DevNotes.txt \
     DataFlow.txt
+
+RESOURCES += res/resources.qrc

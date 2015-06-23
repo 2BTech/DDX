@@ -21,15 +21,16 @@
 There are several base classes from which all data flow mechanics derive.  Every
 instance of these "superclasses" runs in its own thread
 - Daemon:  A singleton class which manages the setup/operation of everything else (including logging)
-	- Chain:  A temporary or permanent manager
+- Session:  A temporary or permanent manager of a data stream.
 - Instrument:  A device which produces data
 	- <specification>(from SpecManager):  Details how to communicate with the instrument
 	- InstrumentLink:  The actual communication method (serial, bluetooth, USB, etc.)
 - Inlet:  A non-instrument source of data (file), which either specifies its 
 - Outlet:  A final destination for the data, such as uploading to GO3/Treks or the GUI (or another daemon instance elsewhere?)
-- Storage:  Some uniform way to store data (files, databases, etc.).  Data can be read from storage.
-- Processor:  Something that modifies or filters the data in some way
-- Validator:  A unit which can send messages if data fails certain checks
+- Switchboard:  
+- Processor:  
+
+Every inlet must be a part of exactly one stream and streams cannot exist without an inlet.  Instruments are a type of inlet.  
 
 There are two different types of long-distance data: streams and messages.
 Streams are QTextStreams which contain data lines.  Data lines must adhere to a

@@ -25,6 +25,7 @@
 #include <QDateTime>
 #include <QSettings>
 #include <QSharedMemory>
+#include <QSystemTrayIcon>
 #include "../DDX-gui/constants.h"
 
 class Daemon : public QObject
@@ -47,7 +48,9 @@ public slots:
 
 private:
 	void loadDefaultSettings();
+	void setupService();
 	QTextStream *qout;  // stdout wrapper
+	QSystemTrayIcon *trayIcon;
 };
 
 #endif // DAEMON_H
