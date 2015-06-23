@@ -24,6 +24,7 @@
 #include <QCoreApplication>  // For loading command line arguments
 #include <QDateTime>
 #include <QSettings>
+#include <QSharedMemory>
 #include "../DDX-gui/constants.h"
 
 class Daemon : public QObject

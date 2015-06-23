@@ -24,7 +24,8 @@
 #-------------------------------------------------
 
 QT       += core \
-			serialport
+			serialport \
+			bluetooth
 
 QT       -= gui
 
@@ -46,4 +47,5 @@ HEADERS += \
 
 DISTFILES += \
     DaemonCommandLineArguments.txt \
-    DevNotes.txt
+    DevNotes.txt \
+    DataFlow.txt

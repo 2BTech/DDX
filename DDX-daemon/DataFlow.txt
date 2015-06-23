@@ -1,0 +1,41 @@
+################################################################################
+##                         DATA DISPLAY APPLICATION X                         ##
+##                            2B TECHNOLOGIES, INC.                           ##
+##                                                                            ##
+## The DDX is free software: you can redistribute it and/or modify it under   ##
+## the terms of the GNU General Public License as published by the Free       ##
+## Software Foundation, either version 3 of the License, or (at your option)  ##
+## any later version.  The DDX is distributed in the hope that it will be     ##
+## useful, but WITHOUT ANY WARRANTY; without even the implied warranty of     ##
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General  ##
+## Public License for more details.  You should have received a copy of the   ##
+## GNU General Public License along with the DDX.  If not, see                ##
+## <http://www.gnu.org/licenses/>.                                            ##
+##                                                                            ##
+##  For more information about the DDX, check out the 2B website or GitHub:   ##
+##       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      ##
+################################################################################
+
+                            DATA FLOW SPECIFICATION
+
+There are several base classes from which all data flow mechanics derive.  Every
+instance of these "superclasses" runs in its own thread
+- Daemon:  A singleton class which manages the setup/operation of everything else (including logging)
+	- Chain:  A temporary or permanent manager
+- Instrument:  A device which produces data
+	- <specification>(from SpecManager):  Details how to communicate with the instrument
+	- InstrumentLink:  The actual communication method (serial, bluetooth, USB, etc.)
+- Inlet:  A non-instrument source of data (file), which either specifies its 
+- Outlet:  A final destination for the data, such as uploading to GO3/Treks or the GUI (or another daemon instance elsewhere?)
+- Storage:  Some uniform way to store data (files, databases, etc.).  Data can be read from storage.
+- Processor:  Something that modifies or filters the data in some way
+- Validator:  A unit which can send messages if data fails certain checks
+
+There are two different types of long-distance data: streams and messages.
+Streams are QTextStreams which contain data lines.  Data lines must adhere to a
+format developed by their sender, or they can be messages.  Messages have a more
+general key-then-string form which can come from any unit and be delivered to
+
+Each of these components can be configured and linked up independently.  This
+allows the compiled daemon to be used for either data collection from a host
+computer or 
