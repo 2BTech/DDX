@@ -24,8 +24,8 @@
 #include <QCoreApplication>  // For loading command line arguments
 #include <QDateTime>
 #include <QSettings>
-#include <QSharedMemory>
-#include <QSystemTrayIcon>
+#include <QSystemTrayIcon>	// Tray icon
+#include <QMenu>			// Tray icon
 #include "../DDX-gui/constants.h"
 
 class Daemon : public QObject
@@ -43,6 +43,7 @@ signals:
 public slots:
 	void init();
 	void log(const QVariant &msg);  // Print a low-info log message
+	void quit(int returnCode=0);
 	// TODO: void report(const QVariant &msg);  // Send a message which should be saved to disk or inserted into the data log somehow
 	// TODO: void notify(const QVariant &msg);  // Pump out a desktop notification and/or email notification (See snorenotify)
 
@@ -51,6 +52,7 @@ private:
 	void setupService();
 	QTextStream *qout;  // stdout wrapper
 	QSystemTrayIcon *trayIcon;
+	QMenu *trayMenu;
 };
 
 #endif // DAEMON_H

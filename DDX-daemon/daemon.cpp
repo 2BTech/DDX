@@ -32,6 +32,13 @@ Daemon::~Daemon() {
 }
 
 
+void Daemon::quit(int returnCode) {
+	// TODO: make this call finishing stuff
+	log("Daemon quit slot called");
+	qApp->exit(returnCode);
+}
+
+
 void Daemon::log(const QVariant &msg) {
 	QString finalMsg = QDateTime::currentDateTime().toString("[yyyy/MM/dd HH:mm:ss.zzz] ");
 	finalMsg.append(msg.toString());
@@ -109,12 +116,25 @@ void Daemon::loadDefaultSettings() {
 	// Logging
 	settings->setValue("logging/AlwaysLogToFile", false);
 	
+	// Locale
+	settings->setValue("locale/DaemonStringsRequired", true);
+	settings->setValue("locale/Quit", "Quit");
+	settings->setValue("locale/StreamOkay", "OK");
+	settings->setValue("locale/StreamError", "Error!");
+	
 	settings->sync();
 	// TODO: Emit a "settings changed" signal
 }
 
+
 void Daemon::setupService() {
 	QIcon icon(":/icons/icon32");
+	
+	trayMenu = new QMenu();
+	trayMenu->addAction(settings->value("locale/Quit").toString(), this, SLOT(quit()));
+	
 	trayIcon = new QSystemTrayIcon(icon, this);
+	trayIcon->setToolTip(APP_NAME_UNTRANSLATABLE);
+	trayIcon->setContextMenu(trayMenu);
 	trayIcon->show();
 }
