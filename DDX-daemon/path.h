@@ -16,29 +16,30 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
+#ifndef PATH_H
+#define PATH_H
+
+#include <QObject>
+// TODO:  Replace with derivatives
+#include "inlet.h"
 #include "outlet.h"
 
-Outlet::Outlet(QObject *parent) : QObject(parent)
+class Path : public QObject
 {
+	Q_OBJECT
+public:
+	explicit Path(QObject *parent = 0);
+	~Path();
 	
-}
-
-Outlet::~Outlet()
-{
+signals:
 	
-}
+public slots:
+	void init();
+	
+private:
+	//TODO: Remove testing stuff
+	Inlet *in;
+	Outlet *out;
+};
 
-
-void Outlet::init() {
-	// TODO
-}
-
-
-QTextStream* Outlet::getStreamIn() {
-	return 0;
-}
-
-
-void Outlet::publishMessage(QString msg) {
-	//qDebug() << "goody";
-}
+#endif // PATH_H

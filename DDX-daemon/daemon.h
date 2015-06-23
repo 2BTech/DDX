@@ -27,6 +27,7 @@
 #include <QSystemTrayIcon>	// Tray icon
 #include <QMenu>			// Tray icon
 #include "../DDX-gui/constants.h"
+#include "path.h"
 
 class Daemon : public QObject
 {

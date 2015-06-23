@@ -16,29 +16,20 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#include "outlet.h"
+#include "path.h"
 
-Outlet::Outlet(QObject *parent) : QObject(parent)
+Path::Path(QObject *parent) : QObject(parent)
 {
 	
 }
 
-Outlet::~Outlet()
+Path::~Path()
 {
 	
 }
 
 
-void Outlet::init() {
-	// TODO
-}
-
-
-QTextStream* Outlet::getStreamIn() {
-	return 0;
-}
-
-
-void Outlet::publishMessage(QString msg) {
-	//qDebug() << "goody";
+void Path::init() {
+	in = new Inlet();
+	
 }

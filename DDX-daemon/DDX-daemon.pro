@@ -39,12 +39,18 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    daemon.cpp
+    daemon.cpp \
+    inlet.cpp \
+    outlet.cpp \
+    path.cpp
 
 HEADERS += \
     ../DDX-gui/constants.h \
+    ../NoGit/private_constants.h \
     daemon.h \
-    ../NoGit/private_constants.h
+    inlet.h \
+    outlet.h \
+    path.h
 
 DISTFILES += \
     DaemonCommandLineArguments.txt \
