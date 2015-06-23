@@ -30,6 +30,11 @@ Path::~Path()
 
 
 void Path::init() {
+	qDebug("Initiating Inlet");
 	in = new Inlet();
+	in->init();
+	qDebug("Initiating Outlet");
+	out = new Outlet();
+	out->init();
 	
 }

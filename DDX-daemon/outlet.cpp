@@ -30,7 +30,7 @@ Outlet::~Outlet()
 
 
 void Outlet::init() {
-	// TODO
+	buffer = new QByteArray(DEFAULT_SLOW_BUFFER_SIZE, '\0');
 }
 
 

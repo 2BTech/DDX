@@ -41,6 +41,10 @@ public slots:
 	void init();
 	//virtual void init() =0;
 	
+private:
+	// TODO:  Make this a vector or something
+	QTextStream *outStream;
+	QMutex *outStreamLock;
 };
 
 #endif // INLET_H

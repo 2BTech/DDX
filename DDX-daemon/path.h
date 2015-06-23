@@ -37,7 +37,7 @@ public slots:
 	void init();
 	
 private:
-	//TODO: Remove testing stuff
+	// TODO: Remove testing stuff
 	Inlet *in;
 	Outlet *out;
 };
