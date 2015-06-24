@@ -20,7 +20,6 @@
 
 Inlet::Inlet(QObject *parent) : QObject(parent)
 {
-	
 }
 
 Inlet::~Inlet()
@@ -31,21 +30,23 @@ Inlet::~Inlet()
 
 void Inlet::init() {
 	// TODO
+	links = new QList<StreamLink>;
+	qDebug(QString("Thread: ").append(QString::number((long long) QThread::currentThreadId())).toLatin1());
 }
 
 
 void Inlet::run() {
 	for (int i=0; i<5; i++) {
-		qDebug("Inlet");
+		qDebug(QString("Inlet: ").append(QString::number((long long) QThread::currentThreadId())).toLatin1());
 		QTest::qWait(1000);
 	}
 }
 
 
-bool Inlet::isPersistent() {
+bool Inlet::isPersistent() const {
 	return false;
 }
 
-void Inlet::addStreamOut(QTextStream *stream) {
+void Inlet::addLink(const StreamLink &link) {
 	return;
 }

@@ -86,6 +86,8 @@ void Daemon::init() {
 		// Also, consider adding the option to show the console rather than hide it
 	}
 	
+	// Determine whether last instance shut down correctly
+	
 	// Check for other daemon instances
 
 	// Load and unload the instrument specification file to test it
@@ -125,6 +127,9 @@ void Daemon::loadDefaultSettings() {
 	settings->setValue("locale/Quit", "Quit");
 	settings->setValue("locale/StreamOkay", "OK");
 	settings->setValue("locale/StreamError", "Error!");
+	
+	// Crash checking
+	settings->setValue("crash/LastShutdownSafe", false);
 	
 	settings->sync();
 	// TODO: Emit a "settings changed" signal

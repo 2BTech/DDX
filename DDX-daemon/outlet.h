@@ -45,6 +45,12 @@
 // TODO: Remove:
 #include <QTest>
 #include <QDebug>
+#include <QThread>
+
+struct StreamLink {
+	QTextStream *s;
+	QMutex *l;
+};
 
 class Outlet : public QObject
 {
@@ -66,6 +72,8 @@ public slots:
 	void publishMessage(QString msg);
 	
 private:
+	void processLine(QString line);
+	
 	QByteArray *buffer;
 	QTextStream *inStream;
 	QMutex *inStreamLock;

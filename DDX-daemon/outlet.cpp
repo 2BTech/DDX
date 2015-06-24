@@ -20,7 +20,6 @@
 
 Outlet::Outlet(QObject *parent) : QObject(parent)
 {
-	
 }
 
 Outlet::~Outlet()
@@ -33,13 +32,14 @@ void Outlet::init() {
 	// Setup the incoming buffer and stream
 	buffer = new QByteArray(DEFAULT_SLOW_BUFFER_SIZE, '\0');
 	inStream = new QTextStream(buffer, QIODevice::ReadOnly);
+	qDebug(QString("Thread: ").append(QString::number((long long) QThread::currentThreadId())).toLatin1());
 }
 
 
 void Outlet::run() {
-	for (int i=0; i<5; i++) {
-		qDebug("Outlet");
-		QTest::qWait(800);
+	for (int i=0; i<20; i++) {
+		qDebug(QString("Outlet: ").append(QString::number((long long) QThread::currentThreadId())).toLatin1());
+		QTest::qWait(250);
 	}
 }
 

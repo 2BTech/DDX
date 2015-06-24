@@ -43,7 +43,8 @@ private:
 	// TODO: Remove testing stuff
 	Inlet *in;
 	Outlet *out;
-	QList<QThread*> *threads;
+	QThread *t1;
+	QThread *t2;
 };
 
 #endif // PATH_H
