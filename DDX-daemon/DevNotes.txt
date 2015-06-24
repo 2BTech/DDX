@@ -25,3 +25,9 @@ then in custom, and finally in standard.  If the instrument was not in generated
 be added to generated.
 
 2015/6/24:  This is an awesome set of guides, I wish I'd known about it earlier:  http://doc.qt.io/qt-5/overviews-main.html
+
+
+
+Planned features:
+- Reset instrument time every month even during data streams
+- Scripting

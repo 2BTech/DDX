@@ -43,7 +43,8 @@ SOURCES += main.cpp \
     daemon.cpp \
     inlet.cpp \
     outlet.cpp \
-    path.cpp
+    path.cpp \
+    module.cpp
 
 HEADERS += \
     ../DDX-gui/constants.h \
@@ -51,7 +52,8 @@ HEADERS += \
     daemon.h \
     inlet.h \
     outlet.h \
-    path.h
+    path.h \
+    module.h
 
 DISTFILES += \
     DaemonCommandLineArguments.txt \

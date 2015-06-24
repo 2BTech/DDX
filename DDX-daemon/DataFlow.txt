@@ -18,19 +18,73 @@
 
                             DATA FLOW SPECIFICATION
 
-There are several base classes from which all data flow mechanics derive.  Every
-instance of these "superclasses" runs in its own thread
+There are several base classes from which all data flow mechanics derive:
 - Daemon:  A singleton class which manages the setup/operation of everything else (including logging)
-- Session:  A temporary or permanent manager of a data stream.
+- Path:  A temporary or permanent manager of a data pipeline
 - Instrument:  A device which produces data
 	- <specification>(from SpecManager):  Details how to communicate with the instrument
 	- InstrumentLink:  The actual communication method (serial, bluetooth, USB, etc.)
-- Inlet:  A non-instrument source of data (file), which either specifies its 
-- Outlet:  A final destination for the data, such as uploading to GO3/Treks or the GUI (or another daemon instance elsewhere?)
-- Switchboard:  
-- Processor:  
+- Inlet:  The entry point for data into the pipeline.  Can be [fast|slow] and [finite|continuous].
+	- FIGURE OUT INSTRUMENT DATA FLOW
+	- RawFile:  A raw instrument output file
+	- PipedFile:  A file which has already gone through a path
+- Module:  An individual component in the pipeline (can be Beacon-like)
+	- GenMod:  General modifications; includes timestamping, column renaming/dropping
+	- StatGen:  Statistics generation
+	- Storage:  Generates and saves PipedFiles
+	- BeaconDump:  Sends all data to a Beacon
+	- Filter:  Can define an operational rule and then an action: hide line, or send message.
+	- Go3Upload:  Global Ozone Upload
+	- Other possibilities:  remote sql
+- Beacon:  A communication/messaging/signal channel along which messages can be broadcast
+	- GuiBeacon (receives all messages unconditionally)
+	- LogBeacon
+	- Other possibilities:  email, text, bluetooth, etc.
 
-Every inlet must be a part of exactly one stream and streams cannot exist without an inlet.  Instruments are a type of inlet.  
+Paths are the heart of every action.  They are, in general, built by a wizard in
+the GUI and can be serialized in JSON.  Every path runs in its own thread.  It
+operates by instantiating an Inlet, which yields data lines (actually
+represented differently by every part of the path).  When the module chain is
+exhausted, a new data measurement is requested from the inlet.  TODO: figure out
+whether calls need to be made to processEvents() and when in this loop.
+
+Modules are complex at the low level because columns can be reconfigured
+midstream and each Module itself can modify the arrangement of columns for other
+Modules downstream.  It's useful to talk about Module operation in terms of a
+column reconfiguration.  When any part of the path has to reconfigure columns,
+the outgoing column format is first recorded in a member of Path which is a list
+of Columns.  The Columns struct contains a QString n and a QString* c.  n is the
+name of a column, and c is a pointer to the currently stored value of that
+column.  During reconfiguration, Modules can make whatever changes they want to
+the column structure.  The only requirement is that they must garbage collect
+any QStrings which they construct to serve as the values of new columns.
+Reconfiguration then ripples down the rest of the chain and data flow resumes.
+Every Module keeps a local copy of the column configuration that they receive
+from the previous Module (or Inlet) in the pipeline, so they can make any
+changes to it that they want.  
+
+HIDDEN DATA LINES ARE NOT SKIPPED BUT BEACON ERRORS ARE SUPPRESSED
+
+
+Each Module accepts data from the previous Module (or Inlet) in the pipeline.
+Hidden lines can be passed without processing.  Non-hidden entries are processed
+according to the module's programming.  Note that every module keeps track of
+what columns it receives.  
+
+The Instrument class both communicates with the instrument and updates the format
+string sent to a connected path.  
+
+Beacons have queues of messages to send which, if overrun, will save new entries
+to disk for later dispatch.  Every Beacon dispatcher runs in its own thread.
+Beacons which are used for system logging are started by Daemon::init(), others
+are started and dropped as needed by particular paths.  
+
+Here is an example of a data line, all of which are terminated with '\n':
++1739,2057/3/24,"comma,comma","quote""quote"
+PipedFile first character key:
+- '+':  Normal data line
+- 'C':  Column header, followed by standard format name line
+- 'R':  Collection restart, followed by this path's JSON definition
 
 There are two different types of long-distance data: streams and messages.
 Streams are QTextStreams which contain data lines.  Data lines must adhere to a
