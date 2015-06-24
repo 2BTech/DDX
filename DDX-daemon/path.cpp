@@ -20,7 +20,7 @@
 
 Path::Path(QObject *parent) : QObject(parent)
 {
-	
+	qDebug("PATH CONSTRUCTOR");
 }
 
 Path::~Path()
@@ -30,11 +30,29 @@ Path::~Path()
 
 
 void Path::init() {
+	qDebug("PATH INIT");
+	threads->append(new QThread(this));
+	threads->append(new QThread(this));
 	qDebug("Initiating Inlet");
 	in = new Inlet();
+	in->moveToThread(threads->at(0));
 	in->init();
 	qDebug("Initiating Outlet");
 	out = new Outlet();
+	out->moveToThread(threads->at(1));
 	out->init();
 	
+	connect(threads->at(1), SIGNAL(started()), out, SLOT(run()));
+	connect(out, SIGNAL(finished()), threads->at(1), SLOT(quit()));
+	connect(out, SIGNAL(finished()), out, SLOT(deleteLater()));
+	connect(threads->at(1), SIGNAL(finished()), threads->at(1), SLOT(deleteLater()));
+	threads->at(1)->start();
+	
+	connect(threads->at(0), SIGNAL(started()), in, SLOT(run()));
+	connect(in, SIGNAL(finished()), threads->at(0), SLOT(quit()));
+	connect(in, SIGNAL(finished()), in, SLOT(deleteLater()));
+	connect(threads->at(0), SIGNAL(finished()), threads->at(0), SLOT(deleteLater()));
+	threads->at(0)->start();
+	
+	// TODO:  add/implement ready() and start() slots, add vector for storing QThread*s
 }

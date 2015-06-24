@@ -20,6 +20,8 @@
 #define PATH_H
 
 #include <QObject>
+#include <QList>
+#include <QThread>
 // TODO:  Replace with derivatives
 #include "inlet.h"
 #include "outlet.h"
@@ -32,6 +34,7 @@ public:
 	~Path();
 	
 signals:
+	void threadDelta(int delta);
 	
 public slots:
 	void init();
@@ -40,6 +43,7 @@ private:
 	// TODO: Remove testing stuff
 	Inlet *in;
 	Outlet *out;
+	QList<QThread*> *threads;
 };
 
 #endif // PATH_H

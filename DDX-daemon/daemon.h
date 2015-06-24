@@ -54,6 +54,9 @@ private:
 	QTextStream *qout;  // stdout wrapper
 	QSystemTrayIcon *trayIcon;
 	QMenu *trayMenu;
+	
+	// TODO: Remove
+	Path *testpath;
 };
 
 #endif // DAEMON_H

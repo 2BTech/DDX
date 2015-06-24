@@ -42,6 +42,9 @@
 #include <QByteArray>
 #include <QMutex>
 #include "../DDX-gui/constants.h"
+// TODO: Remove:
+#include <QTest>
+#include <QDebug>
 
 class Outlet : public QObject
 {
@@ -59,6 +62,7 @@ signals:
 	
 public slots:
 	void init();
+	void run();
 	void publishMessage(QString msg);
 	
 private:

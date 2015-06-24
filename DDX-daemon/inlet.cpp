@@ -34,6 +34,14 @@ void Inlet::init() {
 }
 
 
+void Inlet::run() {
+	for (int i=0; i<5; i++) {
+		qDebug("Inlet");
+		QTest::qWait(1000);
+	}
+}
+
+
 bool Inlet::isPersistent() {
 	return false;
 }

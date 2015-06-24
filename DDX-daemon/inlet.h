@@ -21,6 +21,9 @@
 
 #include <QObject>
 #include <QTextStream>
+// TODO: Remove:
+#include <QTest>
+#include <QDebug>
 
 class Inlet : public QObject
 {
@@ -39,6 +42,7 @@ signals:
 	
 public slots:
 	void init();
+	void run();
 	//virtual void init() =0;
 	
 private:

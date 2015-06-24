@@ -23,3 +23,5 @@
 When an instrument is detected, the application will search for a compatible profile first in generated,
 then in custom, and finally in standard.  If the instrument was not in generated,an entry for it will
 be added to generated.
+
+2015/6/24:  This is an awesome set of guides, I wish I'd known about it earlier:  http://doc.qt.io/qt-5/overviews-main.html

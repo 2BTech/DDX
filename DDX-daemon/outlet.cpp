@@ -30,7 +30,17 @@ Outlet::~Outlet()
 
 
 void Outlet::init() {
+	// Setup the incoming buffer and stream
 	buffer = new QByteArray(DEFAULT_SLOW_BUFFER_SIZE, '\0');
+	inStream = new QTextStream(buffer, QIODevice::ReadOnly);
+}
+
+
+void Outlet::run() {
+	for (int i=0; i<5; i++) {
+		qDebug("Outlet");
+		QTest::qWait(800);
+	}
 }
 
 
@@ -40,5 +50,5 @@ QTextStream* Outlet::getStreamIn() {
 
 
 void Outlet::publishMessage(QString msg) {
-	//qDebug() << "goody";
+	//qDebug("goody");
 }

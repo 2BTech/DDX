@@ -97,13 +97,16 @@ void Daemon::init() {
 	// figure that out)
 
 	// Set up email notifications?  Twitter uploading?
-	
+	log("setupService");
 	// Set up as system service (platform-dependent)
-	setupService();
+	//setupService();
 	
-	while(true){};
-
 	// Try connecting to instruments
+	
+	log("Starting path");
+	testpath = new Path(this);
+	testpath->init();
+	log("Ending path");
 	
 }
 
@@ -129,7 +132,9 @@ void Daemon::loadDefaultSettings() {
 
 
 void Daemon::setupService() {
+	log("In");
 	QIcon icon(":/icons/icon32");
+	log("Icon");
 	
 	trayMenu = new QMenu();
 	trayMenu->addAction(settings->value("locale/Quit").toString(), this, SLOT(quit()));

@@ -26,7 +26,8 @@
 QT       += core \
 			serialport \
 			bluetooth \
-			widgets # For tray icons & messages
+			widgets \ # For tray icons & messages
+			testlib  # For temporary testing
 
 QT       -= gui
 
