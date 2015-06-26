@@ -1,6 +1,6 @@
 #include "module.h"
 
-Module::Module(QString *def, QObject *parent) : QObject(parent)
+Module::Module(const QString *def, QObject *parent) : QObject(parent)
 {
 	
 }

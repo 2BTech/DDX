@@ -18,13 +18,15 @@
 
                             DATA FLOW SPECIFICATION
 
+The DDX is a general purpose data management
+
 There are several base classes from which all data flow mechanics derive:
 - Daemon:  A singleton class which manages the setup/operation of everything else (including logging)
 - Path:  A temporary or permanent manager of a data pipeline
 - Instrument:  A device which produces data
 	- <specification>(from SpecManager):  Details how to communicate with the instrument
 	- InstrumentLink:  The actual communication method (serial, bluetooth, USB, etc.)
-- Inlet:  The entry point for data into the pipeline.  Can be [fast|slow] and [finite|continuous].
+- Inlet:  The entry point for data into the pipeline.  Can be [fast|slow], [synchronous|asynchronous] and [finite|continuous].
 	- FIGURE OUT INSTRUMENT DATA FLOW
 	- RawFile:  A raw instrument output file
 	- PipedFile:  A file which has already gone through a path
@@ -32,7 +34,7 @@ There are several base classes from which all data flow mechanics derive:
 	- GenMod:  General modifications; includes timestamping, column renaming/dropping
 	- StatGen:  Statistics generation
 	- Storage:  Generates and saves PipedFiles
-	- BeaconDump:  Sends all data to a Beacon
+	- BeaconDump:  Sends all data to a Beacon (not recommended)
 	- Filter:  Can define an operational rule and then an action: hide line, or send message.
 	- Go3Upload:  Global Ozone Upload
 	- Other possibilities:  remote sql
@@ -63,7 +65,7 @@ Every Module keeps a local copy of the column configuration that they receive
 from the previous Module (or Inlet) in the pipeline, so they can make any
 changes to it that they want.  
 
-HIDDEN DATA LINES ARE NOT SKIPPED BUT BEACON ERRORS ARE SUPPRESSED
+HIDDEN DATA LINES ARE NOT SKIPPED BUT MODULE ERRORS ARE SUPPRESSED
 
 
 Each Module accepts data from the previous Module (or Inlet) in the pipeline.
@@ -85,11 +87,6 @@ PipedFile first character key:
 - '+':  Normal data line
 - 'C':  Column header, followed by standard format name line
 - 'R':  Collection restart, followed by this path's JSON definition
-
-There are two different types of long-distance data: streams and messages.
-Streams are QTextStreams which contain data lines.  Data lines must adhere to a
-format developed by their sender, or they can be messages.  Messages have a more
-general key-then-string form which can come from any unit and be delivered to
 
 Each of these components can be configured and linked up independently.  This
 allows the compiled daemon to be used for either data collection from a host

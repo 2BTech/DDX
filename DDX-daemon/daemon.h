@@ -25,6 +25,7 @@
 #include <QDateTime>
 #include <QSettings>
 #include <QSystemTrayIcon>	// Tray icon
+#include <QIcon>
 #include <QMenu>			// Tray icon
 #include "../DDX-gui/constants.h"
 #include "path.h"

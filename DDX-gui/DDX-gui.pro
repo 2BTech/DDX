@@ -38,3 +38,6 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     constants.h \
     ../NoGit/private_constants.h
+
+DISTFILES += \
+    ../README.md
