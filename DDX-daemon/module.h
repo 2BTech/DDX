@@ -8,8 +8,9 @@ class Module : public QObject
 {
 	Q_OBJECT
 public:
-	virtual void process();
 	virtual bool handleReconfigure();
+	virtual void process();
+	virtual void skip();
 	
 	explicit Module(const QString *model, QObject *parent = 0);
 	~Module();
@@ -24,14 +25,17 @@ public slots:
 	
 private:
 	const DataDef *inputColumns;  // NOT OWNED
-	DataDef *outputColumns;  // Owned
-	ColumnRefMap* savedColumns;
+	DataDef *outputColumns;  // Super owned, elements owned by newColumns and inputColumns
+	DataDef *newColumns;  // Super and elements owned
+	ColumnRefMap* accessMap;
 	
 protected:
-	inline void saveColumn(Column* c);
-	void insertColumn();  // Unsafe outside of reconfigure();
-	void removeColumn();  // Unsafe outside of reconfigure();
-
+	const Column* findColumn(QString name) const;
+	
+	void insertColumn(int index);  // Unsafe outside of handleReconfigure();
+	void removeColumn(Column *c);  // Unsafe outside of handleReconfigure();
+	void addAccessor(Column *c);  // Unsafe outside of handleReconfigure();
+	inline bool addAccessor(QString n);  // Unsafe outside of handleReconfigure();
 };
 
 #endif // MODULE_H

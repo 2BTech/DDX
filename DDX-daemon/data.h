@@ -23,14 +23,30 @@
 #include <QList>
 #include <QString>
 
+/*!
+ * \brief The Column struct
+ * Stores the contents of and metadata about a column as it resides in a stream.
+ */
 struct Column {
-	QString n;
-	QString *c;
-	QObject *p;  // Points to either a Module or an Inlet
+	QString c;  //!< The column's actual data buffer
+	QString n; //!< The name and main identifier of the column as reported by its parent
+	const QObject *p;  //!< A pointer to the column's parent, either a Module or Inlet
 };
 
-typedef QList<Column> DataDef;
+/*!
+ * \brief DataDef
+ * An ordered representation of Columns, which can model the format of data at
+ * any point in the stream.
+ */
+typedef QList<Column*> DataDef;
+
+/*!
+ * \brief ColumnRefMap
+ * A streamlined way of referencing a subset of columns in a DataDef to make
+ * repeated access faster.
+ */
 typedef QHash<QString, QString*> ColumnRefMap;
+
 
 #endif // DATA_H
 

@@ -1,5 +1,11 @@
 #include "module.h"
 
+void Module::skip() {
+	// TODO: Set all "c" members of the members of newColumn to empty strings (do not make new strings)
+}
+
+
+
 Module::Module(const QString *model, QObject *parent) : QObject(parent)
 {
 	// TODO
@@ -21,6 +27,7 @@ bool Module::handleReconfigure() {
 }
 
 
-void Module::reconfigure() {
-	// TODO
+const DataDef* Module::reconfigure() {
+	// TODO:  Start by erasing newColumns and setting outputColumns to inputColumns
+	return 0;
 }
