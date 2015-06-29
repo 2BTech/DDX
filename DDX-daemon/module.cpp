@@ -1,13 +1,26 @@
 #include "module.h"
 
-Module::Module(const QString *def, QObject *parent) : QObject(parent)
+Module::Module(const QString *model, QObject *parent) : QObject(parent)
 {
-	
+	// TODO
 }
 
 Module::~Module()
 {
-	
+	// TODO
 }
 
-// TODO:  Read this guide in order to get best efficiency out of a repeatedly-changing QString.  Specifically, try reserving ahead of time.
+
+void Module::process() {
+	// TODO:  Make default implementation be an error about not reimplemented
+}
+
+
+bool Module::handleReconfigure() {
+	// TODO:  Make default implementation be an error about not reimplemented
+}
+
+
+void Module::reconfigure() {
+	// TODO
+}

@@ -24,7 +24,7 @@
 #include <QThread>
 // TODO:  Replace with derivatives
 #include "inlet.h"
-#include "outlet.h"
+#include "module.h"
 
 class Path : public QObject
 {
@@ -34,17 +34,11 @@ public:
 	~Path();
 	
 signals:
-	void threadDelta(int delta);
 	
 public slots:
 	void init();
 	
 private:
-	// TODO: Remove testing stuff
-	Inlet *in;
-	Outlet *out;
-	QThread *t1;
-	QThread *t2;
 };
 
 #endif // PATH_H

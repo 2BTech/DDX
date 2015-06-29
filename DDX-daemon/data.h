@@ -16,49 +16,21 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#ifndef OUTLET_H
-#define OUTLET_H
+#ifndef DATA_H
+#define DATA_H
 
 #include <QObject>
-#include <QTextStream>
-#include <QByteArray>
-#include <QMutex>
-#include "../DDX-gui/constants.h"
-// TODO: Remove:
-#include <QTest>
-#include <QDebug>
-#include <QThread>
+#include <QList>
+#include <QString>
 
-struct StreamLink {
-	QTextStream *s;
-	QMutex *l;
+struct Column {
+	QString n;
+	QString *c;
+	QObject *p;  // Points to either a Module or an Inlet
 };
 
-class Outlet : public QObject
-{
-	Q_OBJECT
-public:
-	explicit Outlet(QObject *parent = 0);
-	~Outlet();
-	QTextStream* getStreamIn();
-	
-signals:
-	void msg(QString msg, QString dest);
-	void error(QString error);
-	void ready();
-	void terminated();
-	
-public slots:
-	void init();
-	void run();
-	void publishMessage(QString msg);
-	
-private:
-	void processLine(QString line);
-	
-	QByteArray *buffer;
-	QTextStream *inStream;
-	QMutex *inStreamLock;
-};
+typedef QList<Column> DataDef;
+typedef QHash<QString, QString*> ColumnRefMap;
 
-#endif // OUTLET_H
+#endif // DATA_H
+

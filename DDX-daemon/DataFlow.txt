@@ -45,21 +45,20 @@ There are several base classes from which all data flow mechanics derive:
 
 Paths are the heart of every action.  They are, in general, built by a wizard in
 the GUI and can be serialized in JSON.  Every path runs in its own thread.  It
-operates by instantiating an Inlet, which yields data lines (actually
-represented differently by every part of the path).  When the module chain is
-exhausted, a new data measurement is requested from the inlet.  TODO: figure out
-whether calls need to be made to processEvents() and when in this loop.
+operates by instantiating an Inlet, which yields data lines.  When the module
+chain is exhausted, a new data measurement is requested from the inlet.
+TODO: figure out whether calls need to be made to processEvents() and when in this loop.
 
 Modules are complex at the low level because columns can be reconfigured
 midstream and each Module itself can modify the arrangement of columns for other
-Modules downstream.  It's useful to talk about Module operation in terms of a
+Modules downstream.  It is useful to talk about Module operation in terms of a
 column reconfiguration.  When any part of the path has to reconfigure columns,
 the outgoing column format is first recorded in a member of Path which is a list
-of Columns.  The Columns struct contains a QString n and a QString* c.  n is the
-name of a column, and c is a pointer to the currently stored value of that
-column.  During reconfiguration, Modules can make whatever changes they want to
-the column structure.  The only requirement is that they must garbage collect
-any QStrings which they construct to serve as the values of new columns.
+of Columns.  The Columns struct contains a QString n, a QString* c, and a
+Module* p.  n is the name of a column, and c is a pointer to the currently
+stored value of that column, and p is a pointer to the .  During reconfiguration, Modules can make whatever
+changes they want to the column structure.  The only requirement is that they
+must garbage collect any QStrings which they construct to serve as the values of new columns.
 Reconfiguration then ripples down the rest of the chain and data flow resumes.
 Every Module keeps a local copy of the column configuration that they receive
 from the previous Module (or Inlet) in the pipeline, so they can make any

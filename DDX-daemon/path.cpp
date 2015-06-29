@@ -30,7 +30,7 @@ Path::~Path()
 
 
 void Path::init() {
-	qDebug(QString("Ideal threads:").append(QString::number(QThread::idealThreadCount())).toLatin1());
+	/*qDebug(QString("Ideal threads:").append(QString::number(QThread::idealThreadCount())).toLatin1());
 	t1 = new QThread(this);
 	t2 = new QThread(this);
 	qDebug("Initiating Inlet");
@@ -52,7 +52,7 @@ void Path::init() {
 	connect(in, SIGNAL(finished()), t1, SLOT(quit()));
 	connect(in, SIGNAL(finished()), in, SLOT(deleteLater()));
 	connect(t1, SIGNAL(finished()), t1, SLOT(deleteLater()));
-	t1->start();
+	t1->start();*/
 	
 	// TODO:  add/implement ready() and start() slots, add vector for storing QThread*s
 }

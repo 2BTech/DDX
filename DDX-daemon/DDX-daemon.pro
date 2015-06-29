@@ -53,7 +53,8 @@ HEADERS += \
     inlet.h \
     outlet.h \
     path.h \
-    module.h
+    module.h \
+    data.h
 
 DISTFILES += \
     DaemonCommandLineArguments.txt \
