@@ -42,7 +42,6 @@ TEMPLATE = app
 SOURCES += main.cpp \
     daemon.cpp \
     inlet.cpp \
-    outlet.cpp \
     path.cpp \
     module.cpp
 
@@ -51,7 +50,6 @@ HEADERS += \
     ../NoGit/private_constants.h \
     daemon.h \
     inlet.h \
-    outlet.h \
     path.h \
     module.h \
     data.h

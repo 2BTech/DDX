@@ -47,20 +47,6 @@ void Daemon::log(const QVariant &msg) {
 #endif
 }
 
-/*!
- * \brief Daemon::init
- * Initializes the daemon.  This includes:
- * - Loading saved settings (or resetting to defaults)
- * - Opening log files if necessary
- * - Checking for other daemon instances
- * - Testing the integrity of the instrument specification file
- * - Looking for a GUI instance
- * - Checking for updates to the DDX or the instrument specification file
- * - Installing as service
- * - Try connecting to any existing instrument profiles
- * This function is scheduled to occur immediately after initial event
- * loop processing in main().
- */
 void Daemon::init() {
 	/*!
 	 * \brief Load settings

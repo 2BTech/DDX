@@ -43,8 +43,25 @@ public:
 signals:
 
 public slots:
+	
+	/*!
+	 * \brief Daemon::init
+	 * Initializes the daemon.  This includes:
+	 * - Loading saved settings (or resetting to defaults)
+	 * - Opening log files if necessary
+	 * - Checking for other daemon instances
+	 * - Testing the integrity of the instrument specification file
+	 * - Looking for a GUI instance
+	 * - Checking for updates to the DDX or the instrument specification file
+	 * - Installing as service
+	 * - Try connecting to any existing instrument profiles
+	 * This function is scheduled to occur immediately after initial event
+	 * loop processing in main().
+	 */
 	void init();
+	
 	void log(const QVariant &msg);  // Print a low-info log message
+	
 	void quit(int returnCode=0);
 	// TODO: void report(const QVariant &msg);  // Send a message which should be saved to disk or inserted into the data log somehow
 	// TODO: void notify(const QVariant &msg);  // Pump out a desktop notification and/or email notification (See snorenotify)

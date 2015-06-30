@@ -31,6 +31,12 @@ struct Column {
 	QString c;  //!< The column's actual data buffer
 	QString n; //!< The name and main identifier of the column as reported by its parent
 	const QObject *p;  //!< A pointer to the column's parent, either a Module or Inlet
+	
+	Column(QString name, const QObject *parent) {
+		QString c;
+		QString n(name);
+		p = parent;
+	}
 };
 
 /*!
@@ -49,4 +55,3 @@ typedef QHash<QString, QString*> ColumnRefMap;
 
 
 #endif // DATA_H
-

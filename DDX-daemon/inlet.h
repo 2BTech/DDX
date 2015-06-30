@@ -25,7 +25,6 @@
 #include <QTest>
 #include <QDebug>
 #include <QThread>
-#include "outlet.h"  // For StreamLink struct
 
 class Inlet : public QObject
 {
@@ -34,7 +33,6 @@ public:
 	explicit Inlet(QObject *parent = 0);
 	~Inlet();
 	bool isPersistent() const;
-	void addLink(const StreamLink &link);
 	
 signals:
 	void msg(QString msg, QString dest);
@@ -51,7 +49,6 @@ private:
 	// TODO:  Make this a vector or something
 	QTextStream *outStream;
 	QMutex *outStreamLock;
-	QList<StreamLink> *links;
 };
 
 #endif // INLET_H

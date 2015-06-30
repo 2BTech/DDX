@@ -30,7 +30,6 @@ Inlet::~Inlet()
 
 void Inlet::init() {
 	// TODO
-	links = new QList<StreamLink>;
 	qDebug(QString("Thread: ").append(QString::number((long long) QThread::currentThreadId())).toLatin1());
 }
 
@@ -45,8 +44,4 @@ void Inlet::run() {
 
 bool Inlet::isPersistent() const {
 	return false;
-}
-
-void Inlet::addLink(const StreamLink &link) {
-	return;
 }
