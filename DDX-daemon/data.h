@@ -37,6 +37,8 @@ struct Column {
 		QString n(name);
 		p = parent;
 	}
+	
+	QString* buffer() {return &c;}
 };
 
 /*!
@@ -45,13 +47,5 @@ struct Column {
  * any point in the stream.
  */
 typedef QList<Column*> DataDef;
-
-/*!
- * \brief ColumnRefMap
- * A streamlined way of referencing a subset of columns in a DataDef to make
- * repeated access faster.
- */
-typedef QHash<QString, QString*> ColumnRefMap;
-
 
 #endif // DATA_H

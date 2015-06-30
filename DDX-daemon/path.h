@@ -40,5 +40,5 @@ public slots:
 	
 private:
 };
-
+// TODO:  Allow paths to be "tested", where the inlet produces a default configuration and passes it through to see what errors come up
 #endif // PATH_H

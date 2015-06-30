@@ -1,5 +1,9 @@
 #include "module.h"
 
+void Module::init(QStringList settings) {
+	alert("init() not reimplemented!");
+}
+
 void Module::handleReconfigure() {
 	alert("handleReconfigure() not reimplemented!");
 }
@@ -15,6 +19,10 @@ void Module::skip() {
 		newColumns->at(i)->c = "";
 }
 
+void Module::cleanup() {
+	
+}
+
 
 Module::Module(const QString *model, QObject *parent) : QObject(parent)
 {
@@ -26,7 +34,6 @@ Module::Module(const QString *model, QObject *parent) : QObject(parent)
 
 Module::~Module()
 {
-	delete accessMap;
 	delete outputColumns;
 	for (int i = 0; i < newColumns->size(); i++)
 		delete newColumns->at(i);
@@ -35,7 +42,6 @@ Module::~Module()
 
 
 void Module::reconfigure() {
-	accessMap->clear();
 	newColumns->clear();
 	*outputColumns = *inputColumns;
 	
@@ -56,13 +62,12 @@ const Column* Module::findColumn(QString name) const {
 	return 0;
 }
 
-bool Module::insertColumn(QString name, int index) {
-	if (findColumn(name)) return false;
+QString* Module::insertColumn(QString name, int index) {
+	if (findColumn(name)) return 0;
 	Column *c = new Column(name, this);
 	newColumns->append(c);
 	outputColumns->insert(index, c);
-	addAccessor(c);
-	return true;
+	return c->buffer();
 }
 
 void Module::removeColumn(const Column *c) {
@@ -70,15 +75,4 @@ void Module::removeColumn(const Column *c) {
 	outputColumns->removeAll((Column*) c);
 	if (c->p == this)
 		newColumns->removeAll((Column*) c);
-}
-
-void Module::addAccessor(const Column *c) {
-	accessMap->insert(c->n, (QString*) &(c->c));
-}
-
-inline bool Module::addAccessor(QString name) {
-	const Column *c = findColumn(name);
-	if ( ! c) return false;
-	addAccessor(c);
-	return true;
 }
