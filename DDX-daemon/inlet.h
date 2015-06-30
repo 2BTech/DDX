@@ -20,17 +20,13 @@
 #define INLET_H
 
 #include <QObject>
-#include <QTextStream>
-// TODO: Remove:
-#include <QTest>
-#include <QDebug>
-#include <QThread>
+#include "module.h"
 
-class Inlet : public QObject
+class Inlet : public Module
 {
 	Q_OBJECT
 public:
-	explicit Inlet(QObject *parent = 0);
+	explicit Inlet(const QString *model, QObject *parent = 0);
 	~Inlet();
 	bool isPersistent() const;
 	
@@ -43,12 +39,6 @@ signals:
 public slots:
 	void init();
 	void run();
-	//virtual void init() =0;
-	
-private:
-	// TODO:  Make this a vector or something
-	QTextStream *outStream;
-	QMutex *outStreamLock;
 };
 
 #endif // INLET_H

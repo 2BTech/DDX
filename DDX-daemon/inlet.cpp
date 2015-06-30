@@ -18,7 +18,7 @@
 
 #include "inlet.h"
 
-Inlet::Inlet(QObject *parent) : QObject(parent)
+Inlet::Inlet(const QString *model, QObject *parent) : Module(model, parent)
 {
 }
 
@@ -29,16 +29,10 @@ Inlet::~Inlet()
 
 
 void Inlet::init() {
-	// TODO
-	qDebug(QString("Thread: ").append(QString::number((long long) QThread::currentThreadId())).toLatin1());
 }
 
 
 void Inlet::run() {
-	for (int i=0; i<5; i++) {
-		qDebug(QString("Inlet: ").append(QString::number((long long) QThread::currentThreadId())).toLatin1());
-		QTest::qWait(1000);
-	}
 }
 
 
