@@ -20,6 +20,7 @@
 #define PATH_H
 
 #include <QObject>
+#include <QString>
 #include <QList>
 #include <QThread>
 // TODO:  Replace with derivatives
@@ -32,6 +33,17 @@ class Path : public QObject
 public:
 	explicit Path(QObject *parent = 0);
 	~Path();
+	
+	/*!
+	 * \brief Retreive a Module pointer by name
+	 * \param name The name of the module
+	 * \return Pointer to a Module, or 0 if none found
+	 * 
+	 * ## Module-Module Communication
+	 * Modules can communicate with each other with the use of this function and
+	 * Column::p, although the former is recommended over the latter. 
+	 */
+	Module* getModule(QString name);
 	
 signals:
 	

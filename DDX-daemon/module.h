@@ -12,8 +12,8 @@ public:
 	virtual void init(QStringList settings);
 	
 	/*!
-	 * \brief handleReconfigure
-	 * \return Whether successful
+	 * \brief Update to a new data structure
+	 * 
 	 * This is called when data flow starts and subsequently when an upstream
 	 * Module reconfigures.  The code inside is responsible for updating
 	 * updating outgoing column structure and adding accessors to columns for
@@ -52,16 +52,17 @@ public:
 	 * ## Error Handling
 	 * See daemon.h for the DDX philosophy on error handling.
 	 * 
-	 * Errors should be reported with alert().  This function should be designed
-	 * to handle any possible errors that occur without interrupting data flow.
-	 * Most errors should be caught in handleReconfigure() rather than process()
-	 * to prevent from overloading Beacons during a data stream.
+	 * This function should be designed to handle any possible errors that occur
+	 * without interrupting data flow.  Most errors should be caught in
+	 * handleReconfigure() rather than process() to prevent from overloading
+	 * Beacons during a data stream.  Errors should be reported with alert().
 	 */
 	virtual void handleReconfigure();
 	
 	/*!
-	 * \brief process
-	 * process() is the core of a Module's work.  This is where line-by-line
+	 * \brief Handle a data line
+	 * 
+	 * This function is the core of a Module's work.  This is where line-by-line
 	 * processing occurs.  Any code here can make use of buffer pointers saved
 	 * by handleReconfigure() to read from and write to columns.  Upon entering
 	 * process, column buffers are already loaded with the values from the next
@@ -74,7 +75,7 @@ public:
 	 * ### Workarounds
 	 * In combination with the other virtual functions in Module, a Module can
 	 * do almost anything desired.  For example, a Module can spawn a separate
-	 * thread and push incoming measurements to a queue for processing (albeit
+	 * thread and push incoming data lines to a queue for processing (albeit
 	 * with the downside that resulting information can't be included back in
 	 * the original path).  However, if there really is no way to bypass the
 	 * timeout.
@@ -90,9 +91,10 @@ public:
 	virtual void process();
 	
 	/*!
-	 * \brief skip
-	 * Called instead of process() whenever this Module is skipped.  Default
-	 * implementation simply sets all inserted columns to empty strings.
+	 * \brief Called instead of process when a Module is being skipped.
+	 * 
+	 * [SKIP FUNCTIONALITY NOT YET IMPLEMENTED]  Default implementation simply
+	 * sets all inserted columns to empty strings.
 	 */
 	virtual void skip();
 	
@@ -123,31 +125,32 @@ protected:
 	DataDef *outputColumns;  // Super owned, elements owned by newColumns and inputColumns
 	
 	/*!
-	 * \brief alert
+	 * \brief Echo a statement to all logging Beacons.
 	 * \param msg The message
-	 * Echoes a statement to all logging Beacons.
+	 * 
+	 * Alerts are tagged with the name of the Path and Module they come from.
 	 */
 	void alert(QString msg);
 	
 	/*!
-	 * \brief findColumn
-	 * \param name
-	 * \return pointer to the Column
-	 * Searches through the input columns for a column with the given name.
+	 * \brief Get a pointer to a specific input Column
+	 * \param name The Column's case-insensitive name
+	 * \return A pointer to the Column or 0 if it doesn't exist
+	 * 
+	 * Searches through the input Columns for a Column with the given name.
 	 * This search is case-insensitive. See insertColumn() for reasoning.
 	 * Because only input columns are searched, inserted columns will not be
 	 * found.  They must be managed with the pointer returned from
 	 * insertColumn().
-	 * 
-	 * Returns null if no column could not be found.  
 	 */
 	const Column* findColumn(QString name) const;
 	
 	/*!
-	 * \brief insertColumn
-	 * \param name A unique identifier
+	 * \brief Generate a new Column and add it to the output Columns
+	 * \param name A unique, case-insensitive identifier
 	 * \param index Position index in the Module's output columns
 	 * \return Whether successful
+	 * 
 	 * Generates a new column buffer, adds it to the Module's output columns,
 	 * and adds a reference to the accessor map.
 	 * 
@@ -158,6 +161,7 @@ protected:
 	/*!
 	 * \brief removeColumn
 	 * \param c
+	 * 
 	 * TODO
 	 * 
 	 * __Unsafe outside of reconfigure() or handleReconfigure()!__
