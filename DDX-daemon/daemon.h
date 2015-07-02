@@ -30,6 +30,11 @@
 #include "../DDX-gui/constants.h"
 #include "path.h"
 
+/*!
+ * \brief The main manager of the DDX
+ * 
+ * Instantiating this class and calling init() will begin DDX operation.
+ */
 class Daemon : public QObject
 {
 	Q_OBJECT
@@ -45,8 +50,10 @@ signals:
 public slots:
 	
 	/*!
-	 * \brief Daemon::init
-	 * Initializes the daemon.  This includes:
+	 * \brief Initializes the DDX daemon
+	 * 
+	 * This function is queued to run as soon as the main event loop starts.
+	 * Responsibilities include:
 	 * - Loading saved settings (or resetting to defaults)
 	 * - Opening log files if necessary
 	 * - Checking for other daemon instances

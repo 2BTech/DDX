@@ -27,6 +27,9 @@
 #include "inlet.h"
 #include "module.h"
 
+/*!
+ * \brief A complete string of consecutive Modules which handles data lines
+ */
 class Path : public QObject
 {
 	Q_OBJECT

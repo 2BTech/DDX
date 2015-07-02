@@ -22,6 +22,9 @@
 #include <QObject>
 #include "module.h"
 
+/*!
+ * \brief A Path's first Module, responsible for producing data lines
+ */
 class Inlet : public Module
 {
 	Q_OBJECT

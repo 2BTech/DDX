@@ -49,14 +49,15 @@ void Daemon::log(const QVariant &msg) {
 
 void Daemon::init() {
 	/*!
-	 * \brief Load settings
+	 * ## Loading Settings
 	 * Settings are set to their default values at startup when one of these
 	 * conditions is met:
 	 * - No settings have been set (determined by searching for the setting
 	 *   "SettingsResetOn")
 	 * - The daemon is launched with the "-reconfigure" argument
+	 * 
 	 * Note that the "Default Settings" GUI button simply removes
-	 * "SettingsResetOn" the forces a full application restart.
+	 * "SettingsResetOn" and then forces a full application restart.
 	 * \sa Daemon::loadDefaultSettings
 	 */
 	// TODO:  Add a see also to the above comment about the GUI's option which

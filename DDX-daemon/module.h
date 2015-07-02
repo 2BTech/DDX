@@ -5,6 +5,9 @@
 #include <QVariant>
 #include "data.h"  // Also for DataDef
 
+/*!
+ * \brief An element in a Path which can manipulate and respond to data lines
+ */
 class Module : public QObject
 {
 	Q_OBJECT
@@ -67,7 +70,9 @@ public:
 	 * by handleReconfigure() to read from and write to columns.  Upon entering
 	 * process, column buffers are already loaded with the values from the next
 	 * module upstream.  Any changes to these buffers will then be passed to the
-	 * next module downstream.
+	 * next module downstream.  This function must be failsafe; it can report
+	 * errors but cannot halt the data stream.  _This is a virtual function
+	 * which must be reimplimented._
 	 * 
 	 * ## Timeouts
 	 * [NOT IMPLEMENTED YET] Paths can apply watchdog timers to Modules.

@@ -24,15 +24,14 @@
 #include <QString>
 
 /*!
- * \brief The Column struct
- * Stores the contents of and metadata about a column as it resides in a stream.
+ * \brief Stores the contents of and metadata about a column as it resides in a stream
  */
 struct Column {
 	QString c;  //!< The column's actual data buffer
 	QString n; //!< The name and main identifier of the column as reported by its parent
-	const QObject *p;  //!< A pointer to the column's parent, either a Module or Inlet
+	QObject *p;  //!< A pointer to the column's parent, either a Module or Inlet
 	
-	Column(QString name, const QObject *parent) {
+	Column(QString name, QObject *parent) {
 		QString c;
 		QString n(name);
 		p = parent;
