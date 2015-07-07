@@ -158,9 +158,9 @@ public:
 	 * 
 	 * ### Settings Tree Format
 	 * The settings tree can have any combination of the following elements:
-	 * - Attribute:  A text-based setting
+	 * - Attribute:  A string setting
 	 * - Item:  An element which can be duplicated and rearranged, each with a
-	 * unique name and its own settings elements
+	 * unique name and its own elements
 	 * - Category:  A subgroup of elements
 	 * 
 	 * Every element is represented as a JSON object with a key of "A", "I", or
@@ -168,16 +168,21 @@ public:
 	 * are required to have an "n" string, which is the unique name of the
 	 * element.  All objects, regardless of type, can optionally have a "d"
 	 * string, which is a description.  Descriptions are translatable with tr(),
-	 * but not names.
+	 * but names are not.
 	 * 
 	 * #### Attributes
-	 * - default value
+	 * Attributes can have a "default" string, otherwise the default will be an
+	 * empty string.  When reported to init(), they will be string members of
+	 * their parent object with their name as the key.
 	 * 
 	 * #### Items
-	 * - subitems placed after n and d 
+	 * Items can be 
 	 * 
 	 * #### Categories
-	 * - subitems placed after n and d
+	 * Categories are purely aesthetic.  Any element with an "A", "I", or "C"
+	 * key after the "n" and "d" elements will be listed as a subelement.  When
+	 * reported to init(), they will be objects with their name as a key and
+	 * their subelements as actual subelements.
 	 * 
 	 * TODO: Finish
 	 */
