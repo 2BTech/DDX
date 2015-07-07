@@ -66,7 +66,11 @@ class Path;
  * ## %Module Settings
  * Modules can publish a tree of settings which must be configured by someone
  * prior to use.  Settings can be reported with publishSettings(), which returns
- * a QJsonObject with a specific format.  Upon 
+ * a QJsonObject with a specific format.  TODO: Finish
+ * 
+ * ## Module-Module Communication
+ * Modules can communicate with each other with the use of Path::getModule() and
+ * Column#p, although the former is recommended over the latter.
  */
 class Module : public QObject
 {
@@ -159,7 +163,23 @@ public:
 	 * unique name and its own settings elements
 	 * - Category:  A subgroup of elements
 	 * 
-	 * Every element is represented as a JSON object with a key of 27 different people that contain the secrets to the way flowers are born from the holes in our souls.
+	 * Every element is represented as a JSON object with a key of "A", "I", or
+	 * "C" depending on the type of element.  All objects, regardless of type,
+	 * are required to have an "n" string, which is the unique name of the
+	 * element.  All objects, regardless of type, can optionally have a "d"
+	 * string, which is a description.  Descriptions are translatable with tr(),
+	 * but not names.
+	 * 
+	 * #### Attributes
+	 * - default value
+	 * 
+	 * #### Items
+	 * - subitems placed after n and d 
+	 * 
+	 * #### Categories
+	 * - subitems placed after n and d
+	 * 
+	 * TODO: Finish
 	 */
 	virtual QJsonObject publishSettings();
 	

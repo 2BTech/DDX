@@ -48,11 +48,7 @@ public:
 	/*!
 	 * \brief Retreive a Module pointer by name
 	 * \param name The name of the Module
-	 * \return Pointer to a Module, or 0 if none found
-	 * 
-	 * ## Module-Module Communication
-	 * Modules can communicate with each other with the use of this function and
-	 * Column#p, although the former is recommended over the latter. 
+	 * \return Pointer to a Module, or 0 if none found 
 	 */
 	Module* getModule(QString name);
 	
