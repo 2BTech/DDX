@@ -30,7 +30,7 @@ class Path;
 /*!
  * \brief An element in a Path which can manipulate and respond to data lines
  * 
- * ## %Module Program Flow Overview
+ * ## %Module Execution Flow Overview
  * Module operation is managed by four virtual functions:
  * - init() handles any initialization that needs to happen prior to anything
  * else.  It is called exactly once and only after construction and before the
@@ -62,6 +62,11 @@ class Path;
  * column can be removed by one Module and replaced with another of the same
  * name by a Module downstream without complaint.  Relying on this hack is
  * not reccommended.
+ * 
+ * ## %Module Settings
+ * Modules can publish a tree of settings which must be configured by someone
+ * prior to use.  Settings can be reported with publishSettings(), which returns
+ * a QJsonObject with a specific format.  Upon 
  */
 class Module : public QObject
 {
@@ -70,14 +75,12 @@ public:
 	
 	/*!
 	 * \brief Configure the Module for operation
-	 * \param The JSON settings tree; see publishSettings()
+	 * \param settings The JSON settings tree
 	 * 
 	 * This function can be reimplemented to offer setup space for a Module.  It
 	 * is guaranteed to be called exactly once and prior to the first call to
 	 * handleReconfigure().  _This is a virtual function which must be
 	 * reimplemented._
-	 * 
-	 * Note that this function may be called to test Path configurations
 	 */
 	virtual void init(QJsonObject settings);
 	
@@ -124,18 +127,7 @@ public:
 	 * errors but cannot halt the data stream.  _This is a virtual function
 	 * which must be reimplemented._
 	 * 
-	 * ## Timeouts
-	 * [NOT IMPLEMENTED YET] Paths can apply watchdog timers to Modules.
-	 * 
-	 * ### Workarounds
-	 * In combination with the other virtual functions in Module, a Module can
-	 * do almost anything desired.  For example, a Module can spawn a separate
-	 * thread and push incoming data lines to a queue for processing (albeit
-	 * with the downside that resulting information can't be included back in
-	 * the original path).  However, if there really is no way to bypass the
-	 * timeout.
-	 * 
-	 * ## Error Handling
+	 * ### Error Handling
 	 * See daemon.h for the DDX philosophy on error handling.
 	 * 
 	 * Errors should be reported with alert().  This function should be designed
@@ -160,8 +152,14 @@ public:
 	 * \brief Return a JSON tree of settings for this Module
 	 * \return The settings tree
 	 * 
-	 * ## %Module Settings
-	 * TODO
+	 * ### Settings Tree Format
+	 * The settings tree can have any combination of the following elements:
+	 * - Attribute:  A text-based setting
+	 * - Item:  An element which can be duplicated and rearranged, each with a
+	 * unique name and its own settings elements
+	 * - Category:  A subgroup of elements
+	 * 
+	 * Every element is represented as a JSON object with a key of 27 different people that contain the secrets to the way flowers are born from the holes in our souls.
 	 */
 	virtual QJsonObject publishSettings();
 	
@@ -177,12 +175,6 @@ signals:
 	void triggerReconfigure();
 	void beacon(QStringList targets, QString msg);
 	void sendAlert(QString msg);
-	
-public slots:
-	
-private:
-	const DataDef *inputColumns;  // NOT OWNED
-	DataDef *newColumns;  // Super and elements owned
 	
 protected:
 	QString name;
@@ -226,15 +218,19 @@ protected:
 	QString* insertColumn(QString name, int index);
 	
 	/*!
-	 * \brief removeColumn
+	 * \brief Remove an output Column
 	 * \param c The Column to be removed
 	 * 
-	 * Removes an output Column.  Data in a column which was also an input
-	 * Column is still accessible via findColumn().
+	 * Data in a column which was also an input Column is still accessible via
+	 * findColumn().
 	 * 
 	 * __Unsafe outside of reconfigure() or handleReconfigure()!__
 	 */
 	void removeColumn(const Column *c);  // Unsafe outside of handleReconfigure();
+	
+private:
+	const DataDef *inputColumns;  // NOT OWNED
+	DataDef *newColumns;  // Super and elements owned
 };
 
 #endif // MODULE_H

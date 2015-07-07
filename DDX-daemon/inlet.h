@@ -29,30 +29,46 @@ class Inlet : public Module
 {
 	Q_OBJECT
 public:
-	explicit Inlet(const QString *model, Path *parent = 0);
-	~Inlet();
+	
+	/*!
+	 * \brief Configure the Inlet for operation
+	 * \param settings The JSON settings tree
+	 * 
+	 * TODO
+	 */
+	virtual void init(QJsonObject settings);
+	
+	/*!
+	 * \brief Trigger the initial reconfigure
+	 * 
+	 * TODO
+	 */
+	virtual void initialReconfigure();
 	
 	/*!
 	 * \brief Determines if the stream is synchronous or asynchronous
 	 * \return True if synchronous, false if asynchronous
 	 */
-	bool isSynchronous() const;
+	virtual bool isSynchronous() const;
 	
 	/*!
 	 * \brief Determines if the stream is finite or continuous
 	 * \return True if finite, false if continuous
 	 */
-	bool isFinite() const;
+	virtual bool isFinite() const;
+	
+	
+	explicit Inlet(const QString *model, Path *parent = 0);
+	~Inlet();
 	
 signals:
-	void msg(QString msg, QString dest);
-	void error(QString error);
-	void ready();
-	void finished();
 	
-public slots:
-	void init();
-	void run();
+protected:
+	
+	
+private:
+	void handleReconfigure() {}
+	void process() {}
 };
 
 #endif // INLET_H

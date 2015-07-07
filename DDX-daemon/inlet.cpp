@@ -26,11 +26,3 @@ Inlet::~Inlet()
 {
 	
 }
-
-
-void Inlet::init() {
-}
-
-
-void Inlet::run() {
-}

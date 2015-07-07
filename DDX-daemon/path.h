@@ -31,7 +31,12 @@ class Inlet;
  * \brief A complete string of consecutive Modules which handles data lines
  * 
  * ## Testing %Path Configurations
- * test
+ * Paths can be built by an external configuration wizard in "test mode".  In
+ * test mode, alerts are redirected to a text stream, then Module::init() is
+ * called on every Module followed by the initial reconfigure.  This allows
+ * users to test the structure of their configurations before a Path goes live.
+ * The Module::init() and Module::handleReconfigure() functions should catch as
+ * many errors as possible.
  */
 class Path : public QObject
 {
