@@ -146,15 +146,6 @@ public:
 	virtual void process();
 	
 	/*!
-	 * \brief [IGNORE] Called instead of process() when a Module is being skipped.
-	 * 
-	 * [SKIP FUNCTIONALITY NOT YET IMPLEMENTED]  Default implementation simply
-	 * sets all inserted columns to empty strings.  _This is a virtual function
-	 * which must be reimplemented._
-	 */
-	virtual void skip();
-	
-	/*!
 	 * \brief Called before destruction
 	 * 
 	 * Modules are required to do full memory management because they may be
@@ -173,14 +164,6 @@ public:
 	 * TODO
 	 */
 	virtual QJsonObject publishSettings();
-	
-	/*!
-	 * \brief [IGNORE] Publish a list of live actions which can be triggered
-	 * \return The list of actions
-	 * 
-	 * Live actions are not implemented yet.
-	 */
-	virtual QJsonObject publishLiveActions();
 	
 	explicit Module(const QString *model, Path *parent = 0);
 	~Module();

@@ -31,20 +31,12 @@ void Module::process() {
 	alert("process() not reimplemented!");
 }
 
-
-void Module::skip() {
-	for (int i = 0; i < newColumns->size(); i++)
-		newColumns->at(i)->c = "";
-}
-
 void Module::cleanup() {
 }
 
 QJsonObject Module::publishSettings() {
 	return QJsonObject();
 }
-
-QJsonObject Module::publishLiveActions() {return QJsonObject();}
 
 Module::Module(const QString *model, Path *parent) : QObject(parent)
 {
