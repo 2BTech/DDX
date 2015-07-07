@@ -1,9 +1,30 @@
+/******************************************************************************
+ *                         DATA DISPLAY APPLICATION X                         *
+ *                            2B TECHNOLOGIES, INC.                           *
+ *                                                                            *
+ * The DDX is free software: you can redistribute it and/or modify it under   *
+ * the terms of the GNU General Public License as published by the Free       *
+ * Software Foundation, either version 3 of the License, or (at your option)  *
+ * any later version.  The DDX is distributed in the hope that it will be     *
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of     *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General  *
+ * Public License for more details.  You should have received a copy of the   *
+ * GNU General Public License along with the DDX.  If not, see                *
+ * <http://www.gnu.org/licenses/>.                                            *
+ *                                                                            *
+ *  For more information about the DDX, check out the 2B website or GitHub:   *
+ *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
+ ******************************************************************************/
+
 #ifndef MODULE_H
 #define MODULE_H
 
 #include <QObject>
 #include <QVariant>
-#include "data.h"  // Also for DataDef
+#include "data.h"
+#include "path.h"
+
+class Path;
 
 /*!
  * \brief An element in a Path which can manipulate and respond to data lines
@@ -12,7 +33,19 @@ class Module : public QObject
 {
 	Q_OBJECT
 public:
-	virtual void init(QStringList settings);
+	
+	/*!
+	 * \brief Configure the Module for operation
+	 * \param The JSON settings tree; see getSettings()
+	 * 
+	 * This function can be reimplemented to offer setup space for a Module.  It
+	 * is guaranteed to be called exactly once and prior to the first call to
+	 * handleReconfigure().  _This is a virtual function which must be
+	 * reimplimented._
+	 * 
+	 * Note that this function may be called to test 
+	 */
+	virtual void init(QString settings);
 	
 	/*!
 	 * \brief Update to a new data structure
@@ -96,16 +129,43 @@ public:
 	virtual void process();
 	
 	/*!
-	 * \brief Called instead of process when a Module is being skipped.
+	 * \brief [IGNORE] Called instead of process() when a Module is being skipped.
 	 * 
 	 * [SKIP FUNCTIONALITY NOT YET IMPLEMENTED]  Default implementation simply
-	 * sets all inserted columns to empty strings.
+	 * sets all inserted columns to empty strings.  _This is a virtual function
+	 * which must be reimplimented._
 	 */
 	virtual void skip();
 	
+	/*!
+	 * \brief Called before destruction
+	 * 
+	 * Modules are required to do full memory management because they may be
+	 * loaded and destroyed many times in a Daemon instance which may run
+	 * autonomously for years.  Here is the place to do so.  Note that Columns
+	 * are already fully managed.  _This is a virtual function which must be
+	 * reimplimented._
+	 */
 	virtual void cleanup();
 	
-	explicit Module(const QString *model, QObject *parent = 0);
+	/*!
+	 * \brief Return a JSON tree of settings for this Module
+	 * \return The settings tree
+	 * 
+	 * ## Module Settings
+	 * TODO
+	 */
+	virtual QString publishSettings();
+	
+	/*!
+	 * \brief [IGNORE] Publish a list of live actions which can be triggered
+	 * \return The list of actions
+	 * 
+	 * Live actions are not implemented yet.
+	 */
+	virtual QString publishLiveActions();
+	
+	explicit Module(const QString *model, Path *parent = 0);
 	~Module();
 	void reconfigure();
 	
@@ -115,18 +175,18 @@ public:
 signals:
 	// TODO:  Figure out a way to trigger reconfigures???  I haven't really thought about that yet
 	void triggerReconfigure();
-	void beacon(QString targets, QVariant msg);
+	void beacon(QStringList targets, QString msg);
 	void sendAlert(QString msg);
 	
 public slots:
 	
 private:
-	QString name;
-	const QString *pathName;
 	const DataDef *inputColumns;  // NOT OWNED
 	DataDef *newColumns;  // Super and elements owned
 	
 protected:
+	QString name;
+	Path *path;
 	DataDef *outputColumns;  // Super owned, elements owned by newColumns and inputColumns
 	
 	/*!
@@ -143,7 +203,7 @@ protected:
 	 * \return A pointer to the Column or 0 if it doesn't exist
 	 * 
 	 * Searches through the input Columns for a Column with the given name.
-	 * This search is case-insensitive. See insertColumn() for reasoning.
+	 * This search is case-insensitive; see handleReconfigure() for reasoning.
 	 * Because only input columns are searched, inserted columns will not be
 	 * found.  They must be managed with the pointer returned from
 	 * insertColumn().
@@ -157,7 +217,9 @@ protected:
 	 * \return Whether successful
 	 * 
 	 * Generates a new column buffer, adds it to the Module's output columns,
-	 * and adds a reference to the accessor map.
+	 * and adds a reference to the accessor map.  This function will first
+	 * search for an existing output Column with the given name.  If one is
+	 * found, it returns 0.
 	 * 
 	 * __Unsafe outside of reconfigure() or handleReconfigure()!__
 	 */
@@ -165,9 +227,10 @@ protected:
 	
 	/*!
 	 * \brief removeColumn
-	 * \param c
+	 * \param c The Column to be removed
 	 * 
-	 * TODO
+	 * Removes an output Column.  Data in a column which was also an input
+	 * Column is still accessible via findColumn().
 	 * 
 	 * __Unsafe outside of reconfigure() or handleReconfigure()!__
 	 */

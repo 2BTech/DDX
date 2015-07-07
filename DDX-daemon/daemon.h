@@ -62,6 +62,7 @@ public slots:
 	 * - Checking for updates to the DDX or the instrument specification file
 	 * - Installing as service
 	 * - Try connecting to any existing instrument profiles
+	 * 
 	 * This function is scheduled to occur immediately after initial event
 	 * loop processing in main().
 	 */

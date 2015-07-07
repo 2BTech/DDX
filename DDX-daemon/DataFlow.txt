@@ -32,6 +32,7 @@ There are several base classes from which all data flow mechanics derive:
 	- PipedFile:  A file which has already gone through a path
 - Module:  An individual component in the pipeline (can be Beacon-like)
 	- GenMod:  General modifications; includes timestamping, column renaming/dropping
+	- InletInjector:  Adds the latest output from another inlet into a p
 	- StatGen:  Statistics generation
 	- Storage:  Generates and saves PipedFiles
 	- BeaconDump:  Sends all data to a Beacon (not recommended)

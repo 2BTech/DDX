@@ -29,9 +29,20 @@ class Inlet : public Module
 {
 	Q_OBJECT
 public:
-	explicit Inlet(const QString *model, QObject *parent = 0);
+	explicit Inlet(const QString *model, Path *parent = 0);
 	~Inlet();
-	bool isPersistent() const;
+	
+	/*!
+	 * \brief Determines if the stream is synchronous or asynchronous
+	 * \return True if synchronous, false if asynchronous
+	 */
+	bool isSynchronous() const;
+	
+	/*!
+	 * \brief Determines if the stream is finite or continuous
+	 * \return True if finite, false if continuous
+	 */
+	bool isFinite() const;
 	
 signals:
 	void msg(QString msg, QString dest);

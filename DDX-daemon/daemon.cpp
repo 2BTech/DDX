@@ -49,7 +49,7 @@ void Daemon::log(const QVariant &msg) {
 
 void Daemon::init() {
 	/*!
-	 * ## Loading Settings
+	 * ### Loading Settings
 	 * Settings are set to their default values at startup when one of these
 	 * conditions is met:
 	 * - No settings have been set (determined by searching for the setting

@@ -22,10 +22,10 @@
 #include <QObject>
 #include <QString>
 #include <QList>
-#include <QThread>
-// TODO:  Replace with derivatives
-#include "inlet.h"
 #include "module.h"
+
+class Module;
+class Inlet;
 
 /*!
  * \brief A complete string of consecutive Modules which handles data lines
@@ -48,12 +48,15 @@ public:
 	 */
 	Module* getModule(QString name);
 	
+	QString getName() {return name;}
+	
 signals:
 	
 public slots:
 	void init();
 	
 private:
+	QString name;
 };
 // TODO:  Allow paths to be "tested", where the inlet produces a default configuration and passes it through to see what errors come up
 #endif // PATH_H

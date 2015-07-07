@@ -18,7 +18,7 @@
 
 #include "inlet.h"
 
-Inlet::Inlet(const QString *model, QObject *parent) : Module(model, parent)
+Inlet::Inlet(const QString *model, Path *parent) : Module(model, parent)
 {
 }
 
@@ -33,9 +33,4 @@ void Inlet::init() {
 
 
 void Inlet::run() {
-}
-
-
-bool Inlet::isPersistent() const {
-	return false;
 }
