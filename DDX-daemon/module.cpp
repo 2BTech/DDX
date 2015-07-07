@@ -18,7 +18,7 @@
 
 #include "module.h"
 
-void Module::init(QString settings) {
+void Module::init(QJsonObject settings) {
 	alert("init() not reimplemented!");
 }
 
@@ -40,11 +40,11 @@ void Module::skip() {
 void Module::cleanup() {
 }
 
-QString Module::publishSettings() {
-	alert("publishSettings() not reimplemented!");
-	return QString("{}");
+QJsonObject Module::publishSettings() {
+	return QJsonObject();
 }
 
+QJsonObject Module::publishLiveActions() {return QJsonObject();}
 
 Module::Module(const QString *model, Path *parent) : QObject(parent)
 {
@@ -57,7 +57,6 @@ Module::Module(const QString *model, Path *parent) : QObject(parent)
 	// Call initializer
 }
 
-
 Module::~Module()
 {
 	delete outputColumns;
@@ -65,7 +64,6 @@ Module::~Module()
 		delete newColumns->at(i);
 	delete newColumns;
 }
-
 
 void Module::reconfigure() {
 	newColumns->clear();
@@ -75,8 +73,9 @@ void Module::reconfigure() {
 }
 
 void Module::alert(QString msg) {
-	QString out(path->getName());
-	out.append(":").append(name).append(": ");
+	QString out;
+	if (path) out.append(path->getName()).append(":");
+	out.append(name).append(": ");
 	out.append(msg);
 	emit sendAlert(out);
 }

@@ -41,7 +41,7 @@ struct Column {
 };
 
 /*!
- * \brief DataDef
+ * \brief DataDef struct
  * An ordered representation of Columns, which can model the format of data at
  * any point in the stream.
  */

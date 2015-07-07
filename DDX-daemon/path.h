@@ -29,6 +29,9 @@ class Inlet;
 
 /*!
  * \brief A complete string of consecutive Modules which handles data lines
+ * 
+ * ## Testing %Path Configurations
+ * test
  */
 class Path : public QObject
 {
@@ -39,12 +42,12 @@ public:
 	
 	/*!
 	 * \brief Retreive a Module pointer by name
-	 * \param name The name of the module
+	 * \param name The name of the Module
 	 * \return Pointer to a Module, or 0 if none found
 	 * 
 	 * ## Module-Module Communication
 	 * Modules can communicate with each other with the use of this function and
-	 * Column::p, although the former is recommended over the latter. 
+	 * Column#p, although the former is recommended over the latter. 
 	 */
 	Module* getModule(QString name);
 	
