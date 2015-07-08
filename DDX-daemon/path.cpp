@@ -42,6 +42,12 @@ Path::Path(bool test, QObject *parent) : QObject(parent)
 	*/
 }
 
+Module* Path::findModule(QString name) {
+	// TODO
+	name = QString();
+	return 0;
+}
+
 void Path::init() {
 	
 }
@@ -49,4 +55,9 @@ void Path::init() {
 Path::~Path()
 {
 	
+}
+
+QString Path::getDefaultModuleName() {
+	// TODO
+	return QString();
 }

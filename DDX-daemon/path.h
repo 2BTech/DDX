@@ -50,11 +50,9 @@ public:
 	 * \param name The name of the Module
 	 * \return Pointer to a Module, or 0 if none found 
 	 */
-	Module* getModule(QString name);
+	Module* findModule(QString name);
 	
 	QString getName() {return name;}
-	
-	QString getDefaultModuleName();
 	
 	~Path();
 	
@@ -68,6 +66,8 @@ private:
 	QString name;
 	bool inTestMode;
 	bool isRunning;
+	
+	QString getDefaultModuleName();
 };
 
 #endif // PATH_H

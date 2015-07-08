@@ -43,6 +43,8 @@ public:
 	
 	~Daemon();
 	
+	void addPath();
+	
 	QStringList args;
 	
 	QSettings *settings;

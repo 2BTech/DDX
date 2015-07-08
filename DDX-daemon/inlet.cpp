@@ -18,11 +18,31 @@
 
 #include "inlet.h"
 
-Inlet::Inlet(const QString *name, Path *parent) : Module(name, parent)
+Inlet::Inlet(const QString name, Path *parent) : Module(name, parent)
 {
+	// TODO
 }
 
 Inlet::~Inlet()
 {
-	
+	// TODO
+}
+
+void Inlet::init(QJsonObject settings) {
+	// TODO
+	settings.size();
+}
+
+void Inlet::initialReconfigure() {
+	// TODO
+}
+
+bool Inlet::isSynchronous() const {
+	// TODO
+	return false;
+}
+
+bool Inlet::isFinite() const {
+	// TODO
+	return false;
 }

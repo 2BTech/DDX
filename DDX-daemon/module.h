@@ -109,36 +109,6 @@ public:
 	virtual void init(const QJsonObject settings);
 	
 	/*!
-	 * \brief Update to a new data structure
-	 * 
-	 * This is called when data flow starts and subsequently when an upstream
-	 * Module reconfigures.  The code inside is responsible for updating
-	 * outgoing column structure and adding accessors to columns for
-	 * quick access in process().  _This is a virtual function which must be
-	 * reimplemented._
-	 * 
-	 * ### Initial State
-	 * Prior to every call, previously inserted Columns are destroyed and the
-	 * input column structure is copied to the output column structure.
-	 * 
-	 * ### Fast Buffer Access
-	 * Because findColumn() does a slow linear search through the column list,
-	 * it is best to only do this search once and then save a pointer directly
-	 * to a column's buffer for reading and/or writing during process().  Once
-	 * a column has been found, subclasses should store the result of
-	 * Column::buffer() to refer to the result in the future.
-	 * 
-	 * ### Error Handling
-	 * See the Module class documentation for general information on error
-	 * handling.  This function should be designed to handle any possible
-	 * errors that occur without interrupting data flow.  Most errors should be
-	 * caught in handleReconfigure() rather than process() to prevent from
-	 * overloading Beacons during a data stream.  Errors should be reported with
-	 * alert().
-	 */
-	virtual void handleReconfigure();
-	
-	/*!
 	 * \brief Handle a data line
 	 * 
 	 * This function is the core of a Module's work.  This is where line-by-line
@@ -159,17 +129,6 @@ public:
 	 * alert().
 	 */
 	virtual void process();
-	
-	/*!
-	 * \brief Called before destruction
-	 * 
-	 * Modules are required to do full memory management because they may be
-	 * loaded and destroyed many times in a Daemon instance which may run
-	 * autonomously for years.  Here is the place to do so.  Note that Columns
-	 * are already fully managed.  _This is a virtual function which must be
-	 * reimplemented._
-	 */
-	virtual void cleanup();
 	
 	/*!
 	 * \brief Return a JSON tree of settings for this Module
@@ -271,7 +230,9 @@ public:
 	 */
 	virtual QJsonObject publishSettings();
 	
-	explicit Module(const QString *name, Path *parent);
+	explicit Module(QString name, Path *parent);
+	
+	~Module();
 	
 	/*!
 	 * \brief Manages reconfiguration
@@ -293,12 +254,10 @@ public:
 	inline const DataDef* getOutputColumns() const {return outputColumns;}
 	
 	/*!
-	 * \brief Get the Module's name (externally managed)
+	 * \brief Get the Module's name
 	 * \return The Module's name
 	 */
-	inline QString getName() const {return QString(*name);}
-	
-	~Module();
+	inline QString getName() const {return name;}
 	
 signals:
 	// TODO:  Figure out a way to trigger reconfigures???  I haven't really thought about that yet
@@ -309,6 +268,47 @@ signals:
 protected:
 	Path *path;
 	DataDef *outputColumns;  // Super owned, elements owned by newColumns and inputColumns
+	
+	/*!
+	 * \brief Update to a new data structure
+	 * 
+	 * This is called when data flow starts and subsequently when an upstream
+	 * Module reconfigures.  The code inside is responsible for updating
+	 * outgoing column structure and adding accessors to columns for
+	 * quick access in process().  _This is a virtual function which must be
+	 * reimplemented._
+	 * 
+	 * ### Initial State
+	 * Prior to every call, previously inserted Columns are destroyed and the
+	 * input column structure is copied to the output column structure.
+	 * 
+	 * ### Fast Buffer Access
+	 * Because findColumn() does a slow linear search through the column list,
+	 * it is best to only do this search once and then save a pointer directly
+	 * to a column's buffer for reading and/or writing during process().  Once
+	 * a column has been found, subclasses should store the result of
+	 * Column::buffer() to refer to the result in the future.
+	 * 
+	 * ### Error Handling
+	 * See the Module class documentation for general information on error
+	 * handling.  This function should be designed to handle any possible
+	 * errors that occur without interrupting data flow.  Most errors should be
+	 * caught in handleReconfigure() rather than process() to prevent from
+	 * overloading Beacons during a data stream.  Errors should be reported with
+	 * alert().
+	 */
+	virtual void handleReconfigure();
+	
+	/*!
+	 * \brief Called before destruction
+	 * 
+	 * Modules are required to do full memory management because they may be
+	 * loaded and destroyed many times in a Daemon instance which may run
+	 * autonomously for years.  Here is the place to do so.  Note that Columns
+	 * are already fully managed.  _This is a virtual function which must be
+	 * reimplemented._
+	 */
+	virtual void cleanup();
 	
 	/*!
 	 * \brief Echo a statement to all logging Beacons.
@@ -358,7 +358,10 @@ protected:
 	void removeColumn(const Column *c);  // Unsafe outside of handleReconfigure();
 	
 private:
-	const QString *name;
+	/*!
+	 * \brief This Module's name (not editable after construction)
+	 */
+	QString name;
 	
 	/*!
 	 * \brief Pointer to external input columns

@@ -21,16 +21,17 @@
 Daemon::Daemon(QObject *parent) : QObject(parent) {
 	// Load command line arguments
 	args = ((QCoreApplication*) parent)->arguments();
-	
 	// Open stdout stream for logging
 	qout = new QTextStream(stdout);
 }
 
-
 Daemon::~Daemon() {
-
+	// TODO
 }
 
+void Daemon::addPath() {
+	
+}
 
 void Daemon::quit(int returnCode) {
 	// TODO: make this call finishing stuff

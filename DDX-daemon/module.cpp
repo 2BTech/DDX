@@ -18,6 +18,25 @@
 
 #include "module.h"
 
+Module::Module(QString name, Path *parent) : QObject(parent)
+{
+	path = parent;
+	this->name = name;
+	/* This is safe to instantiate in the constructor because it has no events.
+	 * Moving a Module to a separate thread should not harm anything. */
+	outputColumns = new DataDef();
+	newColumns = 0;
+}
+
+Module::~Module()
+{
+	delete outputColumns;
+	if (newColumns) {
+		emptyNewColumns();
+		delete newColumns;
+	}
+}
+
 void Module::init(const QJsonObject settings) {
 	alert("init() not reimplemented!");
 	settings.count();  // Suppress unused warning
@@ -37,25 +56,6 @@ void Module::cleanup() {
 
 QJsonObject Module::publishSettings() {
 	return QJsonObject();  // Return no settings
-}
-
-Module::Module(const QString *name, Path *parent) : QObject(parent)
-{
-	path = parent;
-	this->name = name;
-	/* This is safe to instantiate in the constructor because it has no events.
-	 * Moving a Module to a separate thread should not harm anything. */
-	outputColumns = new DataDef();
-	newColumns = 0;
-}
-
-Module::~Module()
-{
-	delete outputColumns;
-	if (newColumns) {
-		emptyNewColumns();
-		delete newColumns;
-	}
 }
 
 void Module::reconfigure() {
