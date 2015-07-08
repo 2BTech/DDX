@@ -168,7 +168,8 @@ public:
 	 * are required to have an "n" string, which is the unique name of the
 	 * element.  All objects, regardless of type, can optionally have a "d"
 	 * string, which is a description.  Descriptions are translatable with tr(),
-	 * but names are not.
+	 * but names are not.  All elements retain their order when reported back to
+	 * init().  
 	 * 
 	 * #### Attributes
 	 * Attributes can have a "default" string, otherwise the default will be an
@@ -176,23 +177,36 @@ public:
 	 * their parent object with their name as the key.
 	 * 
 	 * #### Items
-	 * Items can be 
+	 * Items can be duplicated and and individually configured.
 	 * 
 	 * #### Categories
 	 * Categories are purely aesthetic.  Any element with an "A", "I", or "C"
 	 * key after the "n" and "d" elements will be listed as a subelement.  When
 	 * reported to init(), they will be objects with their name as a key and
 	 * their subelements as actual subelements.
-	 * 
-	 * TODO: Finish
 	 */
 	virtual QJsonObject publishSettings();
 	
 	explicit Module(const QString *model, Path *parent = 0);
 	~Module();
+	
+	/*!
+	 * \brief Manages reconfiguration
+	 * 
+	 * Resets columns to their starting state and calls handleReconfigure().
+	 */
 	void reconfigure();
 	
+	/*!
+	 * \brief Set pointer to external input columns (for Path linkage)
+	 * \param c The external input ::DataDef
+	 */
 	void setInputColumnsPtr(const DataDef *c) {inputColumns = c;}
+	
+	/*!
+	 * \brief Get pointer to internal output columns (for Path linkage)
+	 * \return The internal output ::DataDef
+	 */
 	const DataDef* getOutputColumns() const {return outputColumns;}
 	
 signals:
