@@ -43,16 +43,16 @@ class Path : public QObject
 	Q_OBJECT
 public:
 	
-	explicit Path(bool test = false, QObject *parent = 0);
+	explicit Path(QObject *parent = 0, bool test = false);
 	
 	/*!
-	 * \brief Retreive a Module pointer by name
+	 * \brief Retreive a Module pointer by name via slow linear search
 	 * \param name The name of the Module
 	 * \return Pointer to a Module, or 0 if none found 
 	 */
-	Module* findModule(QString name);
+	Module* findModule(QString name) const;
 	
-	QString getName() {return name;}
+	QString getName() const {return name;}
 	
 	~Path();
 	

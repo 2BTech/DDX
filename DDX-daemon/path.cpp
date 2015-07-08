@@ -18,7 +18,7 @@
 
 #include "path.h"
 
-Path::Path(bool test, QObject *parent) : QObject(parent)
+Path::Path(QObject *parent, bool test) : QObject(parent)
 {
 	inTestMode = test;
 	isRunning = false;
@@ -39,10 +39,28 @@ Path::Path(bool test, QObject *parent) : QObject(parent)
 			  .arg(oldName, name));
 		path->registerModule(this, name);
 	}
+	
+	
+	
+-	t2 = new QThread(this);		
+-	qDebug("Initiating Inlet");		
+-	in = new Inlet();		
+-	in->moveToThread(t1);		
+-	in->init();		
+-	qDebug("Initiating Outlet");		
+-	out = new Outlet();		
+-	out->moveToThread(t2);		
+-	out->init();		
+-			
+-	connect(t2, SIGNAL(started()), out, SLOT(run()));		
+-	connect(out, SIGNAL(finished()), t2, SLOT(quit()));		
+-	connect(out, SIGNAL(finished()), out, SLOT(deleteLater()));		
+-	connect(t2, SIGNAL(finished()), t2, SLOT(deleteLater()));		
+-	t2->start();
 	*/
 }
 
-Module* Path::findModule(QString name) {
+Module* Path::findModule(QString name) const {
 	// TODO
 	name = QString();
 	return 0;
