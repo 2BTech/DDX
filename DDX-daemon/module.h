@@ -203,8 +203,9 @@ public:
 	 * category will be shown as attributes of the category itself.
 	 * 
 	 * When reporting back to init(), all attributes will appear in declaration
-	 * order at the front of their parent category and all items will appear
-	 * following these attributes in the order they were instantiated by the
+	 * order at the front of their parent category.  All subcategories will
+	 * follow in the order they were declared.  Then all items will appear
+	 * following these categories in the order they were instantiated by the
 	 * user.  A Module's instance is shown as the master category in the
 	 * configuration GUI, so attributes in the highest level will appear to be
 	 * attributes directly affecting the module (rather than a category or
@@ -270,7 +271,7 @@ public:
 	 */
 	virtual QJsonObject publishSettings();
 	
-	explicit Module(const QJsonObject model, Path *parent);
+	explicit Module(const QString name, Path *parent);
 	~Module();
 	
 	/*!
@@ -295,8 +296,8 @@ public:
 signals:
 	// TODO:  Figure out a way to trigger reconfigures???  I haven't really thought about that yet
 	void triggerReconfigure();
-	void beacon(QStringList targets, QString msg);
-	void sendAlert(QString msg);
+	void beacon(QStringList targets, QString msg) const;
+	void sendAlert(QString msg) const;
 	
 protected:
 	QString name;
@@ -309,7 +310,7 @@ protected:
 	 * 
 	 * Alerts are tagged with the name of the Path and Module they come from.
 	 */
-	void alert(QString msg);
+	void alert(QString msg) const;
 	
 	/*!
 	 * \brief Get a pointer to a specific input Column
@@ -351,8 +352,24 @@ protected:
 	void removeColumn(const Column *c);  // Unsafe outside of handleReconfigure();
 	
 private:
+	
+	/*!
+	 * \brief Pointer to external input columns
+	 */
 	const DataDef *inputColumns;  // NOT OWNED
+	
+	/*!
+	 * \brief List of Columns created by this Module for garbage collection
+	 * 
+	 * Note that this will be a null pointer unless a Column was previously
+	 * inserted by a Module.
+	 */
 	DataDef *newColumns;  // Super and elements owned
+	
+	/*!
+	 * \brief Garbage collects inserted Columns
+	 */
+	inline void emptyNewColumns();
 };
 
 #endif // MODULE_H

@@ -20,6 +20,7 @@
 
 void Module::init(const QJsonObject settings) {
 	alert("init() not reimplemented!");
+	settings.count();  // Suppress unused warning
 }
 
 void Module::handleReconfigure() {
@@ -35,52 +36,35 @@ void Module::cleanup() {
 }
 
 QJsonObject Module::publishSettings() {
-	return QJsonObject();
+	return QJsonObject();  // Return no settings
 }
 
-Module::Module(const QJsonObject model, Path *parent) : QObject(parent)
+Module::Module(const QString name, Path *parent) : QObject(parent)
 {
 	path = parent;
-	
-	// Set name and register it
-	QJsonObject::const_iterator found = model.find("n");
-	if (found == model.end()) name = QString();
-	else name = found.value().toString();
-	if (name.isEmpty()) {
-		name = path->getDefaultModuleName();
-		alert(tr("Module of type '%1'' has no name specified, using '%2'")
-			  .arg(this->metaObject()->className(), name));
-	}
-	if ( ! path->registerModule(this, name)) {
-		QString oldName(name);
-		name = path->getDefaultModuleName();
-		alert(tr("Path has multiple modules with name '%1', using '%2'")
-			  .arg(oldName, name));
-		path->registerModule(this, name);
-	}
-	
-	// Call init
-	found = model.find("s");
-	if (found == model.end()) init(QJsonObject());
-	else (init(found.value().toObject()));
+	this->name = QString(name);
+	/* This is safe to instantiate in the constructor because it has no events.
+	 * Moving a Module to a separate thread should not harm anything. */
+	outputColumns = new DataDef();
+	newColumns = 0;
 }
 
 Module::~Module()
 {
 	delete outputColumns;
-	for (int i = 0; i < newColumns->size(); i++)
-		delete newColumns->at(i);
-	delete newColumns;
+	if (newColumns) {
+		emptyNewColumns();
+		delete newColumns;
+	}
 }
 
 void Module::reconfigure() {
-	newColumns->clear();
+	if (newColumns) emptyNewColumns();
 	*outputColumns = *inputColumns;
-	
 	handleReconfigure();
 }
 
-void Module::alert(QString msg) {
+void Module::alert(QString msg) const {
 	QString out;
 	if (path) out.append(path->getName()).append(":");
 	out.append(name).append(": ");
@@ -97,6 +81,7 @@ Column *Module::findColumn(QString name) const {
 
 QString* Module::insertColumn(QString name, int index) {
 	if (findColumn(name)) return 0;
+	if ( ! newColumns) newColumns = new DataDef();
 	Column *c = new Column(name, this);
 	newColumns->append(c);
 	outputColumns->insert(index, c);
@@ -108,4 +93,9 @@ void Module::removeColumn(const Column *c) {
 	outputColumns->removeAll((Column*) c);
 	if (c->p == this)
 		newColumns->removeAll((Column*) c);
+}
+
+inline void Module::emptyNewColumns() {
+	for (int i = 0; i < newColumns->size(); i++)
+		delete newColumns->at(i);
 }
