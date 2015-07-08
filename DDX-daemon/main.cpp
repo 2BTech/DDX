@@ -36,9 +36,9 @@ int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
 
-	QCoreApplication::setOrganizationName("2B Technologies");
-	QCoreApplication::setOrganizationDomain("twobtech.com");
-	QCoreApplication::setApplicationName("DDX");
+	QCoreApplication::setOrganizationName(APP_AUTHOR_FULL);
+	QCoreApplication::setOrganizationDomain(APP_AUTHOR_DOMAIN);
+	QCoreApplication::setApplicationName(APP_NAME_UNTRANSLATABLE_SHORT);
 	QCoreApplication::setApplicationVersion(VERSION_FULL_TEXT);
 
 	Daemon daemon(&a);

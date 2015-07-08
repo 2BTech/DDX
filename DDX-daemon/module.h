@@ -177,14 +177,13 @@ public:
 	 * 
 	 * ### Settings Tree Format
 	 * The settings tree is a JSON object with a key of "A", "I", or "C"
-	 * depending on the type of element.  All objects, regardless of type, are
+	 * depending on the type of element.  All elements, regardless of type, are
 	 * required to have an "n" string, which is the unique name of the element.
-	 * All objects, regardless of type, can optionally have a "d" string, which
-	 * is a description.  Descriptions are translatable with tr(), but names
-	 * should remain consistent between platforms.  All elements retain their
-	 * order when reported back to init().
-	 * 
-	 * The tree can have any combination of the following elements:
+	 * When displayed in the GUI, underscores in names will be replaced with
+	 * spaces.  All elements, regardless of type, can optionally have a "d"
+	 * string, which is a description.  Descriptions are translatable with tr(),
+	 * but names should remain consistent between platforms.  The tree can have
+	 * any combination of the following elements:
 	 * - _Attribute_:  A string setting.  Attributes can have a "default"
 	 * string, otherwise the default will be an empty string.  When reported to
 	 * init(), they will be string members of their parent object with their
@@ -192,14 +191,82 @@ public:
 	 * - _Item_:  An element which can be duplicated and individually configured,
 	 * each with a unique name.  Items can have any number of subelements; any
 	 * element with an "A", "I", or "C" key after the "n" and "d" elements will
-	 * be listed as a subelement on each instance of an item.
-	 * - _Category_:  A purely aesthetic subgroup of elements.  Categories are
-	 * purely aesthetic.  Any element with an "A", "I", or "C" key after the "n"
-	 * and "d" elements will be listed as a subelement.  When reported to
-	 * init(), they will be objects with their name as a key and their
-	 * subelements as actual subelements.  When displayed in the configuration
-	 * GUI, any attributes directly under a category will be shown as attributes
-	 * of the category itself.
+	 * be listed as a subelement on each instance of an item.  When reported to
+	 * init(), items will have their user-assigned unique name as their key.
+	 * They will be objects with a "t" pair indicating the type, which will be
+	 * the item's "n" string.  Any subelements will follow the "t" pair.
+	 * - _Category_:  A purely aesthetic subgroup of elements.  Any element with
+	 * an "A", "I", or "C" key after the "n" and "d" elements will be listed as
+	 * a subelement.  When reported to init(), they will be objects with their
+	 * name as a key and their subelements as actual subelements.  When
+	 * displayed in the configuration GUI, any attributes directly under a
+	 * category will be shown as attributes of the category itself.
+	 * 
+	 * When reporting back to init(), all attributes will appear in declaration
+	 * order at the front of their parent category and all items will appear
+	 * following these attributes in the order they were instantiated by the
+	 * user.  A Module's instance is shown as the master category in the
+	 * configuration GUI, so attributes in the highest level will appear to be
+	 * attributes directly affecting the module (rather than a category or
+	 * item).
+	 * 
+	 * Here is an example of a settings tree:
+	 ~~~{.json}
+	 * {
+	 *   "Flow_Rate": {
+	 *     "t": "A",
+	 *     "d": "Sample flow rate in l/min",
+	 *     "default": "10"
+	 *   },
+	 *   "Analog_Inputs": {
+	 *     "t": "C",
+	 *     "d": "List any analog inputs here",
+	 *     "Voltage_AI": {
+	 *       "t": "I",
+	 *       "d": "A voltage-based analog input",
+	 *       "Max_Voltage": {
+	 *         "t": "A"
+	 *       },
+	 *       "Min_Voltage": {
+	 *         "t": "A"
+	 *       }
+	 *     },
+	 *     "Current_AI": {
+	 *       "t": "I",
+	 *       "d": "A current-based analog input",
+	 *       "Max_Current": {
+	 *         "t": "A"
+	 *       },
+	 *       "Min_Current": {
+	 *         "t": "A"
+	 *       }
+	 *     }
+	 *   }
+	 * }
+	 ~~~
+	 * And an example response:
+	 ~~~{.json}
+	 * {
+	 *   "Flow_Rate": "12",
+	 *   "Analog_Inputs": {
+	 *     "Temperature Sensor": {
+	 *       "t": "Voltage_AI",
+	 *       "Max_Voltage": "3.3",
+	 *       "Min_Voltage": "0"
+	 *     },
+	 *     "Power Meter": {
+	 *       "t": "Current_AI",
+	 *       "Max_Current": "20",
+	 *       "Min_Current": "0"
+	 *     },
+	 *     "Barometer": {
+	 *       "t": "Voltage_AI",
+	 *       "Max_Voltage": "2",
+	 *       "Min_Voltage": "1"
+	 *     }
+	 *   }
+	 * }
+	 ~~~
 	 */
 	virtual QJsonObject publishSettings();
 	

@@ -21,6 +21,25 @@
 Path::Path(QObject *parent) : QObject(parent)
 {
 	qDebug("PATH CONSTRUCTOR");
+	
+	/* From Module constructor
+	// Set name and register it
+	QJsonObject::const_iterator found = model.find("n");
+	if (found == model.end()) name = QString();
+	else name = found.value().toString();
+	if (name.isEmpty()) {
+		name = path->getDefaultModuleName();
+		alert(tr("Module of type '%1'' has no name specified, using '%2'")
+			  .arg(this->metaObject()->className(), name));
+	}
+	if ( ! path->registerModule(this, name)) {
+		QString oldName(name);
+		name = path->getDefaultModuleName();
+		alert(tr("Path has multiple modules with name '%1', using '%2'")
+			  .arg(oldName, name));
+		path->registerModule(this, name);
+	}
+	*/
 }
 
 Path::~Path()
