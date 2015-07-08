@@ -18,7 +18,7 @@
 
 #include "inlet.h"
 
-Inlet::Inlet(const QString name, Path *parent) : Module(name, parent)
+Inlet::Inlet(const QString *name, Path *parent) : Module(name, parent)
 {
 }
 

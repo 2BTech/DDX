@@ -42,8 +42,8 @@ class Path : public QObject
 {
 	Q_OBJECT
 public:
-	explicit Path(QObject *parent = 0);
-	~Path();
+	
+	explicit Path(bool test = false, QObject *parent = 0);
 	
 	/*!
 	 * \brief Retreive a Module pointer by name
@@ -52,19 +52,11 @@ public:
 	 */
 	Module* getModule(QString name);
 	
-	/*!
-	 * \brief Register a Module with this Path
-	 * \param m The Module
-	 * \param n Its name
-	 * \return True if successful, false if the Module name already exists
-	 * 
-	 * Adds the Module to the 
-	 */
-	bool registerModule(Module *m, QString n);
-	
 	QString getName() {return name;}
 	
 	QString getDefaultModuleName();
+	
+	~Path();
 	
 signals:
 	
@@ -74,6 +66,8 @@ public slots:
 private:
 	QList<Module*> *modules;
 	QString name;
+	bool inTestMode;
+	bool isRunning;
 };
-// TODO:  Allow paths to be "tested", where the inlet produces a default configuration and passes it through to see what errors come up
+
 #endif // PATH_H

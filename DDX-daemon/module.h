@@ -271,8 +271,7 @@ public:
 	 */
 	virtual QJsonObject publishSettings();
 	
-	explicit Module(const QString name, Path *parent);
-	~Module();
+	explicit Module(const QString *name, Path *parent);
 	
 	/*!
 	 * \brief Manages reconfiguration
@@ -285,13 +284,21 @@ public:
 	 * \brief Set pointer to external input columns (for Path linkage)
 	 * \param c The external input ::DataDef
 	 */
-	void setInputColumnsPtr(const DataDef *c) {inputColumns = c;}
+	inline void setInputColumnsPtr(const DataDef *c) {inputColumns = c;}
 	
 	/*!
 	 * \brief Get pointer to internal output columns (for Path linkage)
 	 * \return The internal output ::DataDef
 	 */
-	const DataDef* getOutputColumns() const {return outputColumns;}
+	inline const DataDef* getOutputColumns() const {return outputColumns;}
+	
+	/*!
+	 * \brief Get the Module's name (externally managed)
+	 * \return The Module's name
+	 */
+	inline QString getName() const {return QString(*name);}
+	
+	~Module();
 	
 signals:
 	// TODO:  Figure out a way to trigger reconfigures???  I haven't really thought about that yet
@@ -300,7 +307,6 @@ signals:
 	void sendAlert(QString msg) const;
 	
 protected:
-	QString name;
 	Path *path;
 	DataDef *outputColumns;  // Super owned, elements owned by newColumns and inputColumns
 	
@@ -323,7 +329,7 @@ protected:
 	 * found.  They must be managed with the pointer returned from
 	 * insertColumn().
 	 */
-	Column* findColumn(QString name) const;
+	Column* findColumn(const QString name) const;
 	
 	/*!
 	 * \brief Generate a new Column and add it to the output Columns
@@ -338,7 +344,7 @@ protected:
 	 * 
 	 * __Unsafe outside of reconfigure() or handleReconfigure()!__
 	 */
-	QString* insertColumn(QString name, int index);
+	QString* insertColumn(const QString name, int index);
 	
 	/*!
 	 * \brief Remove an output Column
@@ -352,6 +358,7 @@ protected:
 	void removeColumn(const Column *c);  // Unsafe outside of handleReconfigure();
 	
 private:
+	const QString *name;
 	
 	/*!
 	 * \brief Pointer to external input columns

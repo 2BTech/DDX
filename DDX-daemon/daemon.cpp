@@ -93,8 +93,8 @@ void Daemon::init() {
 	// Try connecting to instruments
 	
 	log("Starting path");
-	testpath = new Path(this);
-	testpath->init();
+	//testpath = new Path(this);
+	//testpath->init();
 	log("Ending path");
 	
 }

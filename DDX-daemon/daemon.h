@@ -40,9 +40,11 @@ class Daemon : public QObject
 	Q_OBJECT
 public:
 	explicit Daemon(QObject *parent = 0);
+	
 	~Daemon();
 	
 	QStringList args;
+	
 	QSettings *settings;
 
 signals:
