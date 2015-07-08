@@ -18,7 +18,7 @@
 
 #include "inlet.h"
 
-Inlet::Inlet(const QString *model, Path *parent) : Module(model, parent)
+Inlet::Inlet(const QJsonObject model, Path *parent) : Module(model, parent)
 {
 }
 

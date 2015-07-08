@@ -46,19 +46,19 @@ public:
 	virtual void initialReconfigure();
 	
 	/*!
-	 * \brief Determines if the stream is synchronous or asynchronous
+	 * \brief Determines whether the stream is synchronous or asynchronous
 	 * \return True if synchronous, false if asynchronous
 	 */
 	virtual bool isSynchronous() const;
 	
 	/*!
-	 * \brief Determines if the stream is finite or continuous
+	 * \brief Determines whether the stream is finite or continuous
 	 * \return True if finite, false if continuous
 	 */
 	virtual bool isFinite() const;
 	
 	
-	explicit Inlet(const QString *model, Path *parent = 0);
+	explicit Inlet(const QJsonObject model, Path *parent = 0);
 	~Inlet();
 	
 signals:

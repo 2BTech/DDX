@@ -85,15 +85,4 @@ private:
 	Path *testpath;
 };
 
-
-/* TODO: Add comments in this file on the error-handling philosophy.
- * # Error Handling
-	 * There are a handful of solutions for managing errors without interrupting
-	 * data flow.  Noncritical Modules can simply pass data through untouched.
-	 * Critical modules whose actions can be postponed can insert a column with
-	 * the name `DDX:<modulename>:Passed` and set it to "ok" when successful and
-	 * anything besides that when unsuccessful, especially reasons why and data
-	 * which may be necessary to carry out the process later.  
- *
- */
 #endif // DAEMON_H

@@ -65,8 +65,22 @@ class Path;
  * 
  * ## %Module Settings
  * Modules can publish a tree of settings which must be configured by someone
- * prior to use.  Settings can be reported with publishSettings(), which returns
- * a QJsonObject with a specific format.  TODO: Finish
+ * prior to use.  Settings can be reported with publishSettings(), which records
+ * what settings this Module allows to be set.  Configured settings are passed
+ * into init().  See Path for information on how settings can be live-tested.
+ * 
+ * ## Error Handling
+ * The DDX philosophy on error handling is to report everything but never fail.
+ * All functions in this class and most others are forcibly failsafe in the
+ * sense that they do not have a way of halting execution.  This is done on
+ * purpose so as to prevent data loss because of software problems.  Care should
+ * be taken to ensure that code is bug-free by catching all possible problems,
+ * reporting them with alert(), and gracefully handling them.  Misconfigured
+ * settings should be reported in init() in the hopes they will be caught in
+ * Path tests.  Bad data structure should be reported and any necessary state
+ * saved in handleReconfigure() so that data can pass through process() without
+ * causing a crash.  process() should be able to deal with incorrect or missing
+ * data safely.  Inlets should buffer asynchronous data.
  * 
  * ## Module-Module Communication
  * Modules can communicate with each other with the use of Path::getModule() and
@@ -85,8 +99,14 @@ public:
 	 * is guaranteed to be called exactly once and prior to the first call to
 	 * handleReconfigure().  _This is a virtual function which must be
 	 * reimplemented._
+	 * 
+	 * ### Error Handling
+	 * See the Module class documentation for general information on error
+	 * handling.  This function should be designed to handle any possible
+	 * errors that occur without interrupting data flow.  Catch as many errors
+	 * as possible here.  Errors should be reported with alert().
 	 */
-	virtual void init(QJsonObject settings);
+	virtual void init(const QJsonObject settings);
 	
 	/*!
 	 * \brief Update to a new data structure
@@ -94,9 +114,8 @@ public:
 	 * This is called when data flow starts and subsequently when an upstream
 	 * Module reconfigures.  The code inside is responsible for updating
 	 * outgoing column structure and adding accessors to columns for
-	 * quick access in process().  This function must be failsafe; it can report
-	 * errors but cannot halt the data stream.  _This is a virtual function
-	 * which must be reimplemented._
+	 * quick access in process().  _This is a virtual function which must be
+	 * reimplemented._
 	 * 
 	 * ### Initial State
 	 * Prior to every call, previously inserted Columns are destroyed and the
@@ -110,12 +129,12 @@ public:
 	 * Column::buffer() to refer to the result in the future.
 	 * 
 	 * ### Error Handling
-	 * See daemon.h for the DDX philosophy on error handling.
-	 * 
-	 * This function should be designed to handle any possible errors that occur
-	 * without interrupting data flow.  Most errors should be caught in
-	 * handleReconfigure() rather than process() to prevent from overloading
-	 * Beacons during a data stream.  Errors should be reported with alert().
+	 * See the Module class documentation for general information on error
+	 * handling.  This function should be designed to handle any possible
+	 * errors that occur without interrupting data flow.  Most errors should be
+	 * caught in handleReconfigure() rather than process() to prevent from
+	 * overloading Beacons during a data stream.  Errors should be reported with
+	 * alert().
 	 */
 	virtual void handleReconfigure();
 	
@@ -132,12 +151,12 @@ public:
 	 * which must be reimplemented._
 	 * 
 	 * ### Error Handling
-	 * See daemon.h for the DDX philosophy on error handling.
-	 * 
-	 * Errors should be reported with alert().  This function should be designed
-	 * to handle any possible errors that occur without interrupting data flow.
-	 * Most errors should be caught in handleReconfigure() rather than process()
-	 * to prevent from overloading Beacons during a data stream.
+	 * See the Module class documentation for general information on error
+	 * handling.  This function should be designed to handle any possible
+	 * errors that occur without interrupting data flow.  Most errors should be
+	 * caught in handleReconfigure() rather than process() to prevent from
+	 * overloading Beacons during a data stream.  Errors should be reported with
+	 * alert().
 	 */
 	virtual void process();
 	
@@ -157,37 +176,34 @@ public:
 	 * \return The settings tree
 	 * 
 	 * ### Settings Tree Format
-	 * The settings tree can have any combination of the following elements:
-	 * - Attribute:  A string setting
-	 * - Item:  An element which can be duplicated and rearranged, each with a
-	 * unique name and its own elements
-	 * - Category:  A subgroup of elements
+	 * The settings tree is a JSON object with a key of "A", "I", or "C"
+	 * depending on the type of element.  All objects, regardless of type, are
+	 * required to have an "n" string, which is the unique name of the element.
+	 * All objects, regardless of type, can optionally have a "d" string, which
+	 * is a description.  Descriptions are translatable with tr(), but names
+	 * should remain consistent between platforms.  All elements retain their
+	 * order when reported back to init().
 	 * 
-	 * Every element is represented as a JSON object with a key of "A", "I", or
-	 * "C" depending on the type of element.  All objects, regardless of type,
-	 * are required to have an "n" string, which is the unique name of the
-	 * element.  All objects, regardless of type, can optionally have a "d"
-	 * string, which is a description.  Descriptions are translatable with tr(),
-	 * but names are not.  All elements retain their order when reported back to
-	 * init().  
-	 * 
-	 * #### Attributes
-	 * Attributes can have a "default" string, otherwise the default will be an
-	 * empty string.  When reported to init(), they will be string members of
-	 * their parent object with their name as the key.
-	 * 
-	 * #### Items
-	 * Items can be duplicated and and individually configured.
-	 * 
-	 * #### Categories
-	 * Categories are purely aesthetic.  Any element with an "A", "I", or "C"
-	 * key after the "n" and "d" elements will be listed as a subelement.  When
-	 * reported to init(), they will be objects with their name as a key and
-	 * their subelements as actual subelements.
+	 * The tree can have any combination of the following elements:
+	 * - _Attribute_:  A string setting.  Attributes can have a "default"
+	 * string, otherwise the default will be an empty string.  When reported to
+	 * init(), they will be string members of their parent object with their
+	 * name as the key.  Attributes may not have their own subelements.
+	 * - _Item_:  An element which can be duplicated and individually configured,
+	 * each with a unique name.  Items can have any number of subelements; any
+	 * element with an "A", "I", or "C" key after the "n" and "d" elements will
+	 * be listed as a subelement on each instance of an item.
+	 * - _Category_:  A purely aesthetic subgroup of elements.  Categories are
+	 * purely aesthetic.  Any element with an "A", "I", or "C" key after the "n"
+	 * and "d" elements will be listed as a subelement.  When reported to
+	 * init(), they will be objects with their name as a key and their
+	 * subelements as actual subelements.  When displayed in the configuration
+	 * GUI, any attributes directly under a category will be shown as attributes
+	 * of the category itself.
 	 */
 	virtual QJsonObject publishSettings();
 	
-	explicit Module(const QString *model, Path *parent = 0);
+	explicit Module(const QJsonObject model, Path *parent);
 	~Module();
 	
 	/*!
@@ -239,13 +255,13 @@ protected:
 	 * found.  They must be managed with the pointer returned from
 	 * insertColumn().
 	 */
-	const Column* findColumn(QString name) const;
+	Column* findColumn(QString name) const;
 	
 	/*!
 	 * \brief Generate a new Column and add it to the output Columns
 	 * \param name A unique, case-insensitive identifier
 	 * \param index Position index in the Module's output columns
-	 * \return Whether successful
+	 * \return A pointer to the created buffer (must be saved!) or 0
 	 * 
 	 * Generates a new column buffer, adds it to the Module's output columns,
 	 * and adds a reference to the accessor map.  This function will first

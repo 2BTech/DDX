@@ -18,7 +18,7 @@
 
 #include "module.h"
 
-void Module::init(QJsonObject settings) {
+void Module::init(const QJsonObject settings) {
 	alert("init() not reimplemented!");
 }
 
@@ -38,15 +38,31 @@ QJsonObject Module::publishSettings() {
 	return QJsonObject();
 }
 
-Module::Module(const QString *model, Path *parent) : QObject(parent)
+Module::Module(const QJsonObject model, Path *parent) : QObject(parent)
 {
-	// TODO
-	
 	path = parent;
-	/*if (parent->inherits("Path")) pathName = ((Path*) parent)->getPathName();
-	else pathName = QString(tr("[testing]"));*/
 	
-	// Call initializer
+	// Set name and register it
+	QJsonObject::const_iterator found = model.find("n");
+	if (found == model.end()) name = QString();
+	else name = found.value().toString();
+	if (name.isEmpty()) {
+		name = path->getDefaultModuleName();
+		alert(tr("Module of type '%1'' has no name specified, using '%2'")
+			  .arg(this->metaObject()->className(), name));
+	}
+	if ( ! path->registerModule(this, name)) {
+		QString oldName(name);
+		name = path->getDefaultModuleName();
+		alert(tr("Path has multiple modules with name '%1', using '%2'")
+			  .arg(oldName, name));
+		path->registerModule(this, name);
+	}
+	
+	// Call init
+	found = model.find("s");
+	if (found == model.end()) init(QJsonObject());
+	else (init(found.value().toObject()));
 }
 
 Module::~Module()
@@ -72,7 +88,7 @@ void Module::alert(QString msg) {
 	emit sendAlert(out);
 }
 
-const Column* Module::findColumn(QString name) const {
+Column *Module::findColumn(QString name) const {
 	for (int i = 0; i < outputColumns->size(); i++)
 		if (QString::compare(outputColumns->at(i)->n, name, Qt::CaseInsensitive) == 0)
 			return outputColumns->at(i);

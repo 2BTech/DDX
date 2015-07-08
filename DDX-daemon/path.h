@@ -52,7 +52,19 @@ public:
 	 */
 	Module* getModule(QString name);
 	
+	/*!
+	 * \brief Register a Module with this Path
+	 * \param m The Module
+	 * \param n Its name
+	 * \return True if successful, false if the Module name already exists
+	 * 
+	 * Adds the Module to the 
+	 */
+	bool registerModule(Module *m, QString n);
+	
 	QString getName() {return name;}
+	
+	QString getDefaultModuleName();
 	
 signals:
 	
@@ -60,6 +72,7 @@ public slots:
 	void init();
 	
 private:
+	QList<Module*> *modules;
 	QString name;
 };
 // TODO:  Allow paths to be "tested", where the inlet produces a default configuration and passes it through to see what errors come up
