@@ -31,17 +31,19 @@ class Path;
 /*!
  * \brief Manages the creation and configuration of Modules, Beacons, and Paths
  * 
- * ## Module and Beacon Registration
+ * ## %Module and %Beacon Registration
  * Modules and Beacons must be registered in order to be used.  Registration
  * entails these steps:
  * - Subclassing the parent class and putting it in its respective source folder
  * ([source root]/modules or [source root]/beacons)
- * - Adding an entry in the registerModules() or registerBeacons() function in
- * module_register.cpp or beacon_register.cpp (see the documentation on these
+ * - Adding an entry in the object registration function (see the documentation on these
  * functions for more specific instructions)
- * - Adding an entry in the getModuleList() or getBeaconList() function also in
- * module_register.cpp or beacon_register.cpp (see the documentation on these
+ *   - For Modules: registerModules() in modules/module_register.cpp
+ *   - For Beacons: registerBeacons() in beacons/beacon_register.cpp
+ * - Adding an entry in the metadata registration function (see the documentation on these
  * functions for more specific instructions)
+ *   - For Modules: getModuleList() in modules/module_register.cpp
+ *   - For Beacons: getBeaconList() in beacons/beacon_register.cpp
  * 
  * Failing to register your Modules and Beacons properly can cause them to not
  * be seen by the UnitManager or can crash the application.

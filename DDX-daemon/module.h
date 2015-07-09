@@ -85,6 +85,10 @@ class Path;
  * ## Module-Module Communication
  * Modules can communicate with each other with the use of Path::getModule() and
  * Column#p, although the former is recommended over the latter.
+ * 
+ * ## %Module Registration
+ * Modules must be properly registered before you can use them.  Registration
+ * instructions are documented with UnitManager.
  */
 class Module : public QObject
 {
