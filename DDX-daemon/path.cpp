@@ -22,7 +22,7 @@ Path::Path(Daemon *parent, const QByteArray model) : QObject(parent)
 {
 	ready = false;
 	running = false;
-	this->model = model;
+	//this->model = model;
 	
 	connect(this, &Path::sendAlert, parent, &Daemon::receiveAlert);
 	

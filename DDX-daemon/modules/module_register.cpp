@@ -16,30 +16,28 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#include "unitmanager.h"
-#include "modules/module_register.cpp"
+#ifndef MODULE_REGISTER_CPP
+#define MODULE_REGISTER_CPP
 
-UnitManager::UnitManager(Daemon *parent) : QObject(parent)
-{
-	QList<QMetaObject> units;
-	// Load Modules
-	units = registerModules();
-	for (int i=0; i < units.size(); i++)
-		modules->insert(QString::fromLatin1(units.at(i).className()),
-						units.at(i));
+#include "../module.h"
+
+#include "genmod.h"
+
+QList<QMetaObject> UnitManager::registerModules() {
+	QList<QMetaObject> m;
 	
-}
-
-UnitManager::~UnitManager()
-{
+	// List all Modules here
+	m.append(GenMod::staticMetaObject);
 	
+	return m;
 }
 
-bool UnitManager::doesModuleExist(const QString type) const {
-	return modules->contains(type);
+QJsonObject UnitManager::getModuleList() const {
+	QJsonObject l;
+	
+	l.insert("GenMod", tr("General modifications (TODO)"));
+	
+	return l;
 }
 
-Module* UnitManager::constructModule(const QString type, Path *parent, const QString name) const {
-	return (Module*) modules->value(type).newInstance(Q_ARG(Path*, parent),
-													  Q_ARG(QString, name));
-}
+#endif // MODULE_REGISTER_CPP

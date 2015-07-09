@@ -44,7 +44,9 @@ SOURCES += main.cpp \
     inlet.cpp \
     path.cpp \
     module.cpp \
-    unitmanager.cpp
+    unitmanager.cpp \
+    modules/genmod.cpp \
+    modules/module_register.cpp
 
 HEADERS += \
     ../DDX-gui/constants.h \
@@ -54,7 +56,8 @@ HEADERS += \
     path.h \
     module.h \
     data.h \
-    unitmanager.h
+    unitmanager.h \
+    modules/genmod.h
 
 DISTFILES += \
     DaemonCommandLineArguments.txt \

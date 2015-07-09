@@ -16,30 +16,5 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#include "unitmanager.h"
-#include "modules/module_register.cpp"
+#include "genmod.h"
 
-UnitManager::UnitManager(Daemon *parent) : QObject(parent)
-{
-	QList<QMetaObject> units;
-	// Load Modules
-	units = registerModules();
-	for (int i=0; i < units.size(); i++)
-		modules->insert(QString::fromLatin1(units.at(i).className()),
-						units.at(i));
-	
-}
-
-UnitManager::~UnitManager()
-{
-	
-}
-
-bool UnitManager::doesModuleExist(const QString type) const {
-	return modules->contains(type);
-}
-
-Module* UnitManager::constructModule(const QString type, Path *parent, const QString name) const {
-	return (Module*) modules->value(type).newInstance(Q_ARG(Path*, parent),
-													  Q_ARG(QString, name));
-}

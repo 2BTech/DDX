@@ -34,6 +34,7 @@
 #include "path.h"
 
 class Path;
+class UnitManager;
 
 /*!
  * \brief The main manager of the DDX
@@ -91,7 +92,7 @@ private:
 	
 	QTextStream *qout;  // stdout wrapper
 	
-	UnitManager *pm;
+	UnitManager *um;
 	
 	QSystemTrayIcon *trayIcon;
 	

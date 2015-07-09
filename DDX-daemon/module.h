@@ -242,6 +242,12 @@ public:
 	void reconfigure();
 	
 	/*!
+	 * \brief Retrieve Module description
+	 * \return The translated description
+	 */
+	virtual QString getDescription();
+	
+	/*!
 	 * \brief Set pointer to external input columns (for Path linkage)
 	 * \param c The external input ::DataDef
 	 */

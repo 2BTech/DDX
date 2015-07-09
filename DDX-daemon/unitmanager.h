@@ -20,22 +20,86 @@
 #define UNITMANAGER_H
 
 #include <QObject>
+#include <QJsonObject>
+#include "module.h"
 #include "daemon.h"
 
 class Daemon;
+class Module;
+class Path;
 
+/*!
+ * \brief Manages the creation and configuration of Modules, Beacons, and Paths
+ * 
+ * ## Module and Beacon Registration
+ * Modules and Beacons must be registered in order to be used.  Registration
+ * entails these steps:
+ * - Subclassing the parent class and putting it in its respective source folder
+ * ([source root]/modules or [source root]/beacons)
+ * - Adding an entry in the registerModules() or registerBeacons() function in
+ * module_register.cpp or beacon_register.cpp (see the documentation on these
+ * functions for more specific instructions)
+ * - Adding an entry in the getModuleList() or getBeaconList() function also in
+ * module_register.cpp or beacon_register.cpp (see the documentation on these
+ * functions for more specific instructions)
+ * 
+ * Failing to register your Modules and Beacons properly can cause them to not
+ * be seen by the UnitManager or can crash the application.
+ */
 class UnitManager : public QObject
 {
 	Q_OBJECT
 public:
 	
-	explicit UnitManager(Daemon *parent = 0);
+	explicit UnitManager(Daemon *parent);
 	
 	~UnitManager();
+	
+	/*!
+	 * \brief Check that a Module type exists
+	 * \param type The name of the Module subclass
+	 * \return Whether it exists
+	 */
+	bool doesModuleExist(const QString type) const;
+	
+	/*!
+	 * \brief Instantiate a Module subclass
+	 * \param type Name of the Module subclass
+	 * \param parent Parent path; passed to Module constructor
+	 * \param name Module name; passed to Module constructor
+	 * \return An instance of a Module subclass
+	 * 
+	 * This function returns a pointer to an instance of a Module subclass.
+	 * Calling on a type which does not exist in the UnitManager's module list
+	 * is undefined behavior.
+	 */
+	Module* constructModule(const QString type, Path *parent, const QString name) const;
+	
+	/*!
+	 * \brief Get a list of Modules
+	 * \return JSON list of Modules and their translated descriptions
+	 * 
+	 * ## Registration Instructions
+	 * TODO
+	 */
+	QJsonObject getModuleList() const;
 	
 signals:
 	
 public slots:
+	
+private:
+	QHash<QString, QMetaObject> *modules;
+	QHash<QString, QMetaObject> *beacons;
+
+	/*!
+	 * \brief Register all Modules with UnitManager
+	 * \return The list of Modules to register
+	 * 
+	 * ## Registration Instructions
+	 * TODO
+	 */
+	QList<QMetaObject> registerModules();
 };
 
 #endif // UNITMANAGER_H

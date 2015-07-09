@@ -58,6 +58,10 @@ QJsonObject Module::publishSettings() {
 	return QJsonObject();  // Return no settings
 }
 
+QString Module::getDescription() {
+	return tr("Default Module description");
+}
+
 void Module::reconfigure() {
 	if (newColumns) emptyNewColumns();
 	*outputColumns = *inputColumns;
@@ -86,9 +90,9 @@ QString* Module::insertColumn(const QString name, int index) {
 
 void Module::removeColumn(const Column *c) {
 	// TODO:  Test whether this even works with pointers
-	outputColumns->removeAll(c);
+	outputColumns->removeAll((Column*) c);
 	if (c->p == this) {
-		newColumns->removeAll(c);
+		newColumns->removeAll((Column*) c);
 		delete c;
 	}
 }

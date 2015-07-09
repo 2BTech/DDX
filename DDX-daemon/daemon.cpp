@@ -107,6 +107,8 @@ void Daemon::init() {
 
 	// Load and unload the instrument specification file to test it
 
+	um = new UnitManager(this);
+	
 	// Look for open GUI instance
 
 	// Check for updates 
