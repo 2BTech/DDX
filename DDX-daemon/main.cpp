@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 
 	Daemon daemon(&a);
 
-	daemon.log("2B DDX " VERSION_FULL_TEXT);
+	daemon.log(APP_NAME_UNTRANSLATABLE " " VERSION_FULL_TEXT);
 
 	// Begin execution
 	QTimer::singleShot(0, &daemon, &Daemon::init);
