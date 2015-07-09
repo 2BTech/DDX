@@ -18,10 +18,11 @@
 
 #include "path.h"
 
-Path::Path(QObject *parent, bool test) : QObject(parent)
+Path::Path(Daemon *parent) : QObject(parent)
 {
-	inTestMode = test;
+	inTestMode = false;
 	isRunning = false;
+	connect(this, &Path::sendAlert, parent, &Daemon::receiveAlert);
 	/* From Module constructor
 	// Set name and register it
 	QJsonObject::const_iterator found = model.find("n");
@@ -60,6 +61,14 @@ Path::Path(QObject *parent, bool test) : QObject(parent)
 	*/
 }
 
+Path::~Path()
+{
+	// TODO
+	// Especially check if it's okay to call QThread::finished and QThread::quit
+	// more than once - if not, ensure that finished() is only emitted once
+	emit finished();
+}
+
 Module* Path::findModule(QString name) const {
 	// TODO
 	name = QString();
@@ -67,15 +76,31 @@ Module* Path::findModule(QString name) const {
 }
 
 void Path::init() {
-	
-}
-
-Path::~Path()
-{
-	
-}
-
-QString Path::getDefaultModuleName() {
 	// TODO
-	return QString();
+}
+
+void Path::start() {
+	// TODO
+}
+
+QString Path::getDefaultModuleName(const QString type) {
+	// TODO
+	int i = 0;
+	QString n;
+	do {
+		i++;
+		n = type;
+		n.append(QString::number(i));
+	} while (findModule(n));
+	return n;
+}
+
+void Path::alert(const QString msg, const Module *m) const {
+	// Start with Path name
+	QString out(name);
+	// Add Module name if applicable
+	if (m) out.append(":").append(m->getName());
+	// Append & send
+	out.append(": ").append(msg);
+	emit sendAlert(msg);
 }

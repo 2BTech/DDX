@@ -230,7 +230,7 @@ public:
 	 */
 	virtual QJsonObject publishSettings();
 	
-	explicit Module(QString name, Path *parent);
+	explicit Module(Path *parent, const QString name);
 	
 	~Module();
 	
@@ -263,7 +263,6 @@ signals:
 	// TODO:  Figure out a way to trigger reconfigures???  I haven't really thought about that yet
 	void triggerReconfigure();
 	void beacon(QStringList targets, QString msg) const;
-	void sendAlert(QString msg) const;
 	
 protected:
 	Path *path;
@@ -316,7 +315,7 @@ protected:
 	 * 
 	 * Alerts are tagged with the name of the Path and Module they come from.
 	 */
-	void alert(QString msg) const;
+	inline void alert(const QString msg) const;
 	
 	/*!
 	 * \brief Get a pointer to a specific input Column

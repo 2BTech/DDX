@@ -27,8 +27,12 @@
 #include <QSystemTrayIcon>	// Tray icon
 #include <QIcon>
 #include <QMenu>			// Tray icon
+#include <QThread>
+#include <QList>
 #include "../DDX-gui/constants.h"
 #include "path.h"
+
+class Path;
 
 /*!
  * \brief The main manager of the DDX
@@ -39,11 +43,11 @@ class Daemon : public QObject
 {
 	Q_OBJECT
 public:
-	explicit Daemon(QObject *parent = 0);
+	explicit Daemon(QCoreApplication *parent);
 	
 	~Daemon();
 	
-	void addPath();
+	void addPath(QByteArray *model);
 	
 	QStringList args;
 	
@@ -72,6 +76,8 @@ public slots:
 	 */
 	void init();
 	
+	void receiveAlert(QString msg);
+	
 	void log(const QVariant &msg);  // Print a low-info log message
 	
 	void quit(int returnCode=0);
@@ -84,6 +90,7 @@ private:
 	QTextStream *qout;  // stdout wrapper
 	QSystemTrayIcon *trayIcon;
 	QMenu *trayMenu;
+	QList<Path*> *paths;
 	
 	// TODO: Remove
 	Path *testpath;

@@ -57,7 +57,7 @@ public:
 	 */
 	virtual bool isFinite() const;
 	
-	explicit Inlet(const QString name, Path *parent = 0);
+	explicit Inlet(Path *parent, const QString name);
 	
 	~Inlet();
 	

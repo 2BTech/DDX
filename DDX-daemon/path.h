@@ -22,10 +22,12 @@
 #include <QObject>
 #include <QString>
 #include <QList>
+#include "daemon.h"
 #include "module.h"
 
 class Module;
 class Inlet;
+class Daemon;
 
 /*!
  * \brief A complete string of consecutive Modules which handles data lines
@@ -43,7 +45,9 @@ class Path : public QObject
 	Q_OBJECT
 public:
 	
-	explicit Path(QObject *parent = 0, bool test = false);
+	explicit Path(Daemon *parent);
+	
+	~Path();
 	
 	/*!
 	 * \brief Retreive a Module pointer by name via slow linear search
@@ -52,14 +56,27 @@ public:
 	 */
 	Module* findModule(QString name) const;
 	
+	/*!
+	 * \brief Echo a statement to all logging Beacons.
+	 * \param msg The message
+	 * \param m The Module from which it comes; ignore when writing Path alerts
+	 * 
+	 * Alerts are tagged with the name of the Path they come from.
+	 */
+	void alert(const QString msg, const Module *m = 0) const;
+	
 	QString getName() const {return name;}
 	
-	~Path();
+	bool isInTestMode() const {return inTestMode;}
 	
 signals:
+	void ready();
+	void finished();
+	void sendAlert(const QString msg) const;
 	
 public slots:
 	void init();
+	void start();
 	
 private:
 	QList<Module*> *modules;
@@ -67,7 +84,7 @@ private:
 	bool inTestMode;
 	bool isRunning;
 	
-	QString getDefaultModuleName();
+	QString getDefaultModuleName(const QString type);
 };
 
 #endif // PATH_H

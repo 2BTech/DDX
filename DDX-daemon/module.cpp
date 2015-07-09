@@ -18,7 +18,7 @@
 
 #include "module.h"
 
-Module::Module(QString name, Path *parent) : QObject(parent)
+Module::Module(Path *parent, const QString name) : QObject(parent)
 {
 	path = parent;
 	this->name = name;
@@ -64,12 +64,8 @@ void Module::reconfigure() {
 	handleReconfigure();
 }
 
-void Module::alert(QString msg) const {
-	QString out;
-	if (path) out.append(path->getName()).append(":");
-	out.append(this->getName()).append(": ");
-	out.append(msg);
-	emit sendAlert(out);
+inline void Module::alert(const QString msg) const {
+	path->alert(msg, this);
 }
 
 Column* Module::findColumn(const QString name) const {
