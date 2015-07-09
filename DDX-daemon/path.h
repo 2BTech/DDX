@@ -39,13 +39,16 @@ class Daemon;
  * users to test the structure of their configurations before a Path goes live.
  * The Module::init() and Module::handleReconfigure() functions should catch as
  * many errors as possible.
+ * 
+ * ## Threading Information
+ * Every Path runs in its own thread.
  */
 class Path : public QObject
 {
 	Q_OBJECT
 public:
 	
-	explicit Path(Daemon *parent);
+	explicit Path(Daemon *parent, const QByteArray model);
 	
 	~Path();
 	
@@ -67,10 +70,9 @@ public:
 	
 	QString getName() const {return name;}
 	
-	bool isInTestMode() const {return inTestMode;}
-	
 signals:
-	void ready();
+	void isReady() const;
+	void isRunning() const;
 	void finished();
 	void sendAlert(const QString msg) const;
 	
@@ -79,10 +81,12 @@ public slots:
 	void start();
 	
 private:
+	QJsonObject model;
 	QList<Module*> *modules;
+	Inlet *inlet;
 	QString name;
-	bool inTestMode;
-	bool isRunning;
+	bool running;
+	bool ready;
 	
 	QString getDefaultModuleName(const QString type);
 };

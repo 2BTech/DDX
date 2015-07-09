@@ -86,9 +86,9 @@ QString* Module::insertColumn(const QString name, int index) {
 
 void Module::removeColumn(const Column *c) {
 	// TODO:  Test whether this even works with pointers
-	outputColumns->removeAll((Column*) c);
+	outputColumns->removeAll(c);
 	if (c->p == this) {
-		newColumns->removeAll((Column*) c);
+		newColumns->removeAll(c);
 		delete c;
 	}
 }

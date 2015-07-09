@@ -21,7 +21,7 @@
 
 #include <QObject>
 #include <QTextStream>  // For outputting to stdout
-#include <QCoreApplication>  // For loading command line arguments
+#include <QCoreApplication>
 #include <QDateTime>
 #include <QSettings>
 #include <QSystemTrayIcon>	// Tray icon
@@ -30,6 +30,7 @@
 #include <QThread>
 #include <QList>
 #include "../DDX-gui/constants.h"
+#include "unitmanager.h"
 #include "path.h"
 
 class Path;
@@ -38,6 +39,10 @@ class Path;
  * \brief The main manager of the DDX
  * 
  * Instantiating this class and calling init() will begin DDX operation.
+ * 
+ * ## Thread Structure
+ * In addition to the Daemon's primary thread, every Path and Beacon gets a
+ * thread to itself.
  */
 class Daemon : public QObject
 {
@@ -47,7 +52,7 @@ public:
 	
 	~Daemon();
 	
-	void addPath(QByteArray *model);
+	void addPath(QByteArray model);
 	
 	QStringList args;
 	
@@ -81,19 +86,22 @@ public slots:
 	void log(const QVariant &msg);  // Print a low-info log message
 	
 	void quit(int returnCode=0);
-	// TODO: void report(const QVariant &msg);  // Send a message which should be saved to disk or inserted into the data log somehow
-	// TODO: void notify(const QVariant &msg);  // Pump out a desktop notification and/or email notification (See snorenotify)
 
 private:
-	void loadDefaultSettings();
-	void setupService();
+	
 	QTextStream *qout;  // stdout wrapper
+	
+	UnitManager *pm;
+	
 	QSystemTrayIcon *trayIcon;
+	
 	QMenu *trayMenu;
+	
 	QList<Path*> *paths;
 	
-	// TODO: Remove
-	Path *testpath;
+	void loadDefaultSettings();
+	
+	void setupService();
 };
 
 #endif // DAEMON_H

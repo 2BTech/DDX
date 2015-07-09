@@ -16,56 +16,26 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#ifndef INLET_H
-#define INLET_H
+#ifndef UNITMANAGER_H
+#define UNITMANAGER_H
 
 #include <QObject>
-#include "module.h"
+#include "daemon.h"
 
-/*!
- * \brief A Path's first Module, responsible for producing data lines
- */
-class Inlet : public Module
+class Daemon;
+
+class UnitManager : public QObject
 {
 	Q_OBJECT
 public:
 	
-	/*!
-	 * \brief Configure the Inlet for operation
-	 * \param settings The JSON settings tree
-	 * 
-	 * TODO
-	 */
-	virtual void init(QJsonObject settings);
+	explicit UnitManager(Daemon *parent = 0);
 	
-	/*!
-	 * \brief Trigger the initial reconfigure
-	 * 
-	 * TODO
-	 */
-	virtual void initialReconfigure();
+	~UnitManager();
 	
-	/*!
-	 * \brief Determines whether the stream is synchronous or asynchronous
-	 * \return True if synchronous, false if asynchronous
-	 */
-	virtual bool isSynchronous() const;
+signals:
 	
-	/*!
-	 * \brief Determines whether the stream is finite or continuous
-	 * \return True if finite, false if continuous
-	 */
-	virtual bool isFinite() const;
-	
-	virtual void start();
-	
-	explicit Inlet(Path *parent, const QString name);
-	
-	~Inlet();
-	
-private:
-	void handleReconfigure() {}
-	void process() {}
+public slots:
 };
 
-#endif // INLET_H
+#endif // UNITMANAGER_H

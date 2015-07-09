@@ -18,47 +18,14 @@
 
 #include "path.h"
 
-Path::Path(Daemon *parent) : QObject(parent)
+Path::Path(Daemon *parent, const QByteArray model) : QObject(parent)
 {
-	inTestMode = false;
-	isRunning = false;
+	ready = false;
+	running = false;
+	this->model = model;
+	
 	connect(this, &Path::sendAlert, parent, &Daemon::receiveAlert);
-	/* From Module constructor
-	// Set name and register it
-	QJsonObject::const_iterator found = model.find("n");
-	if (found == model.end()) name = QString();
-	else name = found.value().toString();
-	if (name.isEmpty()) {
-		name = path->getDefaultModuleName();
-		alert(tr("Module of type '%1'' has no name specified, using '%2'")
-			  .arg(this->metaObject()->className(), name));
-	}
-	if ( ! path->registerModule(this, name)) {
-		QString oldName(name);
-		name = path->getDefaultModuleName();
-		alert(tr("Path has multiple modules with name '%1', using '%2'")
-			  .arg(oldName, name));
-		path->registerModule(this, name);
-	}
 	
-	
-	
--	t2 = new QThread(this);		
--	qDebug("Initiating Inlet");		
--	in = new Inlet();		
--	in->moveToThread(t1);		
--	in->init();		
--	qDebug("Initiating Outlet");		
--	out = new Outlet();		
--	out->moveToThread(t2);		
--	out->init();		
--			
--	connect(t2, SIGNAL(started()), out, SLOT(run()));		
--	connect(out, SIGNAL(finished()), t2, SLOT(quit()));		
--	connect(out, SIGNAL(finished()), out, SLOT(deleteLater()));		
--	connect(t2, SIGNAL(finished()), t2, SLOT(deleteLater()));		
--	t2->start();
-	*/
 }
 
 Path::~Path()
@@ -76,11 +43,28 @@ Module* Path::findModule(QString name) const {
 }
 
 void Path::init() {
-	// TODO
+	/* From Module constructor
+	// Set name and register it
+	QJsonObject::const_iterator found = model.find("n");
+	if (found == model.end()) name = QString();
+	else name = found.value().toString();
+	if (name.isEmpty()) {
+		name = path->getDefaultModuleName();
+		alert(tr("Module of type '%1'' has no name specified, using '%2'")
+			  .arg(this->metaObject()->className(), name));
+	}
+	if ( ! path->registerModule(this, name)) {
+		QString oldName(name);
+		name = path->getDefaultModuleName();
+		alert(tr("Path has multiple modules with name '%1', using '%2'")
+			  .arg(oldName, name));
+		path->registerModule(this, name);
+	}
+	*/
 }
 
 void Path::start() {
-	// TODO
+	
 }
 
 QString Path::getDefaultModuleName(const QString type) {

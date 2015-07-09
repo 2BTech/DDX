@@ -266,6 +266,7 @@ signals:
 	
 protected:
 	Path *path;
+	
 	DataDef *outputColumns;  // Super owned, elements owned by newColumns and inputColumns
 	
 	/*!
@@ -315,7 +316,7 @@ protected:
 	 * 
 	 * Alerts are tagged with the name of the Path and Module they come from.
 	 */
-	inline void alert(const QString msg) const;
+	void alert(const QString msg) const;
 	
 	/*!
 	 * \brief Get a pointer to a specific input Column

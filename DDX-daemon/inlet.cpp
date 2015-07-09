@@ -46,3 +46,7 @@ bool Inlet::isFinite() const {
 	// TODO
 	return false;
 }
+
+void Inlet::start() {
+	alert("start() not reimplemented!");
+}

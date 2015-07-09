@@ -29,10 +29,10 @@ Daemon::~Daemon() {
 	// TODO
 }
 
-void Daemon::addPath(QByteArray *model) {
+void Daemon::addPath(QByteArray model) {
 	
 	QThread *t = new QThread(this);
-	Path *p = new Path(this);
+	Path *p = new Path(this, model);
 	paths->append(p);
 	p->moveToThread(t);
 	connect(t, &QThread::started, p, &Path::init);
@@ -121,8 +121,6 @@ void Daemon::init() {
 	// Try connecting to instruments
 	
 	log("Starting path");
-	//testpath = new Path(this);
-	//testpath->init();
 	log("Ending path");
 	
 }
@@ -153,7 +151,7 @@ void Daemon::loadDefaultSettings() {
 	settings->setValue("crash/LastShutdownSafe", false);
 	
 	settings->sync();
-	// TODO: Emit a "settings changed" signal
+	// TODO: restart Daemon?????
 }
 
 
