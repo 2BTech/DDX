@@ -18,3 +18,14 @@
 
 #include "genmod.h"
 
+/*GenMod::GenMod(Path *parent, const QString name) : Module(parent, name) {
+	
+}
+
+GenMod::~GenMod() {
+	
+}*/
+
+void GenMod::init(const QJsonObject settings) {
+	alert("Sucess!! genmod init() called.");
+}

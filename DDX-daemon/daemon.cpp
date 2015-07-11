@@ -17,6 +17,9 @@
  ******************************************************************************/
 
 #include "daemon.h"
+#include "unitmanager.h"
+#include "path.h"
+#include "modules/genmod.h"
 
 Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	// Load command line arguments
@@ -104,10 +107,13 @@ void Daemon::init() {
 	// Determine whether last instance shut down correctly
 	
 	// Check for other daemon instances
-
+	
 	// Load and unload the instrument specification file to test it
-
+	log("go");
+	GenMod *gm = new GenMod(0, QString("test"));
+log("um");
 	um = new UnitManager(this);
+	log("post um");
 	
 	// Look for open GUI instance
 
@@ -132,7 +138,6 @@ void Daemon::receiveAlert(QString msg) {
 	msg.prepend("a:");
 	log(msg);
 }
-
 
 void Daemon::loadDefaultSettings() {
 	log("Loading default settings");

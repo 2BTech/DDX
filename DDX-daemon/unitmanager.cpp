@@ -17,22 +17,33 @@
  ******************************************************************************/
 
 #include "unitmanager.h"
-#include "modules/module_register.cpp"
+#include "module.h"
+#include "daemon.h"
+#include "path.h"
+// TODO: Remove
+#include "modules/genmod.h"
 
 UnitManager::UnitManager(Daemon *parent) : QObject(parent)
 {
+	parent->log("1");
 	QList<QMetaObject> units;
+	parent->log("2");
 	// Load Modules
+	parent->log("3");
 	units = registerModules();
+	parent->log("4");
 	for (int i=0; i < units.size(); i++)
-		modules->insert(QString::fromLatin1(units.at(i).className()),
+		modules->insert(units.at(i).className(),
 						units.at(i));
-	
+	parent->log("5");
 }
 
 UnitManager::~UnitManager()
 {
-	
+	// TODO: iterate through these?
+	// Does delete work on pointers????
+	delete modules;
+	delete beacons;
 }
 
 bool UnitManager::doesModuleExist(const QString type) const {
@@ -42,4 +53,22 @@ bool UnitManager::doesModuleExist(const QString type) const {
 Module* UnitManager::constructModule(const QString type, Path *parent, const QString name) const {
 	return (Module*) modules->value(type).newInstance(Q_ARG(Path*, parent),
 													  Q_ARG(QString, name));
+}
+
+
+QList<QMetaObject> UnitManager::registerModules() {
+	QList<QMetaObject> m;
+	
+	// List all Modules here
+	m.append(GenMod::staticMetaObject);
+	
+	return m;
+}
+
+QJsonObject UnitManager::getModuleList() const {
+	QJsonObject l;
+	
+	l.insert("GenMod", tr("General modifications (TODO)"));
+	
+	return l;
 }

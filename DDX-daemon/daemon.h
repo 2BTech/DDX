@@ -30,8 +30,6 @@
 #include <QThread>
 #include <QList>
 #include "../DDX-gui/constants.h"
-#include "unitmanager.h"
-#include "path.h"
 
 class Path;
 class UnitManager;

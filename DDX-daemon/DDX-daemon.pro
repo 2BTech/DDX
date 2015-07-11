@@ -45,8 +45,7 @@ SOURCES += main.cpp \
     path.cpp \
     module.cpp \
     unitmanager.cpp \
-    modules/genmod.cpp \
-    modules/module_register.cpp
+    modules/genmod.cpp
 
 HEADERS += \
     ../DDX-gui/constants.h \

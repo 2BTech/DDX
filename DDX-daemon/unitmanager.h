@@ -21,11 +21,10 @@
 
 #include <QObject>
 #include <QJsonObject>
-#include "module.h"
-#include "daemon.h"
 
 class Daemon;
 class Module;
+class Inlet;
 class Path;
 
 /*!

@@ -17,6 +17,9 @@
  ******************************************************************************/
 
 #include "path.h"
+#include "daemon.h"
+#include "module.h"
+#include "inlet.h"
 
 Path::Path(Daemon *parent, const QByteArray model) : QObject(parent)
 {

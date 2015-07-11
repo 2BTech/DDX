@@ -19,13 +19,19 @@
 #ifndef GENMOD_H
 #define GENMOD_H
 
+#include <QObject>
 #include "module.h"
 
-class GenMod final : public Module
+class Path;
+
+class GenMod : public Module
 {
+	Q_OBJECT
 public:
-	
-	
+	using Module::Module;
+	//explicit GenMod(Path *parent, const QString name);
+	//~GenMod();
+	void init(const QJsonObject settings);
 };
 
 #endif // GENMOD_H

@@ -68,7 +68,7 @@ void Module::reconfigure() {
 	handleReconfigure();
 }
 
-inline void Module::alert(const QString msg) const {
+void Module::alert(const QString msg) const {
 	path->alert(msg, this);
 }
 

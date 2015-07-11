@@ -22,8 +22,7 @@
 #include <QObject>
 #include <QString>
 #include <QList>
-#include "daemon.h"
-#include "module.h"
+#include <QJsonObject>
 
 class Module;
 class Inlet;
