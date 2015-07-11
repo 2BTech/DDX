@@ -21,13 +21,13 @@
 #include "module.h"
 #include "inlet.h"
 
-Path::Path(const QByteArray model) : QObject(daemon)
+Path::Path(Daemon *parent, const QByteArray model) : QObject(parent)
 {
 	ready = false;
 	running = false;
 	//this->model = model;
 	
-	connect(this, &Path::sendAlert, daemon, &Daemon::receiveAlert);
+	connect(this, &Path::sendAlert, parent, &Daemon::receiveAlert);
 	
 }
 

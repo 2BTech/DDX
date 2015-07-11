@@ -48,9 +48,8 @@ class Path : public QObject
 {
 	Q_OBJECT
 public:
-	static Daemon* daemon;
 	
-	explicit Path(const QByteArray model);
+	explicit Path(Daemon *parent, const QByteArray model);
 	
 	~Path();
 	
