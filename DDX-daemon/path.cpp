@@ -21,13 +21,13 @@
 #include "module.h"
 #include "inlet.h"
 
-Path::Path(Daemon *parent, const QByteArray model) : QObject(parent)
+Path::Path(const QByteArray model) : QObject(daemon)
 {
 	ready = false;
 	running = false;
 	//this->model = model;
 	
-	connect(this, &Path::sendAlert, parent, &Daemon::receiveAlert);
+	connect(this, &Path::sendAlert, daemon, &Daemon::receiveAlert);
 	
 }
 
@@ -40,9 +40,24 @@ Path::~Path()
 }
 
 Module* Path::findModule(QString name) const {
-	// TODO
-	name = QString();
+	for (int i = 0; i < modules->size(); i++)
+		if (QString::compare(modules->at(i)->getName(), name, Qt::CaseInsensitive) == 0)
+			return modules->at(i);
 	return 0;
+}
+
+QJsonObject Path::publishSettings() const {
+	QJsonObject s;
+	for (int i = 0; i < modules->size(); i++)
+		s.insert(modules->at(i)->getName(), modules->at(i)->publishSettings());
+	return s;
+}
+
+QJsonObject Path::publishActions() const {
+	QJsonObject a;
+	for (int i = 0; i < modules->size(); i++)
+		a.insert(modules->at(i)->getName(), modules->at(i)->publishActions());
+	return a;
 }
 
 void Path::init() {
@@ -67,11 +82,18 @@ void Path::init() {
 }
 
 void Path::start() {
-	
+	if ( ! ready) {
+		alert(tr("Not ready"));
+		return;
+	}
+	// TODO
+}
+
+void Path::stop() {
+	// TODO
 }
 
 QString Path::getDefaultModuleName(const QString type) {
-	// TODO
 	int i = 0;
 	QString n;
 	do {

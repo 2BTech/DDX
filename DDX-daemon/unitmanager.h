@@ -100,7 +100,7 @@ private:
 	 * ## Registration Instructions
 	 * TODO
 	 */
-	QList<QMetaObject> registerModules();
+	void registerModules();
 };
 
 #endif // UNITMANAGER_H

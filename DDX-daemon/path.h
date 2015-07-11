@@ -40,14 +40,17 @@ class Daemon;
  * many errors as possible.
  * 
  * ## Threading Information
- * Every Path runs in its own thread.
+ * Every Path runs in its own thread.  Modules written to communicate across
+ * Paths must take this into account.  Furthermore, Beacons and some inlets
+ * will also be run in their own threads.
  */
 class Path : public QObject
 {
 	Q_OBJECT
 public:
+	static Daemon* daemon;
 	
-	explicit Path(Daemon *parent, const QByteArray model);
+	explicit Path(const QByteArray model);
 	
 	~Path();
 	
@@ -55,8 +58,14 @@ public:
 	 * \brief Retreive a Module pointer by name via slow linear search
 	 * \param name The name of the Module
 	 * \return Pointer to a Module, or 0 if none found 
+	 * 
+	 * Note that this is a case-insensitive search.
 	 */
 	Module* findModule(QString name) const;
+	
+	QJsonObject publishSettings() const;
+	
+	QJsonObject publishActions() const;
 	
 	/*!
 	 * \brief Echo a statement to all logging Beacons.
@@ -71,13 +80,17 @@ public:
 	
 signals:
 	void isReady() const;
+	
 	void isRunning() const;
+	
 	void finished();
+	
 	void sendAlert(const QString msg) const;
 	
 public slots:
 	void init();
 	void start();
+	void stop();
 	
 private:
 	QJsonObject model;

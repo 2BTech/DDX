@@ -54,8 +54,12 @@ void Module::process() {
 void Module::cleanup() {
 }
 
-QJsonObject Module::publishSettings() {
+QJsonObject Module::publishSettings() const {
 	return QJsonObject();  // Return no settings
+}
+
+QJsonObject Module::publishActions() const {
+	return QJsonObject();  // Return no actions
 }
 
 QString Module::getDescription() {

@@ -26,15 +26,7 @@
 UnitManager::UnitManager(Daemon *parent) : QObject(parent)
 {
 	parent->log("1");
-	QList<QMetaObject> units;
-	parent->log("2");
-	// Load Modules
-	parent->log("3");
-	units = registerModules();
-	parent->log("4");
-	for (int i=0; i < units.size(); i++)
-		modules->insert(units.at(i).className(),
-						units.at(i));
+	registerModules();
 	parent->log("5");
 }
 
@@ -56,13 +48,11 @@ Module* UnitManager::constructModule(const QString type, Path *parent, const QSt
 }
 
 
-QList<QMetaObject> UnitManager::registerModules() {
-	QList<QMetaObject> m;
+void UnitManager::registerModules() {
+	modules = new QHash<QString, QMetaObject>;
 	
 	// List all Modules here
-	m.append(GenMod::staticMetaObject);
-	
-	return m;
+	modules->insert("GenMod", GenMod::staticMetaObject);
 }
 
 QJsonObject UnitManager::getModuleList() const {

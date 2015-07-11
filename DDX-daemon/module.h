@@ -232,7 +232,9 @@ public:
 	 * }
 	 ~~~
 	 */
-	virtual QJsonObject publishSettings();
+	virtual QJsonObject publishSettings() const;
+	
+	virtual QJsonObject publishActions() const;
 	
 	explicit Module(Path *parent, const QString name);
 	
