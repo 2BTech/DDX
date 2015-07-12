@@ -61,7 +61,7 @@ public:
 	 * \param type The name of the Module subclass
 	 * \return Whether it exists
 	 */
-	bool doesModuleExist(const QString type) const;
+	inline bool doesModuleExist(const QString type) const;
 	
 	/*!
 	 * \brief Instantiate a Module subclass
@@ -90,6 +90,7 @@ signals:
 public slots:
 	
 private:
+	bool changed;
 	QHash<QString, QMetaObject> *modules;
 	QHash<QString, QMetaObject> *beacons;
 

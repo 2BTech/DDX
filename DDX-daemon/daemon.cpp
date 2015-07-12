@@ -109,11 +109,9 @@ void Daemon::init() {
 	// Check for other daemon instances
 	
 	// Load and unload the instrument specification file to test it
-	log("go");
-	GenMod *gm = new GenMod(0, QString("test"));
-	log("um");
 	um = new UnitManager(this);
-	log("post um");
+	Path *p = new Path(this, QByteArray());
+	GenMod *gm = new GenMod(p, QString("test"));
 	
 	// Look for open GUI instance
 
@@ -145,14 +143,23 @@ void Daemon::loadDefaultSettings() {
 	settings->setValue("SettingsResetOn",
 					   QDateTime::currentDateTime().toString("yyyy/MM/dd HH:mm:ss"));
 	
+	// Paths
+	// Paths must be terminated by a '/'
+	// TODO
+	settings->setValue("paths/configPath", "/");
+	
 	// Logging
 	settings->setValue("logging/AlwaysLogToFile", false);
 	
 	// Locale
+	// TODO: Remove these
 	settings->setValue("locale/DaemonStringsRequired", true);
 	settings->setValue("locale/Quit", "Quit");
 	settings->setValue("locale/StreamOkay", "OK");
 	settings->setValue("locale/StreamError", "Error!");
+	
+	// Unit Management
+	settings->setValue("units/unitFile", "units.json");
 	
 	// Crash checking
 	settings->setValue("crash/LastShutdownSafe", false);

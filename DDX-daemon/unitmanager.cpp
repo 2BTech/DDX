@@ -25,9 +25,12 @@
 
 UnitManager::UnitManager(Daemon *parent) : QObject(parent)
 {
-	parent->log("1");
+	modules = new QHash<QString, QMetaObject>;
 	registerModules();
-	parent->log("5");
+	beacons = new QHash<QString, QMetaObject>;
+	changed = false;
+	QString unitsFileName = parent->settings->value("paths/configPath").toString();
+	unitsFileName.append(parent->settings->value("units/unitFile").toString());
 }
 
 UnitManager::~UnitManager()
@@ -38,7 +41,7 @@ UnitManager::~UnitManager()
 	delete beacons;
 }
 
-bool UnitManager::doesModuleExist(const QString type) const {
+inline bool UnitManager::doesModuleExist(const QString type) const {
 	return modules->contains(type);
 }
 
@@ -49,8 +52,6 @@ Module* UnitManager::constructModule(const QString type, Path *parent, const QSt
 
 
 void UnitManager::registerModules() {
-	modules = new QHash<QString, QMetaObject>;
-	
 	// List all Modules here
 	modules->insert("GenMod", GenMod::staticMetaObject);
 }
