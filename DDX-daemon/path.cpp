@@ -23,12 +23,13 @@
 
 Path::Path(Daemon *parent, const QByteArray model) : QObject(parent)
 {
-	ready = false;
-	running = false;
-	//this->model = model;
+	isReady = false;
+	isRunning = false;
+	rawModel = model;
 	
 	connect(this, &Path::sendAlert, parent, &Daemon::receiveAlert);
-	
+	// TODO:  Check the validity of this
+	connect(this, &Path::finished, this, &Path::deleteLater);
 }
 
 Path::~Path()
@@ -61,47 +62,46 @@ QJsonObject Path::publishActions() const {
 }
 
 void Path::init() {
-	/* From Module constructor
+	// Parse model
+	QJsonParseError *pe;
+	model = QJsonDocument::fromJson(rawModel, pe);
+	if (pe->error != QJsonParseError::NoError) {
+		
+	}
+	
 	// Set name and register it
-	QJsonObject::const_iterator found = model.find("n");
-	if (found == model.end()) name = QString();
-	else name = found.value().toString();
-	if (name.isEmpty()) {
-		name = path->getDefaultModuleName();
-		alert(tr("Module of type '%1'' has no name specified, using '%2'")
-			  .arg(this->metaObject()->className(), name));
+	for (int i = 0; i < modules->size(); i++) {
+		QJsonObject::const_iterator found = model.find("n");
+		if (found == model.end()) name = QString();
+		else name = found.value().toString();
+		if (name.isEmpty()) {
+			name = path->getDefaultModuleName();
+			alert(tr("Module of type '%1' has no name specified, using '%2'")
+				  .arg(this->metaObject()->className(), name));
+		}
+		if ( ! path->registerModule(this, name)) {
+			QString oldName(name);
+			name = path->getDefaultModuleName();
+			alert(tr("Path has multiple modules with name '%1', using '%2'")
+				  .arg(oldName, name));
+			path->registerModule(this, name);
+		}
 	}
-	if ( ! path->registerModule(this, name)) {
-		QString oldName(name);
-		name = path->getDefaultModuleName();
-		alert(tr("Path has multiple modules with name '%1', using '%2'")
-			  .arg(oldName, name));
-		path->registerModule(this, name);
-	}
-	*/
+	emit ready();
 }
 
 void Path::start() {
-	if ( ! ready) {
-		alert(tr("Not ready"));
+	if ( ! isReady) {
+		alert(tr("Path started before it was ready"));
 		return;
 	}
 	// TODO
+	emit running();
 }
 
 void Path::stop() {
 	// TODO
-}
-
-QString Path::getDefaultModuleName(const QString type) {
-	int i = 0;
-	QString n;
-	do {
-		i++;
-		n = type;
-		n.append(QString::number(i));
-	} while (findModule(n));
-	return n;
+	emit finished();
 }
 
 void Path::alert(const QString msg, const Module *m) const {

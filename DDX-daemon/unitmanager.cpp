@@ -52,13 +52,16 @@ Module* UnitManager::constructModule(const QString type, Path *parent, const QSt
 
 
 void UnitManager::registerModules() {
-	// List all Modules here
+	// List all Modules here (1 of 2)
+	// modules->insert("ExampleModule", ExampleModule::staticMetaObject);
 	modules->insert("GenMod", GenMod::staticMetaObject);
 }
 
 QJsonObject UnitManager::getModuleList() const {
 	QJsonObject l;
 	
+	// List all Modules here (2 of 2)
+	// l.insert("ExampleModule", tr("Example description"));
 	l.insert("GenMod", tr("General modifications (TODO)"));
 	
 	return l;

@@ -22,6 +22,7 @@
 #include <QObject>
 #include <QString>
 #include <QList>
+#include <QJsonDocument>
 #include <QJsonObject>
 
 class Module;
@@ -78,11 +79,11 @@ public:
 	QString getName() const {return name;}
 	
 signals:
-	void isReady() const;
+	void ready() const;
 	
-	void isRunning() const;
+	void running() const;
 	
-	void finished();
+	void finished() const;
 	
 	void sendAlert(const QString msg) const;
 	
@@ -92,14 +93,13 @@ public slots:
 	void stop();
 	
 private:
+	QByteArray rawModel;
 	QJsonObject model;
 	QList<Module*> *modules;
 	Inlet *inlet;
 	QString name;
-	bool running;
-	bool ready;
-	
-	QString getDefaultModuleName(const QString type);
+	bool isRunning;
+	bool isReady;
 };
 
 #endif // PATH_H
