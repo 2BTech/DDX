@@ -22,14 +22,14 @@
 #include "inlet.h"
 #include "unitmanager.h"
 
-Path::Path(Daemon *parent, const QString name, const QByteArray model) : QObject(parent)
+Path::Path(Daemon *parent, const QString name) : QObject(parent)
 {
 	this->name = name;
 	daemon = parent;
 	isReady = false;
 	isRunning = false;
-	this->model = model;
 	lastInitIndex = 0;
+	modules = new QList<Module*>;
 	
 	connect(this, &Path::sendAlert, parent, &Daemon::receiveAlert);
 	// TODO:  Check the validity of this
@@ -64,30 +64,43 @@ QJsonObject Path::publishActions() const {
 }
 
 void Path::init() {
-	// Parse model
-	QJsonParseError pe;
-	QJsonDocument modelDoc = QJsonDocument::fromJson(model, &pe);
+	// Ensure there's a UnitManager
+	UnitManager *um = daemon->um;
+	if ( ! um) um = new UnitManager(daemon);
+	
+	// Get scheme
+	QByteArray scheme = um->getPathScheme(name);
 #ifdef PATH_PARSING_CHECKS
-	if (pe.error != QJsonParseError::NoError) {
-		alert(tr("Model failed to parse, reported: '%1'").arg(pe.errorString()));
+	if (scheme.isEmpty()) {
+		alert(tr("There is no scheme for a Path named '%1'").arg(name));
 		terminate();
 		return;
 	}
-	if ( ! modelDoc.isArray()) {
-		alert(tr("Model is not a JSON array"));
+#endif
+	// Parse scheme
+	QJsonParseError pe;
+	QJsonDocument schemeDoc = QJsonDocument::fromJson(scheme, &pe);
+#ifdef PATH_PARSING_CHECKS
+	if (pe.error != QJsonParseError::NoError) {
+		alert(tr("Scheme failed to parse, reported: '%1'").arg(pe.errorString()));
+		terminate();
+		return;
+	}
+	if ( ! schemeDoc.isArray()) {
+		alert(tr("Scheme is not a JSON array"));
 		terminate();
 		return;
 	}
 	QStringList moduleNameList;  // For duplicate checking in loop below
 #endif
-	QJsonArray modelArray = modelDoc.array();
 	
 	// Instantiate and connect all constituent Modules
+	QJsonArray schemeArray = schemeDoc.array();
 	QJsonArray::const_iterator i;
-	for (i = modelArray.constBegin(); i != modelArray.constEnd(); i++) {
+	for (i = schemeArray.constBegin(); i != schemeArray.constEnd(); i++) {
 #ifdef PATH_PARSING_CHECKS
 		if ( ! i->isObject()) {
-			alert(tr("Model contains a member which is not a JSON object"));
+			alert(tr("Scheme contains a member which is not a JSON object"));
 			terminate();
 			return;
 		}
@@ -95,7 +108,7 @@ void Path::init() {
 		QJsonObject obj = i->toObject();
 #ifdef PATH_PARSING_CHECKS
 		if ( ! obj.contains("n") || ! obj.contains("t")) {
-			alert(tr("Model contains a member which does not have a name or type"));
+			alert(tr("Scheme contains a member which is missing a name or type"));
 			terminate();
 			return;
 		}
@@ -108,13 +121,14 @@ void Path::init() {
 			terminate();
 			return;
 		}
-		if ( ! daemon->um->moduleExists(t)) {
-			alert(tr("Model requests module of type '%1', which does not exist").arg(t));
+		moduleNameList.append(n);
+		if ( ! um->moduleExists(t)) {
+			alert(tr("Scheme requests module of type '%1', which does not exist").arg(t));
 			terminate();
 			return;
 		}
 #endif
-		
+		modules->append(um->constructModule(t, this, n));
 		
 		
 		
@@ -161,7 +175,6 @@ void Path::init() {
 		lastInitIndex++;
 	}*/
 	emit ready();
-	model.clear();  // Save memory; we don't need this anymore
 	alert("finished init");
 }
 
@@ -181,17 +194,18 @@ void Path::stop() {
 
 void Path::cleanup() {
 	// TODO
-	for (int i = 0; i < modules->size(); i++)
+	for (int i = 0; i < lastInitIndex; i++)
 		modules->at(i)->cleanup();
+	for (int i = 0; i < modules->size(); i++)
+		delete modules->at(i);
+	delete modules;
+	// TODO: remove
 	emit readyForDeletion();
 }
 
 void Path::terminate() {
 	alert(tr("This is fatal; terminating path"));
-	for (int i = 0; i < lastInitIndex; i++)
-		modules->at(i)->cleanup();
-	emit readyForDeletion();
-	return;
+	cleanup();
 }
 
 void Path::alert(const QString msg, const Module *m) const {

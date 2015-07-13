@@ -32,10 +32,10 @@ Daemon::~Daemon() {
 	// TODO
 }
 
-void Daemon::addPath(QString name, QByteArray model) {
+void Daemon::addPath(QString name, QByteArray scheme) {
 	
 	QThread *t = new QThread(this);
-	Path *p = new Path(this, name, model);
+	Path *p = new Path(this, name);
 	paths->append(p);
 	p->moveToThread(t);
 	connect(t, &QThread::started, p, &Path::init);
@@ -110,7 +110,7 @@ void Daemon::init() {
 	
 	// Load and unload the instrument specification file to test it
 	um = new UnitManager(this);
-	Path *p = new Path(this, "testPATH", QByteArray());
+	Path *p = new Path(this, "testPATH");
 	GenMod *gm = new GenMod(p, QString("test"));
 	
 	

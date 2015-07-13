@@ -21,6 +21,7 @@
 
 #include <QObject>
 #include <QJsonObject>
+#include <QReadWriteLock>
 
 class Daemon;
 class Module;
@@ -56,6 +57,19 @@ public:
 	
 	~UnitManager();
 	
+	QByteArray getPathScheme(QString name) const;
+	
+	/*!
+	 * \brief Tests the validity of a Path scheme
+	 * \param scheme The scheme to be tested
+	 * \return An error string or null QString if there was no error
+	 * 
+	 * This is a slow, heavy-duty verification function which attempts to catch
+	 * scheme formatting errors that could lead to a crash but which aren't
+	 * necessary during most DDX standard operation.
+	 */
+	QString verifyPathScheme(const QByteArray scheme);
+	
 	/*!
 	 * \brief Check that a Module type exists
 	 * \param type The name of the Module subclass
@@ -90,6 +104,7 @@ signals:
 public slots:
 	
 private:
+	static QReadWriteLock configFileLock;
 	bool changed;
 	QHash<QString, QMetaObject> *modules;
 	QHash<QString, QMetaObject> *beacons;

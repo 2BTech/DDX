@@ -28,6 +28,7 @@
 class Module;
 class Inlet;
 class Daemon;
+class UnitManager;
 
 /*!
  * \brief A complete string of consecutive Modules which handles data lines
@@ -42,15 +43,16 @@ class Daemon;
  * 
  * ## Threading Information
  * Every Path runs in its own thread.  Modules written to communicate across
- * Paths must take this into account.  Furthermore, Beacons and some inlets
- * will also be run in their own threads.
+ * Paths must take this into account.  Beacns will also be run in their own
+ * threads.  Any Module can start its own thread, but all functions called by a
+ * Path assume synchronicity.
  */
 class Path : public QObject
 {
 	Q_OBJECT
 public:
 	
-	explicit Path(Daemon *parent, const QString name, const QByteArray model);
+	explicit Path(Daemon *parent, const QString name);
 	
 	~Path();
 	
@@ -66,6 +68,8 @@ public:
 	QJsonObject publishSettings() const;
 	
 	QJsonObject publishActions() const;
+	
+	void terminate();
 	
 	/*!
 	 * \brief Echo a statement to all logging Beacons.
@@ -103,12 +107,12 @@ signals:
 	
 public slots:
 	/*!
-	 * Parse model and Module::init() constituents
+	 * Parse scheme and Module::init() constituents
 	 * 
 	 * Note: Daemon::um _must_ be valid while this method runs!
 	 * 
 	 * ### Parsing
-	 * The model is parsed.  
+	 * The scheme is parsed.  
 	 */
 	void init();
 	void start();
@@ -116,18 +120,10 @@ public slots:
 	void cleanup();  // Or shutdown?
 	
 protected:
-	void terminate();
 	
 private:
 	//! This Path's name (not editable after construction)
 	QString name;
-	
-	/*!
-	 * \brief The raw model JSON passed into the constructor.
-	 * 
-	 * To save memory, this is cleared after the model is parsed.
-	 */
-	QByteArray model;
 	
 	//! The ordered Module list
 	QList<Module*> *modules;
