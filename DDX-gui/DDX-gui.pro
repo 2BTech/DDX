@@ -36,7 +36,7 @@ SOURCES += main.cpp\
         mainwindow.cpp
 
 HEADERS  += mainwindow.h \
-    constants.h \
+    ../DDX-daemon/constants.h \
     ../NoGit/private_constants.h
 
 DISTFILES += \

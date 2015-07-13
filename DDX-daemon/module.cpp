@@ -22,14 +22,15 @@ Module::Module(Path *parent, const QString name) : QObject(parent)
 {
 	path = parent;
 	this->name = name;
-	/* This is safe to instantiate in the constructor because it has no events.
-	 * Moving a Module to a separate thread should not harm anything. */
+	/* This is safe to instantiate in the constructor because it is only a data
+	 * class.  Moving a Module to a separate thread should not harm anything. */
 	outputColumns = new DataDef();
 	newColumns = 0;
 }
 
 Module::~Module()
 {
+	alert("MODULE DESTROYED");
 	delete outputColumns;
 	if (newColumns) {
 		emptyNewColumns();
@@ -46,7 +47,6 @@ void Module::handleReconfigure() {
 	alert("handleReconfigure() not reimplemented!");
 }
 
-
 void Module::process() {
 	alert("process() not reimplemented!");
 }
@@ -60,10 +60,6 @@ QJsonObject Module::publishSettings() const {
 
 QJsonObject Module::publishActions() const {
 	return QJsonObject();  // Return no actions
-}
-
-QString Module::getDescription() {
-	return tr("Default Module description");
 }
 
 void Module::reconfigure() {
@@ -93,7 +89,7 @@ QString* Module::insertColumn(const QString name, int index) {
 }
 
 void Module::removeColumn(const Column *c) {
-	// TODO:  Test whether this even works with pointers
+	// TODO:  Test whether removeAll even works with pointers
 	outputColumns->removeAll((Column*) c);
 	if (c->p == this) {
 		newColumns->removeAll((Column*) c);

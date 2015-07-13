@@ -113,6 +113,7 @@ void Daemon::init() {
 	Path *p = new Path(this, "testPATH", QByteArray());
 	GenMod *gm = new GenMod(p, QString("test"));
 	
+	
 	// Look for open GUI instance
 
 	// Check for updates 
@@ -127,6 +128,7 @@ void Daemon::init() {
 	// Try connecting to instruments
 	
 	log("Starting path");
+	p->init();
 	log("Ending path");
 	
 }

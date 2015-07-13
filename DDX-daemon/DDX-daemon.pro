@@ -48,7 +48,7 @@ SOURCES += main.cpp \
     modules/genmod.cpp
 
 HEADERS += \
-    ../DDX-gui/constants.h \
+    constants.h \
     ../NoGit/private_constants.h \
     daemon.h \
     inlet.h \

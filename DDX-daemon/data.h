@@ -23,15 +23,17 @@
 #include <QList>
 #include <QString>
 
+class Module;
+
 /*!
  * \brief Stores the contents of and metadata about a column as it resides in a stream
  */
 struct Column {
 	QString c;  //!< The column's actual data buffer
 	QString n; //!< The name and main identifier of the column as reported by its parent
-	QObject *p;  //!< A pointer to the column's parent, either a Module or Inlet
+	Module *p;  //!< A pointer to the column's parent Module
 	
-	Column(QString name, QObject *parent) {
+	Column(QString name, Module *parent) {
 		QString c;
 		QString n(name);
 		p = parent;

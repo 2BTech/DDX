@@ -28,7 +28,7 @@ class Inlet;
 class Path;
 
 /*!
- * \brief Manages the creation and configuration of Modules, Beacons, and Paths
+ * \brief Manages the instantiation and configuration of Modules, Beacons, and Paths
  * 
  * ## %Module and %Beacon Registration
  * Modules and Beacons must be registered in order to be used.  Registration
@@ -61,7 +61,7 @@ public:
 	 * \param type The name of the Module subclass
 	 * \return Whether it exists
 	 */
-	inline bool doesModuleExist(const QString type) const;
+	bool moduleExists(const QString type) const;
 	
 	/*!
 	 * \brief Instantiate a Module subclass

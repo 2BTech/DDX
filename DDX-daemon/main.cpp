@@ -19,7 +19,7 @@
 #include <QCoreApplication>
 #include <QTextStream>  // Temporary debug console output
 #include <QTimer>  // For calling init() after exec()
-#include "../DDX-gui/constants.h"
+#include "constants.h"
 #include "daemon.h"
 
 /*!

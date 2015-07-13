@@ -20,25 +20,26 @@
 #include "daemon.h"
 #include "module.h"
 #include "inlet.h"
+#include "unitmanager.h"
 
 Path::Path(Daemon *parent, const QString name, const QByteArray model) : QObject(parent)
 {
 	this->name = name;
+	daemon = parent;
 	isReady = false;
 	isRunning = false;
-	rawModel = model;
+	this->model = model;
+	lastInitIndex = 0;
 	
 	connect(this, &Path::sendAlert, parent, &Daemon::receiveAlert);
 	// TODO:  Check the validity of this
-	connect(this, &Path::finished, this, &Path::deleteLater);
+	connect(this, &Path::readyForDeletion, this, &Path::deleteLater);
 }
 
 Path::~Path()
 {
 	// TODO
-	// Especially check if it's okay to call QThread::finished and QThread::quit
-	// more than once - if not, ensure that finished() is only emitted once
-	emit finished();
+	alert("PATH DESTROYED");
 }
 
 Module* Path::findModule(QString name) const {
@@ -64,26 +65,81 @@ QJsonObject Path::publishActions() const {
 
 void Path::init() {
 	// Parse model
-	QJsonParseError *pe = 0;
-	QJsonDocument modelDoc = QJsonDocument::fromJson(rawModel, pe);
-	if (pe->error != QJsonParseError::NoError) {
-		alert(tr("Path model failed to parse, reported: '%1'").arg(pe->errorString()));
-		alert(tr("This is fatal; terminating path"));
-		// TODO:  Write up documentation to let it know that this can happen during init()
-		emit finished();
+	QJsonParseError pe;
+	QJsonDocument modelDoc = QJsonDocument::fromJson(model, &pe);
+#ifdef PATH_PARSING_CHECKS
+	if (pe.error != QJsonParseError::NoError) {
+		alert(tr("Model failed to parse, reported: '%1'").arg(pe.errorString()));
+		terminate();
 		return;
 	}
-	if ( ! modelDoc.isObject()) {
-		alert(tr("Path model is not a JSON object"));
-		alert(tr("This is fatal; terminating path"));
-		// TODO:  Write up documentation to let it know that this can happen during init()
-		emit finished();
+	if ( ! modelDoc.isArray()) {
+		alert(tr("Model is not a JSON array"));
+		terminate();
 		return;
 	}
-	model = modelDoc.object();
-	rawModel.clear();  // Save memory
+	QStringList moduleNameList;  // For duplicate checking in loop below
+#endif
+	QJsonArray modelArray = modelDoc.array();
 	
-	// TODO:  Make it so that 
+	// Instantiate and connect all constituent Modules
+	QJsonArray::const_iterator i;
+	for (i = modelArray.constBegin(); i != modelArray.constEnd(); i++) {
+#ifdef PATH_PARSING_CHECKS
+		if ( ! i->isObject()) {
+			alert(tr("Model contains a member which is not a JSON object"));
+			terminate();
+			return;
+		}
+#endif
+		QJsonObject obj = i->toObject();
+#ifdef PATH_PARSING_CHECKS
+		if ( ! obj.contains("n") || ! obj.contains("t")) {
+			alert(tr("Model contains a member which does not have a name or type"));
+			terminate();
+			return;
+		}
+#endif
+		QString n = obj.value("n").toString();
+		QString t = obj.value("t").toString();
+#ifdef PATH_PARSING_CHECKS
+		if (moduleNameList.contains(n, Qt::CaseInsensitive)) {
+			alert(tr("Path contains multiple modules named '%1'").arg(n));
+			terminate();
+			return;
+		}
+		if ( ! daemon->um->moduleExists(t)) {
+			alert(tr("Model requests module of type '%1', which does not exist").arg(t));
+			terminate();
+			return;
+		}
+#endif
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		alert("loop 1");
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	// Set name and register it
 	/*for (int i = 0; i < modules->size(); i++) {
@@ -102,8 +158,11 @@ void Path::init() {
 				  .arg(oldName, name));
 			path->registerModule(this, name);
 		}
+		lastInitIndex++;
 	}*/
 	emit ready();
+	model.clear();  // Save memory; we don't need this anymore
+	alert("finished init");
 }
 
 void Path::start() {
@@ -124,7 +183,15 @@ void Path::cleanup() {
 	// TODO
 	for (int i = 0; i < modules->size(); i++)
 		modules->at(i)->cleanup();
-	emit finished();
+	emit readyForDeletion();
+}
+
+void Path::terminate() {
+	alert(tr("This is fatal; terminating path"));
+	for (int i = 0; i < lastInitIndex; i++)
+		modules->at(i)->cleanup();
+	emit readyForDeletion();
+	return;
 }
 
 void Path::alert(const QString msg, const Module *m) const {
@@ -134,5 +201,5 @@ void Path::alert(const QString msg, const Module *m) const {
 	if (m) out.append(":").append(m->getName());
 	// Append & send
 	out.append(": ").append(msg);
-	emit sendAlert(msg);
+	emit sendAlert(out);
 }

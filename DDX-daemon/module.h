@@ -155,9 +155,13 @@ public:
 	 * each with a unique name.  Items can have any number of subelements; any
 	 * element with an "A", "I", or "C" key after the "n" and "d" elements will
 	 * be listed as a subelement on each instance of an item.  When reported to
-	 * init(), items will have their user-assigned unique name as their key.
-	 * They will be objects with a "t" pair indicating the type, which will be
-	 * the item's "n" string.  Any subelements will follow the "t" pair.
+	 * init(), items will appear in a JSON array with the key "items" to
+	 * guarantee they retain their user-assigned order.  Each declared item will
+	 * be an object with an "n" pair indicating the user-assigned unique name
+	 * and a "t" pair indicating the item type corresponding to a reported
+	 * item's "n" string.  Any subelements will follow the "t" pair.  Any
+	 * category in which items were declared will always have an "items" array
+	 * when returned, even if no items were declared.
 	 * - _Category_:  A purely aesthetic subgroup of elements.  Any element with
 	 * an "A", "I", or "C" key after the "n" and "d" elements will be listed as
 	 * a subelement.  When reported to init(), they will be objects with their
@@ -173,6 +177,12 @@ public:
 	 * configuration GUI, so attributes in the highest level will appear to be
 	 * attributes directly affecting the module (rather than a category or
 	 * item).
+	 * 
+	 * Settings must not be named "A", "I", "C", "n", "t", "d", "default", or
+	 * "items".  Duplicate names are checked case-insensitively, so variations
+	 * on capitalization of any reserved keywords will also fail.  It is
+	 * recommendend that you (and users) avoid non-alphanumeric characters in
+	 * names with the exceptions of hypens and underscores.
 	 * 
 	 * Here is an example of a settings tree:
 	 ~~~{.json}
@@ -213,21 +223,26 @@ public:
 	 * {
 	 *   "Flow_Rate": "12",
 	 *   "Analog_Inputs": {
-	 *     "Temperature Sensor": {
-	 *       "t": "Voltage_AI",
-	 *       "Max_Voltage": "3.3",
-	 *       "Min_Voltage": "0"
-	 *     },
-	 *     "Power Meter": {
-	 *       "t": "Current_AI",
-	 *       "Max_Current": "20",
-	 *       "Min_Current": "0"
-	 *     },
-	 *     "Barometer": {
-	 *       "t": "Voltage_AI",
-	 *       "Max_Voltage": "2",
-	 *       "Min_Voltage": "1"
-	 *     }
+	 *     "items": [
+	 *       {
+	 *         "n": "Temperature Sensor",
+	 *         "t": "Voltage_AI",
+	 *         "Max_Voltage": "3.3",
+	 *         "Min_Voltage": "0"
+	 *       },
+	 *       {
+	 *         "n": "Power Meter",
+	 *         "t": "Current_AI",
+	 *         "Max_Current": "20",
+	 *         "Min_Current": "0"
+	 *       },
+	 *       {
+	 *         "n": "Barometer",
+	 *         "t": "Voltage_AI",
+	 *         "Max_Voltage": "2",
+	 *         "Min_Voltage": "1"
+	 *       }
+	 *     ]
 	 *   }
 	 * }
 	 ~~~
@@ -248,10 +263,15 @@ public:
 	void reconfigure();
 	
 	/*!
-	 * \brief Retrieve Module description
-	 * \return The translated description
+	 * \brief Called before destruction
+	 * 
+	 * Modules are required to do full memory management because they may be
+	 * loaded and destroyed many times in a Daemon instance which may run
+	 * autonomously for years.  Here is the place to do so.  Note that Columns
+	 * are already fully managed.  _This is a virtual function which must be
+	 * reimplemented._
 	 */
-	virtual QString getDescription();
+	virtual void cleanup();
 	
 	/*!
 	 * \brief Set pointer to external input columns (for Path linkage)
@@ -312,17 +332,6 @@ protected:
 	virtual void handleReconfigure();
 	
 	/*!
-	 * \brief Called before destruction
-	 * 
-	 * Modules are required to do full memory management because they may be
-	 * loaded and destroyed many times in a Daemon instance which may run
-	 * autonomously for years.  Here is the place to do so.  Note that Columns
-	 * are already fully managed.  _This is a virtual function which must be
-	 * reimplemented._
-	 */
-	virtual void cleanup();
-	
-	/*!
 	 * \brief Echo a statement to all logging Beacons.
 	 * \param msg The message
 	 * 
@@ -370,14 +379,11 @@ protected:
 	void removeColumn(const Column *c);  // Unsafe outside of handleReconfigure();
 	
 private:
-	/*!
-	 * \brief This Module's name (not editable after construction)
-	 */
+	
+	//! This Module's name (not editable after construction)
 	QString name;
 	
-	/*!
-	 * \brief Pointer to external input columns
-	 */
+	//! Pointer to external input columns (this is not owned!)
 	const DataDef *inputColumns;  // NOT OWNED
 	
 	/*!
@@ -388,9 +394,7 @@ private:
 	 */
 	DataDef *newColumns;  // Super and elements owned
 	
-	/*!
-	 * \brief Garbage collects inserted Columns
-	 */
+	//! Garbage collects inserted Columns
 	inline void emptyNewColumns();
 };
 

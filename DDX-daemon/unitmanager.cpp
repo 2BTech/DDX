@@ -41,7 +41,7 @@ UnitManager::~UnitManager()
 	delete beacons;
 }
 
-inline bool UnitManager::doesModuleExist(const QString type) const {
+bool UnitManager::moduleExists(const QString type) const {
 	return modules->contains(type);
 }
 

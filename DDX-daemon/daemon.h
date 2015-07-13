@@ -29,7 +29,7 @@
 #include <QMenu>			// Tray icon
 #include <QThread>
 #include <QList>
-#include "../DDX-gui/constants.h"
+#include "constants.h"
 
 class Path;
 class UnitManager;
@@ -56,6 +56,8 @@ public:
 	QStringList args;
 	
 	QSettings *settings;
+	
+	UnitManager *um;
 
 signals:
 
@@ -89,8 +91,6 @@ public slots:
 private:
 	
 	QTextStream *qout;  // stdout wrapper
-	
-	UnitManager *um;
 	
 	QSystemTrayIcon *trayIcon;
 	

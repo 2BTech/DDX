@@ -23,7 +23,7 @@
 #include <QString>
 #include <QList>
 #include <QJsonDocument>
-#include <QJsonObject>
+#include <QJsonArray>
 
 class Module;
 class Inlet;
@@ -76,6 +76,8 @@ public:
 	 */
 	void alert(const QString msg, const Module *m = 0) const;
 	
+	inline const QList<Module*>* getModules() const {return modules;}
+	
 	/*!
 	 * \brief Get the Path's name
 	 * \return The Path's name
@@ -83,17 +85,27 @@ public:
 	inline QString getName() const {return name;}
 	
 signals:
+	
+	//! Emitted when Path is ready to start
 	void ready() const;
 	
+	//! Emitted when Path has started
 	void running() const;
 	
+	//! Emitted when Path has reached the end of its inlet stream
 	void finished() const;
 	
+	//! Emitted when all cleanup operations have finished
+	void readyForDeletion() const;
+	
+	//! Emitted to send an alert.  _Note:_ use alert() when sending alerts.
 	void sendAlert(const QString msg) const;
 	
 public slots:
 	/*!
-	 * \brief Parse model and Module::init() constituents
+	 * Parse model and Module::init() constituents
+	 * 
+	 * Note: Daemon::um _must_ be valid while this method runs!
 	 * 
 	 * ### Parsing
 	 * The model is parsed.  
@@ -103,18 +115,37 @@ public slots:
 	void stop();
 	void cleanup();  // Or shutdown?
 	
+protected:
+	void terminate();
+	
 private:
-	/*!
-	 * \brief This Path's name (not editable after construction)
-	 */
+	//! This Path's name (not editable after construction)
 	QString name;
 	
-	QByteArray rawModel;
-	QJsonObject model;
+	/*!
+	 * \brief The raw model JSON passed into the constructor.
+	 * 
+	 * To save memory, this is cleared after the model is parsed.
+	 */
+	QByteArray model;
+	
+	//! The ordered Module list
 	QList<Module*> *modules;
+	
+	//! Convenience pointer to Inlet
 	Inlet *inlet;
-	bool isRunning;
+	
+	//! Convenience pointer to parent daemon
+	Daemon *daemon;
+	
+	//! Whether the Path is ready to start
 	bool isReady;
+	
+	//! Whether the Path is currently running
+	bool isRunning;
+	
+	//! Keeps track of which modules have been initiated in case of termination
+	int lastInitIndex;
 };
 
 #endif // PATH_H

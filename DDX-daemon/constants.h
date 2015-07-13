@@ -27,6 +27,13 @@
 #define APP_AUTHOR_FULL "2B Technologies"
 #define APP_AUTHOR_DOMAIN "twobtech.com"
 
+// DEBUGGING
+//! Comment to disable error checks that *shouldn't* be necessary in production
+#define CAUTIOUS_ERROR_CHECKING
+#ifdef CAUTIOUS_ERROR_CHECKING
+	//! Whether to check for rigorously check for JSON parsing errors in code which should come from the DDX itself
+	#define PATH_PARSING_CHECKS
+#endif
 
 // LOGGING
 #ifdef ENABLE_DEBUG
