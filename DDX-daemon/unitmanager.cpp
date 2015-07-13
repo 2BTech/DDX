@@ -67,9 +67,12 @@ QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
 	if (schemeObj.contains("DDX_author"))  // Optional
 		if (schemeObj.value("DDX_author").toString().isEmpty())
 			return tr("Scheme contains a DDX_author which is not a string or empty");
-	if (schemeObj.contains("DDX_version"))
+	if (schemeObj.contains("DDX_version"))  // Optional
 		if (schemeObj.value("DDX_version").toString().isEmpty())
 			return tr("Scheme contains a DDX_version which is not a string or empty");
+	if (schemeObj.contains("auto_start"))
+		if ( ! schemeObj.value("auto_start").isBool())
+			return tr("Scheme contains an auto_start element which is not a boolean");
 	if ( ! schemeObj.value("modules").isArray())
 		return tr("Scheme module list is not a JSON array");
 	QJsonArray modArray = schemeObj.value("modules").toArray();
@@ -79,6 +82,7 @@ QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
 	// Loop through modules and check each one
 	QJsonArray::const_iterator i;
 	QStringList modNameList;
+	QStringList beaconList;
 	Module *moduleInstance;
 	bool firstElement = true;
 	for (i = modArray.constBegin(); i != modArray.constEnd(); i++) {
@@ -96,6 +100,17 @@ QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
 		if (modNameList.contains(n, Qt::CaseInsensitive))
 			return tr("Scheme contains multiple modules named '%1'").arg(n);
 		modNameList.append(n);
+		if (obj.contains("beacons")) {  // Beacon requests are optional
+			if ( ! obj.value("beacons").isArray())
+				return tr("Scheme contains a module with a beacons element which is not a JSON array");
+			QJsonArray beaconArray = schemeObj.value("beacons").toArray();
+			QJsonArray::const_iterator b_i;
+			for (b_i = beaconArray.constBegin(); b_i != beaconArray.constEnd(); b_i++) {
+				if (b_i->toString().isEmpty())
+					return tr("Scheme contains a beacon request which is empty or not a string");
+				beaconList.append(b_i->toString());
+			}
+		}
 		QString t = obj.value("t").toString();
 		if (t.isEmpty())
 			return tr("Scheme contains a module whose type is not a string or empty");
@@ -115,6 +130,7 @@ QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
 		delete moduleInstance;
 		firstElement = false;
 	}
+	// TODO: Iterate through beaconList to verify that each Beacon exists
 	return QString();
 	// TODO:  This function is largely untested!
 }

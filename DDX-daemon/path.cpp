@@ -135,6 +135,8 @@ void Path::init() {
 		}
 		lastInitIndex++;
 	}*/
+	
+	// TODO:  Wait for all requested Beacons to be ready before continuing??
 	emit ready(name);
 	alert("finished init");
 }
