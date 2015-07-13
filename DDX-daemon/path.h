@@ -50,7 +50,7 @@ class Path : public QObject
 	Q_OBJECT
 public:
 	
-	explicit Path(Daemon *parent, const QByteArray model);
+	explicit Path(Daemon *parent, const QString name, const QByteArray model);
 	
 	~Path();
 	
@@ -76,7 +76,11 @@ public:
 	 */
 	void alert(const QString msg, const Module *m = 0) const;
 	
-	QString getName() const {return name;}
+	/*!
+	 * \brief Get the Path's name
+	 * \return The Path's name
+	 */
+	inline QString getName() const {return name;}
 	
 signals:
 	void ready() const;
@@ -88,16 +92,27 @@ signals:
 	void sendAlert(const QString msg) const;
 	
 public slots:
+	/*!
+	 * \brief Parse model and Module::init() constituents
+	 * 
+	 * ### Parsing
+	 * The model is parsed.  
+	 */
 	void init();
 	void start();
 	void stop();
+	void cleanup();  // Or shutdown?
 	
 private:
+	/*!
+	 * \brief This Path's name (not editable after construction)
+	 */
+	QString name;
+	
 	QByteArray rawModel;
 	QJsonObject model;
 	QList<Module*> *modules;
 	Inlet *inlet;
-	QString name;
 	bool isRunning;
 	bool isReady;
 };

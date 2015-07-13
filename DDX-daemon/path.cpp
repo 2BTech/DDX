@@ -21,8 +21,9 @@
 #include "module.h"
 #include "inlet.h"
 
-Path::Path(Daemon *parent, const QByteArray model) : QObject(parent)
+Path::Path(Daemon *parent, const QString name, const QByteArray model) : QObject(parent)
 {
+	this->name = name;
 	isReady = false;
 	isRunning = false;
 	rawModel = model;
@@ -63,14 +64,29 @@ QJsonObject Path::publishActions() const {
 
 void Path::init() {
 	// Parse model
-	QJsonParseError *pe;
-	model = QJsonDocument::fromJson(rawModel, pe);
+	QJsonParseError *pe = 0;
+	QJsonDocument modelDoc = QJsonDocument::fromJson(rawModel, pe);
 	if (pe->error != QJsonParseError::NoError) {
-		
+		alert(tr("Path model failed to parse, reported: '%1'").arg(pe->errorString()));
+		alert(tr("This is fatal; terminating path"));
+		// TODO:  Write up documentation to let it know that this can happen during init()
+		emit finished();
+		return;
 	}
+	if ( ! modelDoc.isObject()) {
+		alert(tr("Path model is not a JSON object"));
+		alert(tr("This is fatal; terminating path"));
+		// TODO:  Write up documentation to let it know that this can happen during init()
+		emit finished();
+		return;
+	}
+	model = modelDoc.object();
+	rawModel.clear();  // Save memory
+	
+	// TODO:  Make it so that 
 	
 	// Set name and register it
-	for (int i = 0; i < modules->size(); i++) {
+	/*for (int i = 0; i < modules->size(); i++) {
 		QJsonObject::const_iterator found = model.find("n");
 		if (found == model.end()) name = QString();
 		else name = found.value().toString();
@@ -86,7 +102,7 @@ void Path::init() {
 				  .arg(oldName, name));
 			path->registerModule(this, name);
 		}
-	}
+	}*/
 	emit ready();
 }
 
@@ -101,6 +117,13 @@ void Path::start() {
 
 void Path::stop() {
 	// TODO
+	// e
+}
+
+void Path::cleanup() {
+	// TODO
+	for (int i = 0; i < modules->size(); i++)
+		modules->at(i)->cleanup();
 	emit finished();
 }
 

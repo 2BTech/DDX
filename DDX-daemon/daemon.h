@@ -51,7 +51,7 @@ public:
 	
 	~Daemon();
 	
-	void addPath(QByteArray model);
+	void addPath(QString name, QByteArray model);
 	
 	QStringList args;
 	

@@ -28,4 +28,5 @@ GenMod::~GenMod() {
 
 void GenMod::init(const QJsonObject settings) {
 	alert("Sucess!! genmod init() called.");
+	settings.size();
 }
