@@ -53,11 +53,11 @@ public:
 	
 	void addPath(QString name, QByteArray scheme);
 	
+	UnitManager *getUnitManager() {return um;}
+	
 	QStringList args;
 	
 	QSettings *settings;
-	
-	UnitManager *um;
 
 signals:
 
@@ -97,6 +97,8 @@ private:
 	QMenu *trayMenu;
 	
 	QList<Path*> *paths;
+	
+	UnitManager *um;
 	
 	void loadDefaultSettings();
 	

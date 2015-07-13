@@ -36,12 +36,15 @@ UnitManager::UnitManager(Daemon *parent) : QObject(parent)
 UnitManager::~UnitManager()
 {
 	// TODO: iterate through these?
-	// Does delete work on pointers????
 	delete modules;
 	delete beacons;
 }
 
-QString UnitManager::verifyPathScheme(const QByteArray scheme) {
+QByteArray UnitManager::getPathScheme(QString name) const {
+	// TODO
+}
+
+QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
 	// Check basic scheme parsing requirements
 	if (scheme.isEmpty())
 		return tr("Scheme is empty");
@@ -56,20 +59,20 @@ QString UnitManager::verifyPathScheme(const QByteArray scheme) {
 	QJsonObject schemeObj = schemeDoc.object();
 	if ( !schemeObj.contains("n") || !schemeObj.contains("modules"))
 		return tr("Scheme is missing name or module list");
-	if ( ! schemeObj.value("n").toString().isEmpty())
+	if (schemeObj.value("n").toString().isEmpty())
 		return tr("Scheme name element is invalid or empty");
-	if ( ! schemeObj.value("modules").isArray())
-		return tr("Scheme module list is not a JSON array");
 	if (schemeObj.contains("d"))  // Descriptions are optional
 		if ( ! schemeObj.value("d").isString())  // Descriptions can be empty
 			return tr("Scheme contains a description which is not a string");
 	if (schemeObj.contains("DDX_author"))  // Optional
-		if ( ! schemeObj.value("DDX_author").toString().isEmpty())
+		if (schemeObj.value("DDX_author").toString().isEmpty())
 			return tr("Scheme contains a DDX_author which is not a string or empty");
 	if (schemeObj.contains("DDX_version"))
-		if ( ! schemeObj.value("DDX_version").toString().isEmpty())
+		if (schemeObj.value("DDX_version").toString().isEmpty())
 			return tr("Scheme contains a DDX_version which is not a string or empty");
-	QJsonArray modArray = schemeDoc.array();
+	if ( ! schemeObj.value("modules").isArray())
+		return tr("Scheme module list is not a JSON array");
+	QJsonArray modArray = schemeObj.value("modules").toArray();
 	if (modArray.size() < 1)
 		return tr("Scheme does not contain any modules");
 	
@@ -113,6 +116,7 @@ QString UnitManager::verifyPathScheme(const QByteArray scheme) {
 		firstElement = false;
 	}
 	return QString();
+	// TODO:  This function is largely untested!
 }
 
 bool UnitManager::moduleExists(const QString type) const {
@@ -131,7 +135,7 @@ void UnitManager::registerModules() {
 	modules->insert("GenMod", GenMod::staticMetaObject);
 }
 
-QJsonObject UnitManager::getModuleList() const {
+QJsonObject UnitManager::getModuleDescriptions() const {
 	QJsonObject l;
 	
 	// List all Modules here (2 of 2)

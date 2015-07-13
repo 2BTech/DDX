@@ -68,7 +68,7 @@ public:
 	 * scheme formatting errors that could lead to a crash but which aren't
 	 * necessary during most DDX standard operation.
 	 */
-	QString verifyPathScheme(const QByteArray scheme);
+	QString verifyPathScheme(const QByteArray scheme) const;
 	
 	/*!
 	 * \brief Check that a Module type exists
@@ -92,10 +92,7 @@ public:
 	
 	/*!
 	 * \brief Get a list of Modules
-	 * \return JSON list of Modules and their translated descriptions
-	 * 
-	 * ## Registration Instructions
-	 * TODO
+	 * \return JSON list of Modules with descriptions and settings
 	 */
 	QJsonObject getModuleList() const;
 	
@@ -117,6 +114,15 @@ private:
 	 * TODO
 	 */
 	void registerModules();
+	
+	/*!
+	 * \brief Return a list of all Modules and their descriptions
+	 * \return The Modules and their descriptions
+	 * 
+	 * ## Registration Instructions
+	 * TODO
+	 */
+	QJsonObject getModuleDescriptions() const;
 };
 
 #endif // UNITMANAGER_H

@@ -43,7 +43,7 @@ class UnitManager;
  * 
  * ## Threading Information
  * Every Path runs in its own thread.  Modules written to communicate across
- * Paths must take this into account.  Beacns will also be run in their own
+ * Paths must take this into account.  Beacons will also be run in their own
  * threads.  Any Module can start its own thread, but all functions called by a
  * Path assume synchronicity.
  */
@@ -91,13 +91,13 @@ public:
 signals:
 	
 	//! Emitted when Path is ready to start
-	void ready() const;
+	void ready(QString path) const;
 	
 	//! Emitted when Path has started
-	void running() const;
+	void running(QString path) const;
 	
 	//! Emitted when Path has reached the end of its inlet stream
-	void finished() const;
+	void finished(QString path) const;
 	
 	//! Emitted when all cleanup operations have finished
 	void readyForDeletion() const;

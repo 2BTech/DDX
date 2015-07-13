@@ -64,73 +64,34 @@ QJsonObject Path::publishActions() const {
 }
 
 void Path::init() {
-	// Ensure there's a UnitManager
-	UnitManager *um = daemon->um;
-	if ( ! um) um = new UnitManager(daemon);
-	
 	// Get scheme
+	UnitManager *um = daemon->getUnitManager();
+	if ( ! um) {
+		alert(tr("Path initialized with no UnitManager in place"));
+		terminate();
+		return;
+	}
+	alert("um exists");
 	QByteArray scheme = um->getPathScheme(name);
 #ifdef PATH_PARSING_CHECKS
-	if (scheme.isEmpty()) {
-		alert(tr("There is no scheme for a Path named '%1'").arg(name));
+	QString parseError = um->verifyPathScheme(scheme);
+	if (parseError.isNull()) {
+		alert(tr("Path failed scheme verification, reported '%1'").arg(parseError));
 		terminate();
 		return;
 	}
 #endif
 	// Parse scheme
-	QJsonParseError pe;
-	QJsonDocument schemeDoc = QJsonDocument::fromJson(scheme, &pe);
-#ifdef PATH_PARSING_CHECKS
-	if (pe.error != QJsonParseError::NoError) {
-		alert(tr("Scheme failed to parse, reported: '%1'").arg(pe.errorString()));
-		terminate();
-		return;
-	}
-	if ( ! schemeDoc.isArray()) {
-		alert(tr("Scheme is not a JSON array"));
-		terminate();
-		return;
-	}
-	QStringList moduleNameList;  // For duplicate checking in loop below
-#endif
+	QJsonDocument schemeDoc = QJsonDocument::fromJson(scheme);
 	
 	// Instantiate and connect all constituent Modules
 	QJsonArray schemeArray = schemeDoc.array();
 	QJsonArray::const_iterator i;
 	for (i = schemeArray.constBegin(); i != schemeArray.constEnd(); i++) {
-#ifdef PATH_PARSING_CHECKS
-		if ( ! i->isObject()) {
-			alert(tr("Scheme contains a member which is not a JSON object"));
-			terminate();
-			return;
-		}
-#endif
 		QJsonObject obj = i->toObject();
-#ifdef PATH_PARSING_CHECKS
-		if ( ! obj.contains("n") || ! obj.contains("t")) {
-			alert(tr("Scheme contains a member which is missing a name or type"));
-			terminate();
-			return;
-		}
-#endif
 		QString n = obj.value("n").toString();
 		QString t = obj.value("t").toString();
-#ifdef PATH_PARSING_CHECKS
-		if (moduleNameList.contains(n, Qt::CaseInsensitive)) {
-			alert(tr("Path contains multiple modules named '%1'").arg(n));
-			terminate();
-			return;
-		}
-		moduleNameList.append(n);
-		if ( ! um->moduleExists(t)) {
-			alert(tr("Scheme requests module of type '%1', which does not exist").arg(t));
-			terminate();
-			return;
-		}
-#endif
 		modules->append(um->constructModule(t, this, n));
-		
-		
 		
 		
 		
@@ -174,7 +135,7 @@ void Path::init() {
 		}
 		lastInitIndex++;
 	}*/
-	emit ready();
+	emit ready(name);
 	alert("finished init");
 }
 
@@ -184,7 +145,7 @@ void Path::start() {
 		return;
 	}
 	// TODO
-	emit running();
+	emit running(name);
 }
 
 void Path::stop() {
