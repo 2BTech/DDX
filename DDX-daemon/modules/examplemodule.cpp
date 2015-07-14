@@ -16,42 +16,35 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#include "examplemodule.h"
 
-// GENERAL PURPOSE INDICATIVES
-#define VERSION_FULL_TEXT "0.0"
-#define APP_NAME_UNTRANSLATABLE_SHORT "DDX"
-#define APP_NAME_UNTRANSLATABLE "2B DDX"
-#define APP_AUTHOR "2B"
-#define APP_AUTHOR_FULL "2B Technologies"
-#define APP_AUTHOR_DOMAIN "twobtech.com"
+ExampleModule::~ExampleModule() {
+	alert("ExampleModule::~ExampleModule()");
+}
 
-// DEBUGGING
-//! Comment to disable error checks that *shouldn't* be necessary in production
-#define CAUTIOUS_ERROR_CHECKING
-#ifdef CAUTIOUS_ERROR_CHECKING
-	//! Whether to check for rigorously check for JSON parsing errors in code which should come from the DDX itself
-	#define PATH_PARSING_CHECKS
-#endif
+void ExampleModule::init(const QJsonObject settings) {
+	settings.size();
+	alert("ExampleModule::init()");
+}
 
-// LOGGING
-#ifdef ENABLE_DEBUG
-#define LOGGING_ENABLE_PRINT_ALL  // Comment to disable printing of all but errors
-#endif
-#define LOGGING_ENABLE_STDOUT  // Comment to disable printing of log messages to stdout
+void ExampleModule::process() {
+	alert("ExampleModule::process()");
+}
 
+QJsonObject ExampleModule::publishSettings() const {
+	alert("ExampleModule::publishSettings()");
+	return QJsonObject();
+}
 
-// PLATFORM SPECIALIZATION
+QJsonObject ExampleModule::publishActions() const {
+	alert("ExampleModule::publishActions()");
+	return QJsonObject();
+}
 
+void ExampleModule::cleanup() {
+	alert("ExampleModule::cleanup()");
+}
 
-// BEACON REMOVAL
-// #define BEACONS
-
-
-// BUFFERING
-#define DEFAULT_SLOW_BUFFER_SIZE	1048576  // 1048576 = 1mb
-#define DEFAULT_FAST_BUFFER_SIZE	104857600  // 104857600 = 100mb
-
-
-#endif // CONSTANTS_H
+void ExampleModule::handleReconfigure() {
+	alert("ExampleModule::handleReconfigure()");
+}

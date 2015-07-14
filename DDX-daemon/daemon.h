@@ -51,7 +51,7 @@ public:
 	
 	~Daemon();
 	
-	void addPath(QString name, QByteArray scheme);
+	void addPath(QString name);
 	
 	UnitManager *getUnitManager() {return um;}
 	

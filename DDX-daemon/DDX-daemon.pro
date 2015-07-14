@@ -45,7 +45,8 @@ SOURCES += main.cpp \
     path.cpp \
     module.cpp \
     unitmanager.cpp \
-    modules/genmod.cpp
+    modules/genmod.cpp \
+    modules/examplemodule.cpp
 
 HEADERS += \
     constants.h \
@@ -56,7 +57,8 @@ HEADERS += \
     module.h \
     data.h \
     unitmanager.h \
-    modules/genmod.h
+    modules/genmod.h \
+    modules/examplemodule.h
 
 DISTFILES += \
     DaemonCommandLineArguments.txt \

@@ -294,7 +294,9 @@ public:
 signals:
 	// TODO:  Figure out a way to trigger reconfigures???  I haven't really thought about that yet
 	void triggerReconfigure();
+#ifdef BEACONS
 	void beacon(QStringList targets, QString msg) const;
+#endif
 	
 protected:
 	Path *path;

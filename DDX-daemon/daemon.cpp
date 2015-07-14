@@ -32,7 +32,7 @@ Daemon::~Daemon() {
 	// TODO
 }
 
-void Daemon::addPath(QString name, QByteArray scheme) {
+void Daemon::addPath(QString name) {
 	
 	QThread *t = new QThread(this);
 	Path *p = new Path(this, name);
@@ -147,8 +147,7 @@ void Daemon::init() {
 	log(um->verifyPathScheme(testScheme));
 	
 	
-	Path *p = new Path(this, "testPATH");
-	GenMod *gm = new GenMod(p, QString("test"));
+	Path *p = new Path(this, "TestPath");
 	
 	
 	// Look for open GUI instance

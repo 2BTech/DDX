@@ -27,7 +27,9 @@ UnitManager::UnitManager(Daemon *parent) : QObject(parent)
 {
 	modules = new QHash<QString, QMetaObject>;
 	registerModules();
+#ifdef BEACONS
 	beacons = new QHash<QString, QMetaObject>;
+#endif
 	changed = false;
 	QString unitsFileName = parent->settings->value("paths/configPath").toString();
 	unitsFileName.append(parent->settings->value("units/unitFile").toString());
@@ -37,7 +39,9 @@ UnitManager::~UnitManager()
 {
 	// TODO: iterate through these?
 	delete modules;
+#ifdef BEACONS
 	delete beacons;
+#endif
 }
 
 QByteArray UnitManager::getPathScheme(QString name) const {
@@ -82,7 +86,9 @@ QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
 	// Loop through modules and check each one
 	QJsonArray::const_iterator i;
 	QStringList modNameList;
+#ifdef BEACONS
 	QStringList beaconList;
+#endif
 	Module *moduleInstance;
 	bool firstElement = true;
 	for (i = modArray.constBegin(); i != modArray.constEnd(); i++) {
@@ -100,6 +106,7 @@ QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
 		if (modNameList.contains(n, Qt::CaseInsensitive))
 			return tr("Scheme contains multiple modules named '%1'").arg(n);
 		modNameList.append(n);
+#ifdef BEACONS
 		if (obj.contains("beacons")) {  // Beacon requests are optional
 			if ( ! obj.value("beacons").isArray())
 				return tr("Scheme contains a module with a beacons element which is not a JSON array");
@@ -111,6 +118,8 @@ QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
 				beaconList.append(b_i->toString());
 			}
 		}
+		// TODO: Iterate through beaconList to verify that each Beacon exists
+#endif
 		QString t = obj.value("t").toString();
 		if (t.isEmpty())
 			return tr("Scheme contains a module whose type is not a string or empty");
@@ -130,9 +139,12 @@ QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
 		delete moduleInstance;
 		firstElement = false;
 	}
-	// TODO: Iterate through beaconList to verify that each Beacon exists
 	return QString();
 	// TODO:  This function is largely untested!
+}
+
+QString UnitManager::addPath(const QByteArray scheme, bool save) {
+	
 }
 
 bool UnitManager::moduleExists(const QString type) const {
@@ -144,10 +156,9 @@ Module* UnitManager::constructModule(const QString type, Path *parent, const QSt
 													  Q_ARG(QString, name));
 }
 
-
 void UnitManager::registerModules() {
 	// List all Modules here (1 of 2)
-	// modules->insert("ExampleModule", ExampleModule::staticMetaObject);
+	modules->insert("ExampleModule", ExampleModule::staticMetaObject);
 	modules->insert("GenMod", GenMod::staticMetaObject);
 }
 

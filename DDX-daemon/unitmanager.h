@@ -71,6 +71,13 @@ public:
 	QString verifyPathScheme(const QByteArray scheme) const;
 	
 	/*!
+	 * \brief Add a path to the manager
+	 * \param scheme
+	 * \return 
+	 */
+	QString addPath(const QByteArray scheme, bool save);
+	
+	/*!
 	 * \brief Check that a Module type exists
 	 * \param type The name of the Module subclass
 	 * \return Whether it exists
@@ -104,7 +111,9 @@ private:
 	static QReadWriteLock configFileLock;
 	bool changed;
 	QHash<QString, QMetaObject> *modules;
+#ifdef BEACONS
 	QHash<QString, QMetaObject> *beacons;
+#endif
 
 	/*!
 	 * \brief Register all Modules with UnitManager
