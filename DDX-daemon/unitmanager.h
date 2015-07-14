@@ -131,7 +131,7 @@ private:
 	 * ## Registration Instructions
 	 * TODO
 	 */
-	QJsonObject getModuleDescriptions() const;
+	QMap<QString, QString> getModuleDescriptions() const;
 };
 
 #endif // UNITMANAGER_H

@@ -46,6 +46,8 @@ UnitManager::~UnitManager()
 
 QByteArray UnitManager::getPathScheme(QString name) const {
 	// TODO
+	name.size();
+	return QByteArray();
 }
 
 QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
@@ -144,7 +146,10 @@ QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
 }
 
 QString UnitManager::addPath(const QByteArray scheme, bool save) {
-	
+	// TODO
+	scheme.size();
+	save = false;
+	return QString();
 }
 
 bool UnitManager::moduleExists(const QString type) const {
@@ -156,18 +161,4 @@ Module* UnitManager::constructModule(const QString type, Path *parent, const QSt
 													  Q_ARG(QString, name));
 }
 
-void UnitManager::registerModules() {
-	// List all Modules here (1 of 2)
-	modules->insert("ExampleModule", ExampleModule::staticMetaObject);
-	modules->insert("GenMod", GenMod::staticMetaObject);
-}
-
-QJsonObject UnitManager::getModuleDescriptions() const {
-	QJsonObject l;
-	
-	// List all Modules here (2 of 2)
-	// l.insert("ExampleModule", tr("Example description"));
-	l.insert("GenMod", tr("General modifications (TODO)"));
-	
-	return l;
-}
+#include "modules/module_register.cpp"

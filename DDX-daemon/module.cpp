@@ -97,6 +97,13 @@ void Module::removeColumn(const Column *c) {
 	}
 }
 
+void Module::terminate(const QString msg) {
+	alert(msg);
+	alert("TERMINATING UNIMPLEMENTED");
+	// TODO
+	path->terminate();
+}
+
 inline void Module::emptyNewColumns() {
 	for (int i = 0; i < newColumns->size(); i++)
 		delete newColumns->at(i);

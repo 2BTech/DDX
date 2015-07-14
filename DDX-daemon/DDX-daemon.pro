@@ -46,7 +46,8 @@ SOURCES += main.cpp \
     module.cpp \
     unitmanager.cpp \
     modules/genmod.cpp \
-    modules/examplemodule.cpp
+    modules/examplemodule.cpp \
+    modules/module_register.cpp
 
 HEADERS += \
     constants.h \

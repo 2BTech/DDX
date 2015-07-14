@@ -184,6 +184,8 @@ public:
 	 * recommendend that you (and users) avoid non-alphanumeric characters in
 	 * names with the exceptions of hypens and underscores.
 	 * 
+	 * TODO:  Add booleans and selects???
+	 * 
 	 * Here is an example of a settings tree:
 	 ~~~{.json}
 	 * {
@@ -379,6 +381,8 @@ protected:
 	 * __Unsafe outside of reconfigure() or handleReconfigure()!__
 	 */
 	void removeColumn(const Column *c);  // Unsafe outside of handleReconfigure();
+	
+	void terminate(const QString msg);
 	
 private:
 	

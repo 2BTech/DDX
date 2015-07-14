@@ -16,49 +16,26 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
+#ifndef MODULE_REGISTER_CPP
+#define MODULE_REGISTER_CPP
+
 #include "examplemodule.h"
+#include "genmod.h"
 
-ExampleModule::~ExampleModule() {
-	alert("ExampleModule::~ExampleModule()");
+void UnitManager::registerModules() {
+	// List all Modules here (1 of 2)
+	modules->insert("ExampleModule", ExampleModule::staticMetaObject);
+	modules->insert("GenMod", GenMod::staticMetaObject);
 }
 
-void ExampleModule::init(const QJsonObject settings) {
-	settings.size();
-	echo = settings.value("Echo_string").toString();
-	if (QString::compare(settings.value("Fail_on_init").toString(), "yes", Qt::CaseInsensitive))
-		terminate("Simulating a failure as requested by settings");
-	alert("ExampleModule::init()");
+QMap<QString, QString> UnitManager::getModuleDescriptions() const {
+	QMap<QString, QString> m;
+	
+	// List all Modules here (2 of 2)
+	m.insert("ExampleModule", tr("An example module"));
+	m.insert("GenMod", tr("General modifications (TODO)"));
+	
+	return m;
 }
 
-void ExampleModule::process() {
-	alert("ExampleModule::process()");
-	alert(echo);
-}
-
-QJsonObject ExampleModule::publishSettings() const {
-	alert("ExampleModule::publishSettings()");
-	QJsonObject s;
-	QJsonObject x;
-	x.insert("t","A");
-	x.insert("d","This string will be echoed by process()");
-	s.insert("Echo_string", x);
-	x.insert("d","Should the module fail in init()? Yes/no");
-	x.insert("default","no");
-	s.insert("Fail_on_init", x);
-	return s;
-}
-
-QJsonObject ExampleModule::publishActions() const {
-	alert("ExampleModule::publishActions()");
-	// TODO
-	return QJsonObject();
-}
-
-void ExampleModule::cleanup() {
-	alert("ExampleModule::cleanup()");
-}
-
-void ExampleModule::handleReconfigure() {
-	alert("ExampleModule::handleReconfigure()");
-	alert(QString("There are %1 input/output columns").arg(outputColumns->size()));
-}
+#endif // MODULE_REGISTER_CPP

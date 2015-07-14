@@ -36,6 +36,8 @@ public:
 	virtual QJsonObject publishActions() const;
 	void cleanup();
 	void handleReconfigure();
+private:
+	QString echo;
 };
 
 #endif // EXAMPLEMODULE_H
