@@ -60,6 +60,8 @@ public:
 	
 	virtual void start();
 	
+	virtual void stop();
+	
 	explicit Inlet(Path *parent, const QString name);
 	
 	~Inlet();

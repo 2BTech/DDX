@@ -130,6 +130,9 @@ signals:
 	//! Emitted when Path has reached the end of its inlet stream
 	void finished(QString path) const;
 	
+	//! Emitted when a new set of live actions is available
+	void updateLiveActions(QJsonObject actions) const;
+	
 	//! Emitted when all cleanup operations have finished
 	void readyForDeletion() const;
 	
