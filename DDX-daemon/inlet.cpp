@@ -48,5 +48,5 @@ bool Inlet::isFinite() const {
 }
 
 void Inlet::start() {
-	alert("start() not reimplemented!");
+	alert("DDX bug: start() not reimplemented!");
 }

@@ -39,16 +39,16 @@ Module::~Module()
 }
 
 void Module::init(const QJsonObject settings) {
-	alert("init() not reimplemented!");
+	alert("DDX bug: init() not reimplemented!");
 	settings.count();  // Suppress unused warning
 }
 
 void Module::handleReconfigure() {
-	alert("handleReconfigure() not reimplemented!");
+	alert("DDX bug: handleReconfigure() not reimplemented!");
 }
 
 void Module::process() {
-	alert("process() not reimplemented!");
+	alert("DDX bug: process() not reimplemented!");
 }
 
 void Module::cleanup() {
@@ -73,7 +73,7 @@ void Module::alert(const QString msg) const {
 }
 
 Column* Module::findColumn(const QString name) const {
-	for (int i = 0; i < outputColumns->size(); i++)
+	for (int i = 0; i < outputColumns->size(); ++i)
 		if (QString::compare(outputColumns->at(i)->n, name, Qt::CaseInsensitive) == 0)
 			return outputColumns->at(i);
 	return 0;
@@ -99,12 +99,11 @@ void Module::removeColumn(const Column *c) {
 
 void Module::terminate(const QString msg) {
 	alert(msg);
-	alert("TERMINATING UNIMPLEMENTED");
 	// TODO
-	path->terminate();
+	path->terminate("Terminating unimplemented; terminating anyway because I don't know how to progrma la la la la lalalalalala");
 }
 
 inline void Module::emptyNewColumns() {
-	for (int i = 0; i < newColumns->size(); i++)
+	for (int i = 0; i < newColumns->size(); ++i)
 		delete newColumns->at(i);
 }

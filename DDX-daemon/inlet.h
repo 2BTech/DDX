@@ -20,6 +20,7 @@
 #define INLET_H
 
 #include <QObject>
+#include "constants.h"
 #include "module.h"
 
 /*!
@@ -64,8 +65,13 @@ public:
 	~Inlet();
 	
 private:
+#ifdef CAUTIOUS_ALERTS
+	void handleReconfigure() {alert("DDX bug: handleReconfigure() called on an inlet");}
+	void process() {alert("DDX bug: process() called on an inlet");}
+#else
 	void handleReconfigure() {}
 	void process() {}
+#endif
 };
 
 #endif // INLET_H

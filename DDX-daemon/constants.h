@@ -33,6 +33,7 @@
 #ifdef CAUTIOUS_ERROR_CHECKING
 	//! Whether to check for rigorously check for JSON parsing errors in code which should come from the DDX itself
 	#define PATH_PARSING_CHECKS
+	#define CAUTIOUS_ALERTS
 #endif
 
 // LOGGING
@@ -47,6 +48,10 @@
 
 // BEACON REMOVAL
 // #define BEACONS
+
+
+// PROCESSING
+#define POSTPROCESS_EVENT_HANDLING_TIMEOUT	200  // Timeout on call to QEventLoop::processEvents() after every Path::process()
 
 
 // BUFFERING

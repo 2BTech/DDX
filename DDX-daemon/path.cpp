@@ -29,6 +29,7 @@ Path::Path(Daemon *parent, const QString name) : QObject(parent)
 	isReady = false;
 	isRunning = false;
 	lastInitIndex = 0;
+	processPosition = 1;
 	modules = new QList<Module*>;
 	
 	connect(this, &Path::sendAlert, parent, &Daemon::receiveAlert);
@@ -43,7 +44,7 @@ Path::~Path()
 }
 
 Module* Path::findModule(QString name) const {
-	for (int i = 0; i < modules->size(); i++)
+	for (int i = 0; i < modules->size(); ++i)
 		if (QString::compare(modules->at(i)->getName(), name, Qt::CaseInsensitive) == 0)
 			return modules->at(i);
 	return 0;
@@ -51,24 +52,55 @@ Module* Path::findModule(QString name) const {
 
 QJsonObject Path::publishSettings() const {
 	QJsonObject s;
-	for (int i = 0; i < modules->size(); i++)
+	for (int i = 0; i < modules->size(); ++i)
 		s.insert(modules->at(i)->getName(), modules->at(i)->publishSettings());
 	return s;
 }
 
 QJsonObject Path::publishActions() const {
 	QJsonObject a;
-	for (int i = 0; i < modules->size(); i++)
+	// TODO:  Append start and stop actions????
+	for (int i = 0; i < modules->size(); ++i)
 		a.insert(modules->at(i)->getName(), modules->at(i)->publishActions());
 	return a;
+}
+
+void Path::terminate(QString msg) {
+	alert(msg);
+	alert(tr("This is fatal; terminating path"));
+	cleanup();
+}
+
+void Path::process() {
+	if ( ! isRunning) {
+		alert("DDX bug: process() called while not running");
+		return;
+	}
+	QList<Module*>::const_iterator it = modules->constBegin();
+	processPosition = 1;
+	for (++it; it < modules->constEnd(); ++it) {  // Start after the inlet
+		processPosition++;
+		(*it)->process();
+	}
+	processPosition = 1;
+	QCoreApplication::processEvents(QEventLoop::AllEvents, POSTPROCESS_EVENT_HANDLING_TIMEOUT);
+}
+
+void Path::reconfigure() {
+	if ( ! isReady) {
+		alert("DDX bug: reconfigure() called while not running");
+		return;
+	}
+	for (int i = processPosition; i < modules->size(); ++i) {
+		modules->at(i)->reconfigure();
+	}
 }
 
 void Path::init() {
 	// Get scheme
 	UnitManager *um = daemon->getUnitManager();
 	if ( ! um) {
-		alert(tr("Path initialized with no UnitManager in place"));
-		terminate();
+		terminate("DDX bug: Path initialized with no UnitManager in place");
 		return;
 	}
 	alert("um exists");
@@ -76,8 +108,7 @@ void Path::init() {
 #ifdef PATH_PARSING_CHECKS
 	QString parseError = um->verifyPathScheme(scheme);
 	if (parseError.isNull()) {
-		alert(tr("Path failed scheme verification, reported '%1'").arg(parseError));
-		terminate();
+		terminate(tr("Path failed scheme verification, reported '%1'").arg(parseError));
 		return;
 	}
 #endif
@@ -87,7 +118,7 @@ void Path::init() {
 	// Instantiate and connect all constituent Modules
 	QJsonArray schemeArray = schemeDoc.array();
 	QJsonArray::const_iterator i;
-	for (i = schemeArray.constBegin(); i != schemeArray.constEnd(); i++) {
+	for (i = schemeArray.constBegin(); i != schemeArray.constEnd(); ++i) {
 		QJsonObject obj = i->toObject();
 		QString n = obj.value("n").toString();
 		QString t = obj.value("t").toString();
@@ -115,9 +146,8 @@ void Path::init() {
 	
 	
 	
-	
 	// Set name and register it
-	/*for (int i = 0; i < modules->size(); i++) {
+	/*for (int i = 0; i < modules->size(); ++i) {
 		QJsonObject::const_iterator found = model.find("n");
 		if (found == model.end()) name = QString();
 		else name = found.value().toString();
@@ -157,18 +187,13 @@ void Path::stop() {
 
 void Path::cleanup() {
 	// TODO
-	for (int i = 0; i < lastInitIndex; i++)
+	for (int i = 0; i < lastInitIndex; ++i)
 		modules->at(i)->cleanup();
-	for (int i = 0; i < modules->size(); i++)
+	for (int i = 0; i < modules->size(); ++i)
 		delete modules->at(i);
 	delete modules;
 	// TODO: remove
 	emit readyForDeletion();
-}
-
-void Path::terminate() {
-	alert(tr("This is fatal; terminating path"));
-	cleanup();
 }
 
 void Path::alert(const QString msg, const Module *m) const {

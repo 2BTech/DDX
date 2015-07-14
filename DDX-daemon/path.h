@@ -69,7 +69,32 @@ public:
 	
 	QJsonObject publishActions() const;
 	
-	void terminate();
+	/*!
+	 * \brief Terminate this Path prior to starting
+	 * 
+	 * In the event of a configuration error which truly prevents a Module
+	 * from functioning, it can be caught in Module::init() and handled by
+	 * calling this function.
+	 */
+	void terminate(QString msg);
+	
+	/*!
+	 * Execute the processing loop once
+	 * 
+	 * This function must _only_ be called by a Path's Inlet and while the Path
+	 * is running.  It loops through all Modules and calls Module::process().
+	 */
+	void process();
+	
+	/*!
+	 * Reconfigure downstream Modules
+	 * 
+	 * This function must _only_ be called by a Module's Module::process()
+	 * function and while the Path is running.  All Modules after the Module
+	 * currently in a process call will have Module::reconfigure() called in
+	 * order.  The currently active Module will be skipped.
+	 */
+	void reconfigure();
 	
 	/*!
 	 * \brief Echo a statement to all logging Beacons.
@@ -80,6 +105,12 @@ public:
 	 */
 	void alert(const QString msg, const Module *m = 0) const;
 	
+	/*!
+	 * \brief Retrieve Module list
+	 * \return The list of Modules
+	 * 
+	 * Can be used so that Modules can search for companion Modules by type.
+	 */
 	inline const QList<Module*>* getModules() const {return modules;}
 	
 	/*!
@@ -142,6 +173,9 @@ private:
 	
 	//! Keeps track of which modules have been initiated in case of termination
 	int lastInitIndex;
+	
+	//! Manages the current processing index for return after reconfiguration
+	int processPosition;
 };
 
 #endif // PATH_H
