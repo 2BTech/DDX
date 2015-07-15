@@ -107,8 +107,9 @@ public:
 	 * ### Error Handling
 	 * See the Module class documentation for general information on error
 	 * handling.  This function should be designed to handle any possible
-	 * errors that occur without interrupting data flow.  Catch as many errors
-	 * as possible here.  Errors should be reported with alert().
+	 * errors that occur without interrupting data flow.  However, this is the
+	 * one function which _can_ report fatal configuration errors which will
+	 * terminate a path before it begins.  Errors should be reported with alert().
 	 */
 	virtual void init(const QJsonObject settings);
 	

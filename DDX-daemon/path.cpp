@@ -91,9 +91,12 @@ void Path::reconfigure() {
 		alert("DDX bug: reconfigure() called while not running");
 		return;
 	}
-	for (int i = processPosition; i < modules->size(); ++i) {
+	for (int i = processPosition; i < modules->size(); ++i)
 		modules->at(i)->reconfigure();
-	}
+}
+
+void Path::test() {
+	
 }
 
 void Path::init() {

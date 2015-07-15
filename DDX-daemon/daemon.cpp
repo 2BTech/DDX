@@ -213,7 +213,7 @@ void Daemon::setupService() {
 	log("Icon");
 	
 	trayMenu = new QMenu();
-	trayMenu->addAction(settings->value("locale/Quit").toString(), this, SLOT(quit()));
+	trayMenu->addAction(tr("Quit"), this, SLOT(quit()));
 	
 	trayIcon = new QSystemTrayIcon(icon, this);
 	trayIcon->setToolTip(APP_NAME_UNTRANSLATABLE);

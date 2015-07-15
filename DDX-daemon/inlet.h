@@ -40,13 +40,6 @@ public:
 	virtual void init(QJsonObject settings);
 	
 	/*!
-	 * \brief Trigger the initial reconfigure
-	 * 
-	 * TODO
-	 */
-	virtual void initialReconfigure();
-	
-	/*!
 	 * \brief Determines whether the stream is synchronous or asynchronous
 	 * \return True if synchronous, false if asynchronous
 	 */

@@ -96,6 +96,8 @@ public:
 	 */
 	void reconfigure();
 	
+	void test(QString method);
+	
 	/*!
 	 * \brief Echo a statement to all logging Beacons.
 	 * \param msg The message
