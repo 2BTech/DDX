@@ -33,14 +33,19 @@ Daemon::~Daemon() {
 	// TODO
 }
 
-void Daemon::addPath(QString name) {
-	
+void Daemon::testPath(QByteArray scheme, int log) {
+	scheme.size();
+	// TODO
+}
+
+void Daemon::addPath(QString name, int log) {
+	UnitManager *um = getUnitManager();
 	QThread *t = new QThread(this);
 	Path *p = new Path(this, name);
-	paths->append(p);
+	paths.append(p);
 	p->moveToThread(t);
 	connect(t, &QThread::started, p, &Path::init);
-	connect(p, &Path::finished, t, &QThread::quit);
+	connect(p, &Path::destroyed, t, &QThread::quit);
 	connect(t, &QThread::finished, t, &QThread::deleteLater);
 	t->start();
 }
@@ -61,8 +66,13 @@ void Daemon::log(const QVariant &msg) {
 }
 
 void Daemon::init() {
-	/*!
-	 * ### Loading Settings
+	/*! ### Searching for other Daemon instances
+	 * This must be done before settings are loaded so as to avoid race
+	 * conditions when reading from settings.
+	 */
+	// TODO
+	
+	/*! ### Loading Settings
 	 * Settings are set to their default values at startup when one of these
 	 * conditions is met:
 	 * - No settings have been set (determined by searching for the setting
@@ -88,11 +98,9 @@ void Daemon::init() {
 	
 	// Determine whether last instance shut down correctly
 	
-	// Check for other daemon instances
-	
 	// Load and unload the instrument specification file to test it
 	
-	um = new UnitManager(this);
+	UnitManager *um = getUnitManager();
 	QByteArray testScheme = "{\"n\":\"Test path\",\"d\":\"This is a test path\",\"DDX_author\":\"2B Technologies\",\"DDX_version\":\"0\",\"modules\":[{\"n\":\"Test inlet\",\"t\":\"ExampleInlet\",\"s\":{\"SampleSetting\":\"42\"}},{\"n\":\"Test module 1\",\"t\":\"ExampleModule\"},{\"n\":\"Test module 2\",\"t\":\"ExampleModule\",\"s\":{\"Flow_Rate\":\"12\",\"Analog_Inputs\":{\"items\":[{\"n\":\"Temperature Sensor\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"3.3\",\"Min_Voltage\":\"0\"},{\"n\":\"Power Meter\",\"t\":\"Current_AI\",\"Max_Current\":\"20\",\"Min_Current\":\"0\"},{\"n\":\"Barometer\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"2\",\"Min_Voltage\":\"1\"}]}}}]}";
 	/*
 	 * {
@@ -147,6 +155,8 @@ void Daemon::init() {
 	log("Verifying path...");
 	log(um->verifyPathScheme(testScheme));
 	
+	releaseUnitManager();
+	
 	
 	Path *p = new Path(this, "TestPath");
 	
@@ -170,15 +180,15 @@ void Daemon::init() {
 }
 
 UnitManager* Daemon::getUnitManager() {
-	if ( ! um) um = new UnitManager(this);
+	if ( ! unitManager) unitManager = new UnitManager(this);
 	umRefCount++;
-	return um;
+	return unitManager;
 }
 
 void Daemon::releaseUnitManager() {
 	if (--umRefCount == 0) {
-		delete um;
-		um = 0;
+		delete unitManager;
+		unitManager = 0;
 	}
 }
 

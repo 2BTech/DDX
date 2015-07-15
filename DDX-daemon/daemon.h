@@ -51,7 +51,9 @@ public:
 	
 	~Daemon();
 	
-	void addPath(QString name);
+	void testPath(QByteArray scheme, int log = 0);
+	
+	void addPath(QString name, int log = 0);
 	
 	UnitManager *getUnitManager();
 	
@@ -98,9 +100,9 @@ private:
 	
 	QMenu *trayMenu;
 	
-	QList<Path*> *paths;
+	QList<Path*> paths;
 	
-	UnitManager *um;
+	UnitManager *unitManager;
 	
 	int umRefCount;
 	

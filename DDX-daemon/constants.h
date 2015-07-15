@@ -29,11 +29,11 @@
 
 // DEBUGGING
 //! Comment to disable error checks that *shouldn't* be necessary in production
-#define CAUTIOUS_ERROR_CHECKING
-#ifdef CAUTIOUS_ERROR_CHECKING
+#define ENABLE_CAUTIOUS_ERROR_CHECKING
+#ifdef ENABLE_CAUTIOUS_ERROR_CHECKING
 	//! Whether to check for rigorously check for JSON parsing errors in code which should come from the DDX itself
 	#define PATH_PARSING_CHECKS
-	#define CAUTIOUS_ALERTS
+	#define CAUTIOUS_CHECKS
 #endif
 
 // LOGGING

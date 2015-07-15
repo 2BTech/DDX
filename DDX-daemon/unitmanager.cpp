@@ -30,7 +30,7 @@ UnitManager::UnitManager(Daemon *parent) : QObject(parent)
 #ifdef BEACONS
 	beacons = new QHash<QString, QMetaObject>;
 #endif
-	changed = false;
+	schemeFileNeedsRewriting = false;
 	QString unitsFileName = parent->settings->value("paths/configPath").toString();
 	unitsFileName.append(parent->settings->value("units/unitFile").toString());
 }

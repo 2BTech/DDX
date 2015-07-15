@@ -26,16 +26,16 @@ class Path;
 
 class ExampleModule : public Module
 {
-	Q_OBJECT
+	Q_OBJECT  // Required
 public:
-	using Module::Module;
-	~ExampleModule();
-	void init(const QJsonObject settings);
-	void process();
-	QJsonObject publishSettings() const;
-	QJsonObject publishActions() const;
-	void cleanup();
-	void handleReconfigure();
+	using Module::Module;  // Required
+	~ExampleModule();  // Required
+	void init(const QJsonObject settings);  // Required
+	void process();  // Required
+	QJsonObject publishSettings() const;  // Optional
+	QJsonObject publishActions() const;  // Optional
+	void cleanup();  // Required
+	void handleReconfigure();  // Required
 private:
 	QString echo;
 };

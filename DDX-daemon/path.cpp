@@ -22,7 +22,7 @@
 #include "inlet.h"
 #include "unitmanager.h"
 
-Path::Path(Daemon *parent, const QString name) : QObject(parent)
+Path::Path(Daemon *parent, const QString name, const QByteArray scheme) : QObject(parent)
 {
 	this->name = name;
 	daemon = parent;
@@ -65,18 +65,23 @@ QJsonObject Path::publishActions() const {
 	return a;
 }
 
-void Path::terminate(QString msg) {
+void Path::terminate() {
+	if (isReady) {
+		alert("DDX bug:  Something tried to terminate outside of init()");
+		return;
+	}
 	terminated = true;
-	alert(msg);
 	alert(tr("This is fatal; terminating path"));
 	cleanup();
 }
 
 void Path::process() {
+#ifdef CAUTIOUS_CHECKS
 	if ( ! isRunning) {
 		alert("DDX bug: process() called while not running");
 		return;
 	}
+#endif
 	QList<Module*>::const_iterator it = modules.constBegin();
 	processPosition = 1;
 	for (++it; it < modules.constEnd(); ++it) {  // Start after the inlet
@@ -88,10 +93,12 @@ void Path::process() {
 }
 
 void Path::reconfigure() {
+#ifdef CAUTIOUS_CHECKS
 	if ( ! isReady) {
 		alert("DDX bug: reconfigure() called while not running");
 		return;
 	}
+#endif
 	for (int i = processPosition; i < modules.size(); ++i)
 		modules.at(i)->reconfigure();
 }
@@ -103,16 +110,13 @@ void Path::test(QString methodName) {
 void Path::init() {
 	// Get scheme
 	UnitManager *um = daemon->getUnitManager();
-	if ( ! um) {
-		terminate("DDX bug: Path initialized with no UnitManager in place");
-		return;
-	}
 	alert("um exists");
 	QByteArray scheme = um->getPathScheme(name);
 #ifdef PATH_PARSING_CHECKS
 	QString parseError = um->verifyPathScheme(scheme);
 	if (parseError.isNull()) {
-		terminate(tr("Path failed scheme verification, reported '%1'").arg(parseError));
+		alert(tr("Path failed scheme verification, reported '%1'").arg(parseError));
+		terminate();
 		return;
 	}
 #endif
@@ -144,8 +148,8 @@ void Path::init() {
 	// TODO:  Make sure this is safe here rather than at the end of the function
 	daemon->releaseUnitManager();
 	
-	for (int i = 0; i < modules.size(); ++i) {
-		modules.at(i)->init();
+	for (lastInitIndex = 0; lastInitIndex < modules.size(); ++lastInitIndex) {
+		modules.at(lastInitIndex)->init(QJsonObject());
 		if (terminated) return;
 	}
 	

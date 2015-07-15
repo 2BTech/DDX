@@ -109,7 +109,7 @@ public slots:
 	
 private:
 	static QReadWriteLock configFileLock;
-	bool changed;
+	bool schemeFileNeedsRewriting;
 	QHash<QString, QMetaObject> *modules;
 #ifdef BEACONS
 	QHash<QString, QMetaObject> *beacons;

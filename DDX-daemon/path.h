@@ -53,7 +53,7 @@ class Path : public QObject
 	Q_OBJECT
 public:
 	
-	explicit Path(Daemon *parent, const QString name);
+	explicit Path(Daemon *parent, const QString name, const QByteArray scheme);
 	
 	~Path();
 	
@@ -77,7 +77,7 @@ public:
 	 * from functioning, it can be caught in Module::init() and handled by
 	 * calling this function.
 	 */
-	void terminate(QString msg);
+	void terminate();
 	
 	/*!
 	 * Execute the processing loop once
@@ -114,13 +114,13 @@ public:
 	 * 
 	 * Can be used so that Modules can search for companion Modules by type.
 	 */
-	inline const QList<Module*>* getModules() const {return &modules;}
+	const QList<Module*>* getModules() const {return &modules;}
 	
 	/*!
 	 * \brief Get the Path's name
 	 * \return The Path's name
 	 */
-	inline QString getName() const {return name;}
+	QString getName() const {return name;}
 	
 signals:
 	
@@ -161,6 +161,9 @@ protected:
 private:
 	//! This Path's name (not editable after construction)
 	QString name;
+	
+	//! This Path's scheme (will be cleared after initialization)
+	QByteArray scheme;
 	
 	//! The ordered Module list
 	QList<Module*> modules;

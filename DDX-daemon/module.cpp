@@ -97,11 +97,11 @@ void Module::removeColumn(const Column *c) {
 
 void Module::terminate(const QString msg) {
 	alert(msg);
-	// TODO
-	path->terminate("Terminating unimplemented; terminating anyway because I don't know how to progrma la la la la lalalalalala");
+	path->terminate();
 }
 
 inline void Module::emptyNewColumns() {
 	for (int i = 0; i < newColumns->size(); ++i)
 		delete newColumns->at(i);
+	newColumns->clear();
 }
