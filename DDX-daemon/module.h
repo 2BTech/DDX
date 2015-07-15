@@ -25,8 +25,6 @@
 #include "data.h"
 #include "path.h"
 
-class Path;
-
 /*!
  * \brief An element in a Path which can manipulate and respond to data lines
  * 
@@ -286,7 +284,7 @@ public:
 	 * \brief Get pointer to internal output columns (for Path linkage)
 	 * \return The internal output ::DataDef
 	 */
-	inline const DataDef* getOutputColumns() const {return outputColumns;}
+	inline const DataDef* getOutputColumns() const {return &outputColumns;}
 	
 	/*!
 	 * \brief Get the Module's name
@@ -297,7 +295,7 @@ public:
 protected:
 	Path *path;
 	
-	DataDef *outputColumns;  // Super owned, elements owned by newColumns and inputColumns
+	DataDef outputColumns;  // Elements owned by newColumns and inputColumns
 	
 	/*!
 	 * \brief Update to a new data structure

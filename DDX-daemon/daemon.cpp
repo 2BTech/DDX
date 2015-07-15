@@ -26,6 +26,7 @@ Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	args = parent->arguments();
 	// Open stdout stream for logging
 	qout = new QTextStream(stdout);
+	umRefCount = 0;
 }
 
 Daemon::~Daemon() {
@@ -166,7 +167,19 @@ void Daemon::init() {
 	log("Starting path");
 	p->init();
 	log("Ending path");
-	
+}
+
+UnitManager* Daemon::getUnitManager() {
+	if ( ! um) um = new UnitManager(this);
+	umRefCount++;
+	return um;
+}
+
+void Daemon::releaseUnitManager() {
+	if (--umRefCount == 0) {
+		delete um;
+		um = 0;
+	}
 }
 
 void Daemon::receiveAlert(QString msg) {

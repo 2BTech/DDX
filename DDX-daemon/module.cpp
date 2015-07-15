@@ -24,14 +24,12 @@ Module::Module(Path *parent, const QString name) : QObject(parent)
 	this->name = name;
 	/* This is safe to instantiate in the constructor because it is only a data
 	 * class.  Moving a Module to a separate thread should not harm anything. */
-	outputColumns = new DataDef();
 	newColumns = 0;
 }
 
 Module::~Module()
 {
 	alert("MODULE DESTROYED");
-	delete outputColumns;
 	if (newColumns) {
 		emptyNewColumns();
 		delete newColumns;
@@ -64,7 +62,7 @@ QJsonObject Module::publishActions() const {
 
 void Module::reconfigure() {
 	if (newColumns) emptyNewColumns();
-	*outputColumns = *inputColumns;
+	outputColumns = *inputColumns;
 	handleReconfigure();
 }
 
@@ -73,9 +71,9 @@ void Module::alert(const QString msg) const {
 }
 
 Column* Module::findColumn(const QString name) const {
-	for (int i = 0; i < outputColumns->size(); ++i)
-		if (QString::compare(outputColumns->at(i)->n, name, Qt::CaseInsensitive) == 0)
-			return outputColumns->at(i);
+	for (int i = 0; i < outputColumns.size(); ++i)
+		if (QString::compare(outputColumns.at(i)->n, name, Qt::CaseInsensitive) == 0)
+			return outputColumns.at(i);
 	return 0;
 }
 
@@ -84,13 +82,13 @@ QString* Module::insertColumn(const QString name, int index) {
 	if ( ! newColumns) newColumns = new DataDef();
 	Column *c = new Column(name, this);
 	newColumns->append(c);
-	outputColumns->insert(index, c);
+	outputColumns.insert(index, c);
 	return c->buffer();
 }
 
 void Module::removeColumn(const Column *c) {
 	// TODO:  Test whether removeAll even works with pointers
-	outputColumns->removeAll((Column*) c);
+	outputColumns.removeAll((Column*) c);
 	if (c->p == this) {
 		newColumns->removeAll((Column*) c);
 		delete c;

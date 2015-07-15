@@ -60,5 +60,5 @@ void ExampleModule::cleanup() {
 
 void ExampleModule::handleReconfigure() {
 	alert("ExampleModule::handleReconfigure()");
-	alert(QString("There are %1 input/output columns").arg(outputColumns->size()));
+	alert(QString("There are %1 input/output columns").arg(outputColumns.size()));
 }

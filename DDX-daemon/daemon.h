@@ -53,7 +53,9 @@ public:
 	
 	void addPath(QString name);
 	
-	UnitManager *getUnitManager() {return um;}
+	UnitManager *getUnitManager();
+	
+	void releaseUnitManager();
 	
 	QStringList args;
 	
@@ -99,6 +101,8 @@ private:
 	QList<Path*> *paths;
 	
 	UnitManager *um;
+	
+	int umRefCount;
 	
 	void loadDefaultSettings();
 	

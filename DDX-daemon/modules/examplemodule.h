@@ -33,7 +33,7 @@ public:
 	void init(const QJsonObject settings);
 	void process();
 	QJsonObject publishSettings() const;
-	virtual QJsonObject publishActions() const;
+	QJsonObject publishActions() const;
 	void cleanup();
 	void handleReconfigure();
 private:

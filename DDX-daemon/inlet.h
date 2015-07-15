@@ -35,7 +35,10 @@ public:
 	 * \brief Configure the Inlet for operation
 	 * \param settings The JSON settings tree
 	 * 
-	 * TODO
+	 * See Module::init() for general initiation information.  Inlets function
+	 * exactly the same but with one additional requirement.  Inlet::init()
+	 * _must_ also prepare a best-guess column structure with
+	 * insertColumn() before returning.
 	 */
 	virtual void init(QJsonObject settings);
 	

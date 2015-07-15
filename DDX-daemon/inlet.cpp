@@ -33,10 +33,6 @@ void Inlet::init(QJsonObject settings) {
 	settings.size();
 }
 
-void Inlet::initialReconfigure() {
-	// TODO
-}
-
 bool Inlet::isSynchronous() const {
 	// TODO
 	return false;
@@ -48,5 +44,9 @@ bool Inlet::isFinite() const {
 }
 
 void Inlet::start() {
-	alert("DDX bug: start() not reimplemented!");
+	alert("DDX bug: start() not reimplemented");
+}
+
+void Inlet::stop() {
+	alert("DDX bug: stop() not reimplemented");
 }

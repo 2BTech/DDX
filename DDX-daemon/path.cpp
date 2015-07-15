@@ -30,7 +30,7 @@ Path::Path(Daemon *parent, const QString name) : QObject(parent)
 	isRunning = false;
 	lastInitIndex = 0;
 	processPosition = 1;
-	modules = new QList<Module*>;
+	terminated = false;
 	
 	connect(this, &Path::sendAlert, parent, &Daemon::receiveAlert);
 	// TODO:  Check the validity of this
@@ -44,28 +44,29 @@ Path::~Path()
 }
 
 Module* Path::findModule(QString name) const {
-	for (int i = 0; i < modules->size(); ++i)
-		if (QString::compare(modules->at(i)->getName(), name, Qt::CaseInsensitive) == 0)
-			return modules->at(i);
+	for (int i = 0; i < modules.size(); ++i)
+		if (QString::compare(modules.at(i)->getName(), name, Qt::CaseInsensitive) == 0)
+			return modules.at(i);
 	return 0;
 }
 
 QJsonObject Path::publishSettings() const {
 	QJsonObject s;
-	for (int i = 0; i < modules->size(); ++i)
-		s.insert(modules->at(i)->getName(), modules->at(i)->publishSettings());
+	for (int i = 0; i < modules.size(); ++i)
+		s.insert(modules.at(i)->getName(), modules.at(i)->publishSettings());
 	return s;
 }
 
 QJsonObject Path::publishActions() const {
 	QJsonObject a;
 	// TODO:  Append start and stop actions????
-	for (int i = 0; i < modules->size(); ++i)
-		a.insert(modules->at(i)->getName(), modules->at(i)->publishActions());
+	for (int i = 0; i < modules.size(); ++i)
+		a.insert(modules.at(i)->getName(), modules.at(i)->publishActions());
 	return a;
 }
 
 void Path::terminate(QString msg) {
+	terminated = true;
 	alert(msg);
 	alert(tr("This is fatal; terminating path"));
 	cleanup();
@@ -76,9 +77,9 @@ void Path::process() {
 		alert("DDX bug: process() called while not running");
 		return;
 	}
-	QList<Module*>::const_iterator it = modules->constBegin();
+	QList<Module*>::const_iterator it = modules.constBegin();
 	processPosition = 1;
-	for (++it; it < modules->constEnd(); ++it) {  // Start after the inlet
+	for (++it; it < modules.constEnd(); ++it) {  // Start after the inlet
 		processPosition++;
 		(*it)->process();
 	}
@@ -91,12 +92,12 @@ void Path::reconfigure() {
 		alert("DDX bug: reconfigure() called while not running");
 		return;
 	}
-	for (int i = processPosition; i < modules->size(); ++i)
-		modules->at(i)->reconfigure();
+	for (int i = processPosition; i < modules.size(); ++i)
+		modules.at(i)->reconfigure();
 }
 
-void Path::test() {
-	
+void Path::test(QString methodName) {
+	methodName.size();
 }
 
 void Path::init() {
@@ -120,13 +121,12 @@ void Path::init() {
 	
 	// Instantiate and connect all constituent Modules
 	QJsonArray schemeArray = schemeDoc.array();
-	QJsonArray::const_iterator i;
-	for (i = schemeArray.constBegin(); i != schemeArray.constEnd(); ++i) {
-		QJsonObject obj = i->toObject();
+	
+	for (QJsonArray::const_iterator it = schemeArray.constBegin(); it != schemeArray.constEnd(); ++it) {
+		QJsonObject obj = it->toObject();
 		QString n = obj.value("n").toString();
 		QString t = obj.value("t").toString();
-		modules->append(um->constructModule(t, this, n));
-		
+		modules.append(um->constructModule(t, this, n));
 		
 		
 		
@@ -141,8 +141,13 @@ void Path::init() {
 		alert("loop 1");
 	}
 	
+	// TODO:  Make sure this is safe here rather than at the end of the function
+	daemon->releaseUnitManager();
 	
-	
+	for (int i = 0; i < modules.size(); ++i) {
+		modules.at(i)->init();
+		if (terminated) return;
+	}
 	
 	
 	
@@ -170,6 +175,9 @@ void Path::init() {
 	}*/
 	
 	// TODO:  Wait for all requested Beacons to be ready before continuing??
+	
+	// Send initial reconfigure
+	reconfigure();
 	emit ready(name);
 	alert("finished init");
 }
@@ -191,10 +199,9 @@ void Path::stop() {
 void Path::cleanup() {
 	// TODO
 	for (int i = 0; i < lastInitIndex; ++i)
-		modules->at(i)->cleanup();
-	for (int i = 0; i < modules->size(); ++i)
-		delete modules->at(i);
-	delete modules;
+		modules.at(i)->cleanup();
+	for (int i = 0; i < modules.size(); ++i)
+		delete modules.at(i);
 	// TODO: remove
 	emit readyForDeletion();
 }
