@@ -24,6 +24,7 @@
 #include <QList>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QJsonObject>
 
 class Module;
 class Inlet;
@@ -96,7 +97,7 @@ public:
 	 */
 	void reconfigure();
 	
-	void test(QString method);
+	void test(QString methodName);
 	
 	/*!
 	 * \brief Echo a statement to all logging Beacons.
@@ -113,7 +114,7 @@ public:
 	 * 
 	 * Can be used so that Modules can search for companion Modules by type.
 	 */
-	inline const QList<Module*>* getModules() const {return modules;}
+	inline const QList<Module*>* getModules() const {return &modules;}
 	
 	/*!
 	 * \brief Get the Path's name
@@ -162,7 +163,7 @@ private:
 	QString name;
 	
 	//! The ordered Module list
-	QList<Module*> *modules;
+	QList<Module*> modules;
 	
 	//! Convenience pointer to Inlet
 	Inlet *inlet;
@@ -181,6 +182,9 @@ private:
 	
 	//! Manages the current processing index for return after reconfiguration
 	int processPosition;
+	
+	//! Used to break out of configuration loops in init() if terminated
+	bool terminated;
 };
 
 #endif // PATH_H
