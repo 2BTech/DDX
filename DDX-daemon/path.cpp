@@ -71,6 +71,8 @@ void Path::terminate() {
 		alert("DDX bug:  Something tried to terminate outside of init()");
 		return;
 	}
+	// TODO:  Ensure this is safe to use here
+	daemon->releaseUnitManager();
 	terminated = true;
 	alert(tr("This is fatal; terminating path"));
 	cleanup();

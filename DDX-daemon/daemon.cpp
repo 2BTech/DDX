@@ -125,8 +125,8 @@ void Daemon::releaseUnitManager() {
 		log ("DELETING UNITMANAGER");
 		delete unitManager;
 		log ("    ok");
-		unitManager = 0;
 	}
+	if (umRefCount < 0) umRefCount = 0;
 }
 
 void Daemon::receiveAlert(QString msg) {

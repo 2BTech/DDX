@@ -83,6 +83,9 @@ public slots:
 	 * 
 	 * This function is scheduled to occur immediately after initial event
 	 * loop processing in main().
+	 * 
+	 * ## Planned Future Additions
+	 * - Configuring network UPnP with the BRisa framework
 	 */
 	void init();
 	
