@@ -72,12 +72,6 @@ void Daemon::quit(int returnCode) {
 }
 
 void Daemon::init() {
-	/*! ### Searching for other Daemon instances
-	 * This must be done before settings are loaded so as to avoid race
-	 * conditions when reading from settings.
-	 */
-	setupTcpServer();
-	
 	/*! ### Loading Settings
 	 * Settings are set to their default values at startup when one of these
 	 * conditions is met:
@@ -96,6 +90,8 @@ void Daemon::init() {
 		 || args.contains("-reconfigure")) loadDefaultSettings();
 	else log(tr("Loading settings last reset on ").append(settings->value("SettingsResetOn").toString()));
 
+	setupTcpServer();
+	
 	// Determine whether log should be saved to file
 	if (args.contains("-l") || settings->value("logging/AlwaysLogToFile").toBool()) {
 		// TODO
@@ -180,7 +176,8 @@ void Daemon::releaseUnitManager() {
 }
 
 void Daemon::setupTcpServer() {
-	if ( ! tcpServer->listen(QHostAddress::Any, GUI_PORT)) {
+	int port = settings->value("network/GUIPort").toInt();
+	if ( ! tcpServer->listen(QHostAddress::Any, port)) {
 		alert(tr("Server creation failed with error '%1'.  This is likely"
 				 "because another DDX daemon is already running on this"
 				 "machine.  This instance will now terminate.")
@@ -206,6 +203,8 @@ void Daemon::loadDefaultSettings() {
 	
 	// Logging
 	settings->setValue("logging/AlwaysLogToFile", false);
+	
+	settings->setValue("network/GUIPort", 4388);
 	
 	// Locale
 	// TODO: Remove these

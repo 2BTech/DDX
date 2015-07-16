@@ -54,11 +54,6 @@
 // PROCESSING
 #define POSTPROCESS_EVENT_HANDLING_TIMEOUT	200  // Timeout on call to QEventLoop::processEvents() after every Path::process()
 
-
-// IPC
-#define GUI_PORT	4388
-
-
 // BUFFERING
 #define DEFAULT_SLOW_BUFFER_SIZE	1048576  // 1048576 = 1mb
 #define DEFAULT_FAST_BUFFER_SIZE	104857600  // 104857600 = 100mb
