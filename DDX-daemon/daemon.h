@@ -24,15 +24,18 @@
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QSettings>
-#include <QSystemTrayIcon>	// Tray icon
-#include <QIcon>
-#include <QMenu>			// Tray icon
+#ifdef ICON
+	#include <QSystemTrayIcon>
+	#include <QIcon>
+	#include <QMenu>
+#endif
 #include <QThread>
 #include <QList>
 #include <random>
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QTcpServer>
+#include <QTcpSocket>
 #include "constants.h"
 
 class Path;
@@ -99,6 +102,8 @@ public slots:
 	
 	void log(const QString msg);
 	
+	void handleSocketConnection();
+	
 	void handleNetworkError(QAbstractSocket::SocketError error);
 	
 	void quit(int returnCode=0);
@@ -112,9 +117,10 @@ private:
 	//! Used to direct RPC responses to their requestor
 	QHash<int, QString> responseDirector;
 	
+#ifdef ICON
 	QSystemTrayIcon *trayIcon;
-	
 	QMenu *trayMenu;
+#endif
 	
 	//! The list of active Paths, including Paths in testing
 	QList<Path*> paths;

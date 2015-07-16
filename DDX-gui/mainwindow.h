@@ -20,6 +20,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTimer>
+#include <QTcpSocket>
+#include <QHostAddress>
 
 class MainWindow : public QMainWindow
 {
@@ -28,6 +31,13 @@ class MainWindow : public QMainWindow
 public:
 	MainWindow(QWidget *parent = 0);
 	~MainWindow();
+	
+public slots:
+	void boop();
+	
+private:
+	QTimer *t;
+	QTcpSocket *s;
 };
 
 #endif // MAINWINDOW_H

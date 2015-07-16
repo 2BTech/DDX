@@ -146,6 +146,13 @@ void Daemon::log(const QString msg) {
 #endif
 }
 
+void Daemon::handleSocketConnection() {
+	QTcpSocket *s;
+	while ((s = tcpServer->nextPendingConnection())) {
+		
+	}
+}
+
 void Daemon::handleNetworkError(QAbstractSocket::SocketError error) {
 	// TODO
 	log(tr("Unhandled network error: '%1'").arg(error));
@@ -224,6 +231,7 @@ void Daemon::loadDefaultSettings() {
 }
 
 void Daemon::setupService() {
+#ifdef ICON
 	log("In");
 	QIcon icon(":/icons/icon32");
 	log("Icon");
@@ -235,4 +243,5 @@ void Daemon::setupService() {
 	trayIcon->setToolTip(APP_NAME_UNTRANSLATABLE);
 	trayIcon->setContextMenu(trayMenu);
 	trayIcon->show();
+#endif
 }

@@ -21,9 +21,23 @@
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
+	s = new QTcpSocket(this);
+	t = new QTimer(this);
+	t->setInterval(100);
+	
 }
 
 MainWindow::~MainWindow()
 {
 	
+}
+
+void MainWindow::boop() {
+	if (s->isValid()) {  // Connected
+		s->write("boop");
+	}
+	else {  // Not connected
+		
+		s->connectToHost(QHostAddress(QHostAddress::LocalHost), 4388);
+	}
 }
