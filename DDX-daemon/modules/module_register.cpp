@@ -18,14 +18,16 @@
 
 #ifndef MODULE_REGISTER_CPP
 #define MODULE_REGISTER_CPP
+#include "../unitmanager.h"
 
+// Include Module headers here
 #include "examplemodule.h"
 #include "genmod.h"
 
 void UnitManager::registerModules() {
 	// List all Modules here (1 of 2)
-	modules->insert("ExampleModule", ExampleModule::staticMetaObject);
-	modules->insert("GenMod", GenMod::staticMetaObject);
+	modules.insert("ExampleModule", ExampleModule::staticMetaObject);
+	modules.insert("GenMod", GenMod::staticMetaObject);
 }
 
 QMap<QString, QString> UnitManager::getModuleDescriptions() const {

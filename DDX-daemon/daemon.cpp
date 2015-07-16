@@ -27,6 +27,7 @@ Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	// Open stdout stream for logging
 	qout = new QTextStream(stdout);
 	umRefCount = 0;
+	unitManager = 0;	
 }
 
 Daemon::~Daemon() {
@@ -40,8 +41,10 @@ void Daemon::testPath(QByteArray scheme, int log) {
 
 void Daemon::addPath(QString name, int log) {
 	UnitManager *um = getUnitManager();
+	QByteArray scheme = um->getPathScheme(name);
+	// TODO add error checking for scheme not found
 	QThread *t = new QThread(this);
-	Path *p = new Path(this, name);
+	Path *p = new Path(this, name, scheme);
 	paths.append(p);
 	p->moveToThread(t);
 	connect(t, &QThread::started, p, &Path::init);
@@ -88,7 +91,7 @@ void Daemon::init() {
 	settings = new QSettings(parent());
 	if ( ! settings->contains("SettingsResetOn")
 		 || args.contains("-reconfigure")) loadDefaultSettings();
-	else log(QString("Loading settings last reset on ").append(settings->value("SettingsResetOn").toString()));
+	else log(tr("Loading settings last reset on ").append(settings->value("SettingsResetOn").toString()));
 
 	// Determine whether log should be saved to file
 	if (args.contains("-l") || settings->value("logging/AlwaysLogToFile").toBool()) {
@@ -100,94 +103,28 @@ void Daemon::init() {
 	
 	// Load and unload the instrument specification file to test it
 	
-	UnitManager *um = getUnitManager();
 	QByteArray testScheme = "{\"n\":\"Test path\",\"d\":\"This is a test path\",\"DDX_author\":\"2B Technologies\",\"DDX_version\":\"0\",\"modules\":[{\"n\":\"Test inlet\",\"t\":\"ExampleInlet\",\"s\":{\"SampleSetting\":\"42\"}},{\"n\":\"Test module 1\",\"t\":\"ExampleModule\"},{\"n\":\"Test module 2\",\"t\":\"ExampleModule\",\"s\":{\"Flow_Rate\":\"12\",\"Analog_Inputs\":{\"items\":[{\"n\":\"Temperature Sensor\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"3.3\",\"Min_Voltage\":\"0\"},{\"n\":\"Power Meter\",\"t\":\"Current_AI\",\"Max_Current\":\"20\",\"Min_Current\":\"0\"},{\"n\":\"Barometer\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"2\",\"Min_Voltage\":\"1\"}]}}}]}";
-	/*
-	 * {
-	 *   "n": "Test path",
-	 *   "d": "This is a test path",
-	 *   "DDX_author": "2B Technologies",
-	 *   "DDX_version": "0.0",
-	 *   "modules": [
-	 *     {
-	 *       "n": "Test inlet",
-	 *       "t": "ExampleInlet",
-	 *       "s": {
-	 *         "SampleSetting": "42"
-	 *       }
-	 *     },
-	 *     {
-	 *       "n": "Test module 1",
-	 *       "t": "ExampleModule"
-	 *     },
-	 *     {
-	 *       "n": "Test module 2",
-	 *       "t": "ExampleModule",
-	 *       "s": {
-	 *         "Flow_Rate": "12",
-	 *         "Analog_Inputs": {
-	 *           "items": [
-	 *             {
-	 *               "n": "Temperature Sensor",
-	 *               "t": "Voltage_AI",
-	 *               "Max_Voltage": "3.3",
-	 *               "Min_Voltage": "0"
-	 *             },
-	 *             {
-	 *               "n": "Power Meter",
-	 *               "t": "Current_AI",
-	 *               "Max_Current": "20",
-	 *               "Min_Current": "0"
-	 *             },
-	 *             {
-	 *               "n": "Barometer",
-	 *               "t": "Voltage_AI",
-	 *               "Max_Voltage": "2",
-	 *               "Min_Voltage": "1"
-	 *             }
-	 *           ]
-	 *         }
-	 *       }
-	 *     }
-	 *   ]
-	 * }
-	 */
-	log("Verifying path...");
-	log(um->verifyPathScheme(testScheme));
-	
 	releaseUnitManager();
 	
 	
-	Path *p = new Path(this, "TestPath");
-	
-	
-	// Look for open GUI instance
-
-	// Check for updates 
-	// (once a week, also for instrument specifications, even if app is running,
-	// figure that out)
-
-	// Set up email notifications?  Twitter uploading?
-	log("setupService");
 	// Set up as system service (platform-dependent)
 	//setupService();
 	
-	// Try connecting to instruments
-	
-	log("Starting path");
-	p->init();
-	log("Ending path");
 }
 
 UnitManager* Daemon::getUnitManager() {
+	log("Unit manager requested");
 	if ( ! unitManager) unitManager = new UnitManager(this);
 	umRefCount++;
 	return unitManager;
 }
 
 void Daemon::releaseUnitManager() {
-	if (--umRefCount == 0) {
+	log ("Unit manager released");
+	if ((--umRefCount < 1) && unitManager) {
+		log ("DELETING UNITMANAGER");
 		delete unitManager;
+		log ("    ok");
 		unitManager = 0;
 	}
 }

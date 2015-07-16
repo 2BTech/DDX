@@ -25,23 +25,16 @@
 
 UnitManager::UnitManager(Daemon *parent) : QObject(parent)
 {
-	modules = new QHash<QString, QMetaObject>;
 	registerModules();
-#ifdef BEACONS
-	beacons = new QHash<QString, QMetaObject>;
-#endif
 	schemeFileNeedsRewriting = false;
-	QString unitsFileName = parent->settings->value("paths/configPath").toString();
-	unitsFileName.append(parent->settings->value("units/unitFile").toString());
+	QString schemeFileName = parent->settings->value("paths/configPath").toString();
+	schemeFileName.append(parent->settings->value("units/unitFile").toString());
+	// TODO: load paths
 }
 
 UnitManager::~UnitManager()
 {
-	// TODO: iterate through these?
-	delete modules;
-#ifdef BEACONS
-	delete beacons;
-#endif
+	// TODO: iterate through modules
 }
 
 QByteArray UnitManager::getPathScheme(QString name) const {
@@ -88,9 +81,6 @@ QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
 	// Loop through modules and check each one
 	QJsonArray::const_iterator i;
 	QStringList modNameList;
-#ifdef BEACONS
-	QStringList beaconList;
-#endif
 	Module *moduleInstance;
 	bool firstElement = true;
 	for (i = modArray.constBegin(); i != modArray.constEnd(); ++i) {
@@ -108,20 +98,6 @@ QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
 		if (modNameList.contains(n, Qt::CaseInsensitive))
 			return tr("Scheme contains multiple modules named '%1'").arg(n);
 		modNameList.append(n);
-#ifdef BEACONS
-		if (obj.contains("beacons")) {  // Beacon requests are optional
-			if ( ! obj.value("beacons").isArray())
-				return tr("Scheme contains a module with a beacons element which is not a JSON array");
-			QJsonArray beaconArray = schemeObj.value("beacons").toArray();
-			QJsonArray::const_iterator b_i;
-			for (b_i = beaconArray.constBegin(); b_i != beaconArray.constEnd(); ++b_i) {
-				if (b_i->toString().isEmpty())
-					return tr("Scheme contains a beacon request which is empty or not a string");
-				beaconList.append(b_i->toString());
-			}
-		}
-		// TODO: Iterate through beaconList to verify that each Beacon exists
-#endif
 		QString t = obj.value("t").toString();
 		if (t.isEmpty())
 			return tr("Scheme contains a module whose type is empty or not a string");
@@ -146,19 +122,20 @@ QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
 }
 
 QString UnitManager::addPath(const QByteArray scheme, bool save) {
+	QString error = verifyPathScheme(scheme);
+	if ( ! error.isEmpty()) return error;
 	// TODO
-	scheme.size();
-	save = false;
+	if (save) ((Daemon*) parent())->receiveAlert("DDX bug: path saving not implemented yet (UnitManager::addPath())");
 	return QString();
 }
 
 bool UnitManager::moduleExists(const QString type) const {
-	return modules->contains(type);
+	return modules.contains(type);
 }
 
 Module* UnitManager::constructModule(const QString type, Path *parent, const QString name) const {
-	return (Module*) modules->value(type).newInstance(Q_ARG(Path*, parent),
-													  Q_ARG(QString, name));
+	return (Module*) modules.value(type).newInstance(Q_ARG(Path*, parent),
+													 Q_ARG(QString, name));
 }
 
 #include "modules/module_register.cpp"

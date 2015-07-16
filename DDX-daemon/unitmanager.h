@@ -22,6 +22,7 @@
 #include <QObject>
 #include <QJsonObject>
 #include <QReadWriteLock>
+#include <QHash>
 
 class Daemon;
 class Module;
@@ -109,11 +110,11 @@ public slots:
 	
 private:
 	static QReadWriteLock configFileLock;
+	
 	bool schemeFileNeedsRewriting;
-	QHash<QString, QMetaObject> *modules;
-#ifdef BEACONS
-	QHash<QString, QMetaObject> *beacons;
-#endif
+	
+	//! The list of Modules used to instantiate them by name
+	QHash<QString, QMetaObject> modules;
 
 	/*!
 	 * \brief Register all Modules with UnitManager

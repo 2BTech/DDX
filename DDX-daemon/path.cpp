@@ -25,6 +25,7 @@
 Path::Path(Daemon *parent, const QString name, const QByteArray scheme) : QObject(parent)
 {
 	this->name = name;
+	this->scheme = scheme;
 	daemon = parent;
 	isReady = false;
 	isRunning = false;
@@ -108,10 +109,8 @@ void Path::test(QString methodName) {
 }
 
 void Path::init() {
-	// Get scheme
 	UnitManager *um = daemon->getUnitManager();
-	alert("um exists");
-	QByteArray scheme = um->getPathScheme(name);
+	// Parse scheme
 #ifdef PATH_PARSING_CHECKS
 	QString parseError = um->verifyPathScheme(scheme);
 	if (parseError.isNull()) {
@@ -120,8 +119,8 @@ void Path::init() {
 		return;
 	}
 #endif
-	// Parse scheme
 	QJsonDocument schemeDoc = QJsonDocument::fromJson(scheme);
+	scheme.clear();
 	
 	// Instantiate and connect all constituent Modules
 	QJsonArray schemeArray = schemeDoc.array();
