@@ -130,6 +130,9 @@ signals:
 	//! Emitted when Path has started
 	void running(QString path) const;
 	
+	//! Emitted when Path is stopped
+	void stopped(QString path) const;
+	
 	//! Emitted when Path has reached the end of its inlet stream
 	void finished(QString path) const;
 	

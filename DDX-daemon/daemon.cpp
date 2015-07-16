@@ -26,17 +26,26 @@ Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	args = parent->arguments();
 	// Open stdout stream for logging
 	qout = new QTextStream(stdout);
+	// Initialize random number generator (for network requests)
+	int a = QTime::currentTime().msec();
+	int b = QDate::currentDate().day()*2 - QTime::currentTime().second();
+	//std::seed_seq ss({210,a,38,b,178,2819});
+	std::seed_seq ss({210,a,38,b,178,2819});
+	mersenneTwister = std::mt19937(ss);
+	// Initialize other variables
 	umRefCount = 0;
 	unitManager = 0;	
 }
 
 Daemon::~Daemon() {
 	// TODO
+	if (unitManager) delete unitManager;
 }
 
 void Daemon::testPath(QByteArray scheme, int log) {
-	scheme.size();
 	// TODO
+	scheme.size();
+	log += 2;
 }
 
 void Daemon::addPath(QString name, int log) {
@@ -51,6 +60,8 @@ void Daemon::addPath(QString name, int log) {
 	connect(p, &Path::destroyed, t, &QThread::quit);
 	connect(t, &QThread::finished, t, &QThread::deleteLater);
 	t->start();
+	log +=2;
+	// TODO
 }
 
 void Daemon::quit(int returnCode) {
@@ -103,6 +114,10 @@ void Daemon::init() {
 	
 	// Load and unload the instrument specification file to test it
 	
+	for (int i = 0; i < 20; i++) {
+		log (randomGen());
+	}
+	
 	QByteArray testScheme = "{\"n\":\"Test path\",\"d\":\"This is a test path\",\"DDX_author\":\"2B Technologies\",\"DDX_version\":\"0\",\"modules\":[{\"n\":\"Test inlet\",\"t\":\"ExampleInlet\",\"s\":{\"SampleSetting\":\"42\"}},{\"n\":\"Test module 1\",\"t\":\"ExampleModule\"},{\"n\":\"Test module 2\",\"t\":\"ExampleModule\",\"s\":{\"Flow_Rate\":\"12\",\"Analog_Inputs\":{\"items\":[{\"n\":\"Temperature Sensor\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"3.3\",\"Min_Voltage\":\"0\"},{\"n\":\"Power Meter\",\"t\":\"Current_AI\",\"Max_Current\":\"20\",\"Min_Current\":\"0\"},{\"n\":\"Barometer\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"2\",\"Min_Voltage\":\"1\"}]}}}]}";
 	releaseUnitManager();
 	
@@ -112,14 +127,26 @@ void Daemon::init() {
 	
 }
 
+void Daemon::request(QJsonObject params, QString dest) {
+	params.size();
+	dest.size();
+	// TODO
+}
+
 UnitManager* Daemon::getUnitManager() {
-	log("Unit manager requested");
 	if ( ! unitManager) unitManager = new UnitManager(this);
+#ifdef KEEP_UNITMANAGER
+	return unitManager;
+#else
+	if ( ! unitManager) 
+	log("Unit manager requested");
 	umRefCount++;
 	return unitManager;
+#endif
 }
 
 void Daemon::releaseUnitManager() {
+#ifndef KEEP_UNITMANAGER
 	log ("Unit manager released");
 	if ((--umRefCount < 1) && unitManager) {
 		log ("DELETING UNITMANAGER");
@@ -127,6 +154,7 @@ void Daemon::releaseUnitManager() {
 		log ("    ok");
 	}
 	if (umRefCount < 0) umRefCount = 0;
+#endif
 }
 
 void Daemon::receiveAlert(QString msg) {
@@ -179,4 +207,8 @@ void Daemon::setupService() {
 	trayIcon->setToolTip(APP_NAME_UNTRANSLATABLE);
 	trayIcon->setContextMenu(trayMenu);
 	trayIcon->show();
+}
+
+int Daemon::randomGen() {
+	return abs((int) mersenneTwister());
 }

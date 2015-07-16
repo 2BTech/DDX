@@ -29,6 +29,9 @@
 #include <QMenu>			// Tray icon
 #include <QThread>
 #include <QList>
+#include <random>
+#include <QJsonObject>
+#include <QJsonDocument>
 #include "constants.h"
 
 class Path;
@@ -89,6 +92,8 @@ public slots:
 	 */
 	void init();
 	
+	void request(QJsonObject params, QString dest);
+	
 	void receiveAlert(QString msg);
 	
 	void log(const QVariant &msg);  // Print a low-info log message
@@ -98,6 +103,8 @@ public slots:
 private:
 	
 	QTextStream *qout;  // stdout wrapper
+	
+	QHash<int, QString> responseDirector;
 	
 	QSystemTrayIcon *trayIcon;
 	
@@ -109,9 +116,13 @@ private:
 	
 	int umRefCount;
 	
+	std::mt19937 mersenneTwister;
+	
 	void loadDefaultSettings();
 	
 	void setupService();
+	
+	int randomGen();
 };
 
 #endif // DAEMON_H

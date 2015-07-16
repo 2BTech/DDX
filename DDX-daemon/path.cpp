@@ -183,6 +183,7 @@ void Path::init() {
 	
 	// Send initial reconfigure
 	reconfigure();
+	isReady = true;
 	emit ready(name);
 	alert("finished init");
 }
@@ -192,13 +193,15 @@ void Path::start() {
 		alert(tr("Path started before it was ready"));
 		return;
 	}
-	// TODO
+	isRunning = true;
 	emit running(name);
+	inlet->start();
 }
 
 void Path::stop() {
-	// TODO
-	// e
+	inlet->stop();
+	isRunning = false;
+	emit stopped(name);
 }
 
 void Path::cleanup() {

@@ -35,6 +35,7 @@
 	#define PATH_PARSING_CHECKS
 	#define CAUTIOUS_CHECKS
 #endif
+#define KEEP_UNITMANAGER
 
 // LOGGING
 #ifdef ENABLE_DEBUG
