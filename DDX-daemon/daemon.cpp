@@ -26,15 +26,10 @@ Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	args = parent->arguments();
 	// Open stdout stream for logging
 	qout = new QTextStream(stdout);
-	// Initialize random number generator (for network requests)
-	int a = QTime::currentTime().msec();
-	int b = QDate::currentDate().day()*2 - QTime::currentTime().second();
-	//std::seed_seq ss({210,a,38,b,178,2819});
-	std::seed_seq ss({210,a,38,b,178,2819});
-	mersenneTwister = std::mt19937(ss);
 	// Initialize other variables
 	umRefCount = 0;
-	unitManager = 0;	
+	unitManager = 0;
+	nextRequestId = 1;
 }
 
 Daemon::~Daemon() {
@@ -68,15 +63,6 @@ void Daemon::quit(int returnCode) {
 	// TODO: make this call finishing stuff
 	log("Daemon quit slot called");
 	qApp->exit(returnCode);
-}
-
-
-void Daemon::log(const QVariant &msg) {
-	QString finalMsg = QDateTime::currentDateTime().toString("[yyyy/MM/dd HH:mm:ss.zzz] ");
-	finalMsg.append(msg.toString());
-#ifdef LOGGING_ENABLE_STDOUT
-	*qout << finalMsg << endl;
-#endif
 }
 
 void Daemon::init() {
@@ -114,9 +100,6 @@ void Daemon::init() {
 	
 	// Load and unload the instrument specification file to test it
 	
-	for (int i = 0; i < 20; i++) {
-		log (randomGen());
-	}
 	
 	QByteArray testScheme = "{\"n\":\"Test path\",\"d\":\"This is a test path\",\"DDX_author\":\"2B Technologies\",\"DDX_version\":\"0\",\"modules\":[{\"n\":\"Test inlet\",\"t\":\"ExampleInlet\",\"s\":{\"SampleSetting\":\"42\"}},{\"n\":\"Test module 1\",\"t\":\"ExampleModule\"},{\"n\":\"Test module 2\",\"t\":\"ExampleModule\",\"s\":{\"Flow_Rate\":\"12\",\"Analog_Inputs\":{\"items\":[{\"n\":\"Temperature Sensor\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"3.3\",\"Min_Voltage\":\"0\"},{\"n\":\"Power Meter\",\"t\":\"Current_AI\",\"Max_Current\":\"20\",\"Min_Current\":\"0\"},{\"n\":\"Barometer\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"2\",\"Min_Voltage\":\"1\"}]}}}]}";
 	releaseUnitManager();
@@ -127,10 +110,40 @@ void Daemon::init() {
 	
 }
 
-void Daemon::request(QJsonObject params, QString dest) {
+void Daemon::request(QJsonObject params, QString dest, bool response) {
+	if (response) {
+		/* Get request ID so that responses can be recorded
+		 * While this function is technically called from multiple threads, each
+		 * call is queued, so Daemon data elements should be safe to access. */
+		int id = nextRequestId++;
+		if (nextRequestId == INT_MAX) {
+			log("RPC ID value maxed; resetting.  May cause undefined behavior.");
+			nextRequestId = 100;
+			/* TODO:  In future versions, it may be better to trigger and daemon
+			 * restart when this happens. */
+		}
+	}
+	
+	
+	
+	
 	params.size();
 	dest.size();
+}
+
+void Daemon::alert(const QString msg) {
 	// TODO
+	QString out("alert:");
+	out.append(msg);
+	log(msg);
+}
+
+void Daemon::log(const QString msg) {
+	QString finalMsg = QDateTime::currentDateTime().toString("[yyyy/MM/dd HH:mm:ss.zzz] ");
+	finalMsg.append(msg);
+#ifdef LOGGING_ENABLE_STDOUT
+	*qout << finalMsg << endl;
+#endif
 }
 
 UnitManager* Daemon::getUnitManager() {
@@ -155,12 +168,6 @@ void Daemon::releaseUnitManager() {
 	}
 	if (umRefCount < 0) umRefCount = 0;
 #endif
-}
-
-void Daemon::receiveAlert(QString msg) {
-	// TODO
-	msg.prepend("a:");
-	log(msg);
 }
 
 void Daemon::loadDefaultSettings() {
@@ -194,7 +201,6 @@ void Daemon::loadDefaultSettings() {
 	// TODO: restart Daemon?????
 }
 
-
 void Daemon::setupService() {
 	log("In");
 	QIcon icon(":/icons/icon32");
@@ -207,8 +213,4 @@ void Daemon::setupService() {
 	trayIcon->setToolTip(APP_NAME_UNTRANSLATABLE);
 	trayIcon->setContextMenu(trayMenu);
 	trayIcon->show();
-}
-
-int Daemon::randomGen() {
-	return abs((int) mersenneTwister());
 }

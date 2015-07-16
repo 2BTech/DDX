@@ -92,37 +92,37 @@ public slots:
 	 */
 	void init();
 	
-	void request(QJsonObject params, QString dest);
+	void request(QJsonObject params, QString dest, bool response = false);
 	
-	void receiveAlert(QString msg);
+	void alert(const QString msg);
 	
-	void log(const QVariant &msg);  // Print a low-info log message
+	void log(const QString msg);
 	
 	void quit(int returnCode=0);
 
 private:
+	//! stdout wrapper used for logging
+	QTextStream *qout;
 	
-	QTextStream *qout;  // stdout wrapper
-	
+	//! Used to direct RPC responses to their requestor
 	QHash<int, QString> responseDirector;
 	
 	QSystemTrayIcon *trayIcon;
 	
 	QMenu *trayMenu;
 	
+	//! The list of active Paths, including Paths in testing
 	QList<Path*> paths;
 	
 	UnitManager *unitManager;
 	
 	int umRefCount;
 	
-	std::mt19937 mersenneTwister;
+	int nextRequestId;
 	
 	void loadDefaultSettings();
 	
 	void setupService();
-	
-	int randomGen();
 };
 
 #endif // DAEMON_H

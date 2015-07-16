@@ -33,7 +33,8 @@ Path::Path(Daemon *parent, const QString name, const QByteArray scheme) : QObjec
 	processPosition = 1;
 	terminated = false;
 	
-	connect(this, &Path::sendAlert, parent, &Daemon::receiveAlert);
+	connect(this, &Path::sendAlert, parent, &Daemon::alert);
+	connect(this, &Path::sendLog, parent, &Daemon::log);
 	// TODO:  Check the validity of this
 	connect(this, &Path::readyForDeletion, this, &Path::deleteLater);
 }
@@ -222,4 +223,14 @@ void Path::alert(const QString msg, const Module *m) const {
 	// Append & send
 	out.append(": ").append(msg);
 	emit sendAlert(out);
+}
+
+void Path::log(const QString msg, const Module *m) const {
+	// Start with Path name
+	QString out(name);
+	// Add Module name if applicable
+	if (m) out.append(":").append(m->getName());
+	// Append & send
+	out.append(": ").append(msg);
+	emit sendLog(out);
 }

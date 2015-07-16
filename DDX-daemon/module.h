@@ -328,12 +328,20 @@ protected:
 	virtual void handleReconfigure();
 	
 	/*!
-	 * \brief Echo a statement to all logging Beacons.
+	 * \brief Send a high-level message to the user
 	 * \param msg The message
 	 * 
 	 * Alerts are tagged with the name of the Path and Module they come from.
 	 */
 	void alert(const QString msg) const;
+	
+	/*!
+	 * \brief Log a low-level event message
+	 * \param msg The message
+	 * 
+	 * Log events are tagged with the name of the Path and Module they come from.
+	 */
+	void log(const QString msg) const;
 	
 	/*!
 	 * \brief Get a pointer to a specific input Column

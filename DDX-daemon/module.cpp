@@ -70,6 +70,10 @@ void Module::alert(const QString msg) const {
 	path->alert(msg, this);
 }
 
+void Module::log(const QString msg) const {
+	path->log(msg, this);
+}
+
 Column* Module::findColumn(const QString name) const {
 	for (int i = 0; i < outputColumns.size(); ++i)
 		if (QString::compare(outputColumns.at(i)->n, name, Qt::CaseInsensitive) == 0)

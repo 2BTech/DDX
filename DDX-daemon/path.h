@@ -100,13 +100,22 @@ public:
 	void test(QString methodName);
 	
 	/*!
-	 * \brief Echo a statement to all logging Beacons.
+	 * \brief Send a high-level message to the user
 	 * \param msg The message
 	 * \param m The Module from which it comes; ignore when writing Path alerts
 	 * 
 	 * Alerts are tagged with the name of the Path they come from.
 	 */
 	void alert(const QString msg, const Module *m = 0) const;
+	
+	/*!
+	 * \brief Log a low-level event message
+	 * \param msg The message
+	 * \param m The Module from which it comes; ignore when writing Path alerts
+	 * 
+	 * Log events are tagged with the name of the Path they come from.
+	 */
+	void log(const QString msg, const Module *m = 0) const;
 	
 	/*!
 	 * \brief Retrieve Module list
@@ -144,6 +153,9 @@ signals:
 	
 	//! Emitted to send an alert.  _Note:_ use alert() when sending alerts.
 	void sendAlert(const QString msg) const;
+	
+	//! Emitted to log an event.  _Note:_ use log() when logging events.
+	void sendLog(const QString msg) const;
 	
 public slots:
 	/*!

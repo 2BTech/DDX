@@ -54,6 +54,14 @@ public:
 	 */
 	virtual bool isFinite() const;
 	
+	/*!
+	 * \brief Flag Inlet for starting
+	 * 
+	 * This function should return before the first call to process().  This
+	 * function is called with plenty of stack overhead, so it's best to start
+	 * any data collection systems and then use signals and slots to handle
+	 * individual data lines once control is yielded back to the event loop.
+	 */
 	virtual void start();
 	
 	virtual void stop();
@@ -63,6 +71,9 @@ public:
 	~Inlet();
 	
 private:
+	bool streamIsSynchronous;
+	bool streamIsFinite;
+	
 #ifdef CAUTIOUS_ALERTS
 	void handleReconfigure() {alert("DDX bug: handleReconfigure() called on an inlet");}
 	void process() {alert("DDX bug: process() called on an inlet");}
