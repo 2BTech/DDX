@@ -30,11 +30,14 @@ Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	umRefCount = 0;
 	unitManager = 0;
 	nextRequestId = 1;
+	tcpServer = new QTcpServer(this);
+	quitting = false;
 }
 
 Daemon::~Daemon() {
 	// TODO
 	if (unitManager) delete unitManager;
+	delete tcpServer;
 }
 
 void Daemon::testPath(QByteArray scheme, int log) {
@@ -60,8 +63,11 @@ void Daemon::addPath(QString name, int log) {
 }
 
 void Daemon::quit(int returnCode) {
+	if (quitting) return;
+	quitting = true;
 	// TODO: make this call finishing stuff
-	log("Daemon quit slot called");
+	if (returnCode) log(tr("Quitting"));
+	else log(tr("Terminating (%1)").arg(returnCode));
 	qApp->exit(returnCode);
 }
 
@@ -70,7 +76,7 @@ void Daemon::init() {
 	 * This must be done before settings are loaded so as to avoid race
 	 * conditions when reading from settings.
 	 */
-	// TODO
+	setupTcpServer();
 	
 	/*! ### Loading Settings
 	 * Settings are set to their default values at startup when one of these
@@ -118,15 +124,13 @@ void Daemon::request(QJsonObject params, QString dest, bool response) {
 		int id = nextRequestId++;
 		if (nextRequestId == INT_MAX) {
 			log("RPC ID value maxed; resetting.  May cause undefined behavior.");
-			nextRequestId = 100;
+			nextRequestId = 100;  // Some random relatively low value
 			/* TODO:  In future versions, it may be better to trigger and daemon
 			 * restart when this happens. */
 		}
+		id+=2;
 	}
-	
-	
-	
-	
+	else {}
 	params.size();
 	dest.size();
 }
@@ -144,6 +148,11 @@ void Daemon::log(const QString msg) {
 #ifdef LOGGING_ENABLE_STDOUT
 	*qout << finalMsg << endl;
 #endif
+}
+
+void Daemon::handleNetworkError(QAbstractSocket::SocketError error) {
+	// TODO
+	log(tr("Unhandled network error: '%1'").arg(error));
 }
 
 UnitManager* Daemon::getUnitManager() {
@@ -168,6 +177,20 @@ void Daemon::releaseUnitManager() {
 	}
 	if (umRefCount < 0) umRefCount = 0;
 #endif
+}
+
+void Daemon::setupTcpServer() {
+	if ( ! tcpServer->listen(QHostAddress::Any, GUI_PORT)) {
+		alert(tr("Server creation failed with error '%1'.  This is likely"
+				 "because another DDX daemon is already running on this"
+				 "machine.  This instance will now terminate.")
+			  .arg(tcpServer->errorString()));
+		quit(E_TCP_SERVER_FAILED);
+		return;
+	}
+	
+	
+	connect(tcpServer, &QTcpServer::acceptError, this, &Daemon::handleNetworkError);
 }
 
 void Daemon::loadDefaultSettings() {

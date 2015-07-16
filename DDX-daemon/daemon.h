@@ -32,6 +32,7 @@
 #include <random>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QTcpServer>
 #include "constants.h"
 
 class Path;
@@ -98,11 +99,15 @@ public slots:
 	
 	void log(const QString msg);
 	
+	void handleNetworkError(QAbstractSocket::SocketError error);
+	
 	void quit(int returnCode=0);
 
 private:
 	//! stdout wrapper used for logging
 	QTextStream *qout;
+	
+	QTcpServer *tcpServer;
 	
 	//! Used to direct RPC responses to their requestor
 	QHash<int, QString> responseDirector;
@@ -119,6 +124,16 @@ private:
 	int umRefCount;
 	
 	int nextRequestId;
+	
+	bool quitting;
+	
+	/*!
+	 * \brief Install a connection listener on the appropriate port
+	 * 
+	 * Note that this function may quit the application on failure.  Callers
+	 * should be prepared to do so cleanly if necessary.
+	 */
+	void setupTcpServer();
 	
 	void loadDefaultSettings();
 	

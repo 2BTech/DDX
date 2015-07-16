@@ -24,6 +24,7 @@
 #-------------------------------------------------
 
 QT       += core \
+			network \
 			serialport \
 			bluetooth \
 			widgets \ # For tray icons & messages
