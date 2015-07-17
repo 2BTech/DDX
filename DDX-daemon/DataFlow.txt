@@ -91,3 +91,8 @@ PipedFile first character key:
 Each of these components can be configured and linked up independently.  This
 allows the compiled daemon to be used for either data collection from a host
 computer or 
+
+
+Planned features:
+- UPnP
+- Using external SSH application for secure tunnelling?

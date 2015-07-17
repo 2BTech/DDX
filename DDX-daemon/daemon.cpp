@@ -155,7 +155,7 @@ void Daemon::handleSocketConnection() {
 
 void Daemon::handleNetworkError(QAbstractSocket::SocketError error) {
 	// TODO
-	log(tr("Unhandled network error: '%1'").arg(error));
+	log(QString("DDX bug: Unhandled network error (QAbstractSocket): '%1'").arg(error));
 }
 
 UnitManager* Daemon::getUnitManager() {
@@ -212,6 +212,7 @@ void Daemon::loadDefaultSettings() {
 	settings->setValue("logging/AlwaysLogToFile", false);
 	
 	settings->setValue("network/GUIPort", 4388);
+	settings->setValue("network/AllowExternalManagement", false);
 	
 	// Locale
 	// TODO: Remove these
