@@ -42,6 +42,8 @@ public:
 	 */
 	void setupTcpServer();
 	
+	void shutdown();
+	
 signals:
 	
 public slots:

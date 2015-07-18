@@ -147,6 +147,7 @@ void Daemon::quit(int returnCode) {
 	if (quitting) return;  // Prevent recursion
 	quitting = true;
 	// TODO: make this call finishing stuff
+	n->shutdown();  // May take a while
 	if (returnCode) log(tr("Terminating (%1)").arg(returnCode));
 	else log(tr("Quitting"));
 	qApp->exit(returnCode);
@@ -154,14 +155,11 @@ void Daemon::quit(int returnCode) {
 
 UnitManager* Daemon::getUnitManager() {
 	if ( ! unitManager) unitManager = new UnitManager(this);
-#ifdef KEEP_UNITMANAGER
-	return unitManager;
-#else
-	if ( ! unitManager) 
+#ifndef KEEP_UNITMANAGER
 	log("Unit manager requested");
 	umRefCount++;
-	return unitManager;
 #endif
+	return unitManager;
 }
 
 void Daemon::releaseUnitManager() {

@@ -24,8 +24,19 @@ Network::Network(Daemon *parent) : QObject(parent)
 	server = new QTcpServer(this);
 }
 
-Network::~Network()
-{
+Network::~Network() {
+	// Forcibly close open connections (should have been gracefully handled in
+	// shutdown() if possible)
+	QHash<QString, QAbstractSocket*>::const_iterator it;
+	for (it = sockets.constBegin(); it != sockets.constEnd(); ++it) {
+		(*it)->abort();
+		delete *it;
+	}
+	for (int i = 0; i < ur_sockets.size(); i++) {
+		ur_sockets.at(i)->abort();
+		delete ur_sockets.at(i);
+	}
+	server->close();
 	delete server;
 }
 
@@ -40,6 +51,13 @@ void Network::setupTcpServer() {
 	}
 	connect(server, &QTcpServer::acceptError, this, &Network::handleNetworkError);
 	connect(server, &QTcpServer::newConnection, this, &Network::handleSocketConnection);
+}
+
+void Network::shutdown() {
+	d->log(tr("Closing network connections"));
+	// TODO:  Close all connections gracefully without using event loop
+	// This function must be thread-safe with regards to being called by
+	// the daemon
 }
 
 void Network::handleData() {
@@ -75,4 +93,6 @@ void Network::handleSocketConnection() {
 void Network::handleNetworkError(QAbstractSocket::SocketError error) {
 	// TODO
 	d->log(QString("DDX bug: Unhandled network error (QAbstractSocket): '%1'").arg(error));
+	// This should loop through all active RPC requests and return an error
+	// for any that relied on the connection that failed
 }

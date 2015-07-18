@@ -38,7 +38,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::boop() {
 	if (s->state() == QAbstractSocket::ConnectedState) {  // Connected
-		s->write(QString("boop%1\n").arg(n).toLatin1());
+		s->write(QString("{\"test\":\"%1\"}\n").arg(n).toLatin1());
 		s->flush();
 		l->setText(tr("Connected (%1)").arg(n));
 	}
