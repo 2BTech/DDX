@@ -19,6 +19,7 @@
 #include "daemon.h"
 #include "unitmanager.h"
 #include "path.h"
+#include "network.h"
 #include "modules/genmod.h"
 
 Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
@@ -27,17 +28,63 @@ Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	// Open stdout stream for logging
 	qout = new QTextStream(stdout);
 	// Initialize other variables
+	n = new Network(this);
 	umRefCount = 0;
 	unitManager = 0;
 	nextRequestId = 1;
-	tcpServer = new QTcpServer(this);
 	quitting = false;
 }
 
 Daemon::~Daemon() {
 	// TODO
 	if (unitManager) delete unitManager;
-	delete tcpServer;
+	delete n;
+}
+
+void Daemon::init() {
+	/*! ### Loading Settings
+	 * Settings are set to their default values at startup when one of these
+	 * conditions is met:
+	 * - No settings have been set (determined by searching for the setting
+	 *   "SettingsResetOn")
+	 * - The daemon is launched with the "-reconfigure" argument
+	 * 
+	 * Note that the "Default Settings" GUI button simply removes
+	 * "SettingsResetOn" and then forces a full application restart.
+	 * \sa Daemon::loadDefaultSettings
+	 */
+	// TODO:  Add a see also to the above comment about the GUI's option which
+	// removes "SettingsResetOn"
+	settings = new QSettings(parent());
+	if ( ! settings->contains("SettingsResetOn")
+		 || args.contains("-reconfigure")) loadDefaultSettings();
+	else log(tr("Loading settings last reset on ").append(settings->value("SettingsResetOn").toString()));
+
+	n->setupTcpServer();
+	
+	// Determine whether log should be saved to file
+	if (args.contains("-l") || settings->value("logging/AlwaysLogToFile").toBool()) {
+		// TODO
+		// Also, consider adding the option to show the console rather than hide it
+	}
+	
+	// Determine whether last instance shut down correctly
+	
+	// Load and unload the instrument specification file to test it
+	
+	
+	QByteArray testScheme = "{\"n\":\"Test path\",\"d\":\"This is a test path\",\"DDX_author\":\"2B Technologies\",\"DDX_version\":\"0\",\"modules\":[{\"n\":\"Test inlet\",\"t\":\"ExampleInlet\",\"s\":{\"SampleSetting\":\"42\"}},{\"n\":\"Test module 1\",\"t\":\"ExampleModule\"},{\"n\":\"Test module 2\",\"t\":\"ExampleModule\",\"s\":{\"Flow_Rate\":\"12\",\"Analog_Inputs\":{\"items\":[{\"n\":\"Temperature Sensor\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"3.3\",\"Min_Voltage\":\"0\"},{\"n\":\"Power Meter\",\"t\":\"Current_AI\",\"Max_Current\":\"20\",\"Min_Current\":\"0\"},{\"n\":\"Barometer\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"2\",\"Min_Voltage\":\"1\"}]}}}]}";
+	releaseUnitManager();
+	
+	
+	// Set up as system service (platform-dependent)
+	//setupService();
+	
+}
+
+QVariant Daemon::s(const QString &key) {
+	// TODO: assert(settings != 0);
+	return settings->value(key);
 }
 
 void Daemon::testPath(QByteArray scheme, int log) {
@@ -60,56 +107,6 @@ void Daemon::addPath(QString name, int log) {
 	t->start();
 	log +=2;
 	// TODO
-}
-
-void Daemon::quit(int returnCode) {
-	if (quitting) return;
-	quitting = true;
-	// TODO: make this call finishing stuff
-	if (returnCode) log(tr("Quitting"));
-	else log(tr("Terminating (%1)").arg(returnCode));
-	qApp->exit(returnCode);
-}
-
-void Daemon::init() {
-	/*! ### Loading Settings
-	 * Settings are set to their default values at startup when one of these
-	 * conditions is met:
-	 * - No settings have been set (determined by searching for the setting
-	 *   "SettingsResetOn")
-	 * - The daemon is launched with the "-reconfigure" argument
-	 * 
-	 * Note that the "Default Settings" GUI button simply removes
-	 * "SettingsResetOn" and then forces a full application restart.
-	 * \sa Daemon::loadDefaultSettings
-	 */
-	// TODO:  Add a see also to the above comment about the GUI's option which
-	// removes "SettingsResetOn"
-	settings = new QSettings(parent());
-	if ( ! settings->contains("SettingsResetOn")
-		 || args.contains("-reconfigure")) loadDefaultSettings();
-	else log(tr("Loading settings last reset on ").append(settings->value("SettingsResetOn").toString()));
-
-	setupTcpServer();
-	
-	// Determine whether log should be saved to file
-	if (args.contains("-l") || settings->value("logging/AlwaysLogToFile").toBool()) {
-		// TODO
-		// Also, consider adding the option to show the console rather than hide it
-	}
-	
-	// Determine whether last instance shut down correctly
-	
-	// Load and unload the instrument specification file to test it
-	
-	
-	QByteArray testScheme = "{\"n\":\"Test path\",\"d\":\"This is a test path\",\"DDX_author\":\"2B Technologies\",\"DDX_version\":\"0\",\"modules\":[{\"n\":\"Test inlet\",\"t\":\"ExampleInlet\",\"s\":{\"SampleSetting\":\"42\"}},{\"n\":\"Test module 1\",\"t\":\"ExampleModule\"},{\"n\":\"Test module 2\",\"t\":\"ExampleModule\",\"s\":{\"Flow_Rate\":\"12\",\"Analog_Inputs\":{\"items\":[{\"n\":\"Temperature Sensor\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"3.3\",\"Min_Voltage\":\"0\"},{\"n\":\"Power Meter\",\"t\":\"Current_AI\",\"Max_Current\":\"20\",\"Min_Current\":\"0\"},{\"n\":\"Barometer\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"2\",\"Min_Voltage\":\"1\"}]}}}]}";
-	releaseUnitManager();
-	
-	
-	// Set up as system service (platform-dependent)
-	//setupService();
-	
 }
 
 void Daemon::request(QJsonObject params, QString dest, bool response) {
@@ -146,16 +143,13 @@ void Daemon::log(const QString msg) {
 #endif
 }
 
-void Daemon::handleSocketConnection() {
-	QTcpSocket *s;
-	while ((s = tcpServer->nextPendingConnection())) {
-		
-	}
-}
-
-void Daemon::handleNetworkError(QAbstractSocket::SocketError error) {
-	// TODO
-	log(QString("DDX bug: Unhandled network error (QAbstractSocket): '%1'").arg(error));
+void Daemon::quit(int returnCode) {
+	if (quitting) return;
+	quitting = true;
+	// TODO: make this call finishing stuff
+	if (returnCode) log(tr("Quitting"));
+	else log(tr("Terminating (%1)").arg(returnCode));
+	qApp->exit(returnCode);
 }
 
 UnitManager* Daemon::getUnitManager() {
@@ -180,21 +174,6 @@ void Daemon::releaseUnitManager() {
 	}
 	if (umRefCount < 0) umRefCount = 0;
 #endif
-}
-
-void Daemon::setupTcpServer() {
-	int port = settings->value("network/GUIPort").toInt();
-	if ( ! tcpServer->listen(QHostAddress::Any, port)) {
-		alert(tr("Server creation failed with error '%1'.  This is likely"
-				 "because another DDX daemon is already running on this"
-				 "machine.  This instance will now terminate.")
-			  .arg(tcpServer->errorString()));
-		quit(E_TCP_SERVER_FAILED);
-		return;
-	}
-	
-	
-	connect(tcpServer, &QTcpServer::acceptError, this, &Daemon::handleNetworkError);
 }
 
 void Daemon::loadDefaultSettings() {

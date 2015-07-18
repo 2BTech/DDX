@@ -26,7 +26,7 @@ Path::Path(Daemon *parent, const QString name, const QByteArray scheme) : QObjec
 {
 	this->name = name;
 	this->scheme = scheme;
-	daemon = parent;
+	d = parent;
 	isReady = false;
 	isRunning = false;
 	lastInitIndex = 0;
@@ -73,7 +73,7 @@ void Path::terminate() {
 		return;
 	}
 	// TODO:  Ensure this is safe to use here
-	daemon->releaseUnitManager();
+	d->releaseUnitManager();
 	terminated = true;
 	alert(tr("This is fatal; terminating path"));
 	cleanup();
@@ -112,7 +112,7 @@ void Path::test(QString methodName) {
 }
 
 void Path::init() {
-	UnitManager *um = daemon->getUnitManager();
+	UnitManager *um = d->getUnitManager();
 	// Parse scheme
 #ifdef PATH_PARSING_CHECKS
 	QString parseError = um->verifyPathScheme(scheme);
@@ -148,7 +148,7 @@ void Path::init() {
 	}
 	
 	// TODO:  Make sure this is safe here rather than at the end of the function
-	daemon->releaseUnitManager();
+	d->releaseUnitManager();
 	
 	for (lastInitIndex = 0; lastInitIndex < modules.size(); ++lastInitIndex) {
 		modules.at(lastInitIndex)->init(QJsonObject());

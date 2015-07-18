@@ -187,7 +187,7 @@ private:
 	Inlet *inlet;
 	
 	//! Convenience pointer to parent daemon
-	Daemon *daemon;
+	Daemon *d;
 	
 	//! Whether the Path is ready to start
 	bool isReady;

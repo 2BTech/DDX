@@ -23,6 +23,8 @@
 #include <QTimer>
 #include <QTcpSocket>
 #include <QHostAddress>
+#include <QLabel>
+#include <QTime>
 
 class MainWindow : public QMainWindow
 {
@@ -38,6 +40,8 @@ public slots:
 private:
 	QTimer *t;
 	QTcpSocket *s;
+	QLabel *l;
+	QString n;
 };
 
 #endif // MAINWINDOW_H

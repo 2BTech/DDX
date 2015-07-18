@@ -16,37 +16,54 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#include "mainwindow.h"
+#ifndef NETWORK_H
+#define NETWORK_H
 
-MainWindow::MainWindow(QWidget *parent)
-	: QMainWindow(parent)
-{
-	s = new QTcpSocket(this);
-	t = new QTimer(this);
-	t->setInterval(500);
-	connect(t, &QTimer::timeout, this, &MainWindow::boop);
-	l = new QLabel("Initial");
-	this->setCentralWidget(l);
-	t->start();
-	n = QString::number(QTime::currentTime().msec());
-}
+#include <QObject>
+#include <QTcpServer>
+#include <QTcpSocket>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include "constants.h"
+#include "daemon.h"
 
-MainWindow::~MainWindow()
+class Network : public QObject
 {
+	Q_OBJECT
+public:
+	explicit Network(Daemon *parent);
+	~Network();
 	
-}
+	/*!
+	 * \brief Install a TCP server on the appropriate port
+	 * 
+	 * Note that this function may quit the application on failure.  Callers
+	 * Callers should be prepared to do so cleanly if necessary.
+	 */
+	void setupTcpServer();
+	
+signals:
+	
+public slots:
+	
+private slots:
+	
+	void handleData();
+	
+	void handleSocketConnection();
+	
+	void handleNetworkError(QAbstractSocket::SocketError error);
+	
+private:
+	
+	QHash<QString, QAbstractSocket*> sockets;
+	
+	QList<QAbstractSocket*> ur_sockets;
+	
+	Daemon *d;
+	
+	QTcpServer *server;
+	
+};
 
-void MainWindow::boop() {
-	if (s->state() == QAbstractSocket::ConnectedState) {  // Connected
-		s->write(QString("boop%1\n").arg(n).toLatin1());
-		s->flush();
-		l->setText(tr("Connected (%1)").arg(n));
-	}
-	else {  // Not connected
-		if (s->state() == QAbstractSocket::HostLookupState
-			|| s->state() == QAbstractSocket::ConnectingState)
-			return;
-		s->connectToHost(QHostAddress(QHostAddress::LocalHost), 4388);
-		l->setText(tr("Connection requested (%1)").arg(n));
-	}
-}
+#endif // NETWORK_H

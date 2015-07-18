@@ -31,15 +31,13 @@
 #endif
 #include <QThread>
 #include <QList>
-#include <random>
 #include <QJsonObject>
 #include <QJsonDocument>
-#include <QTcpServer>
-#include <QTcpSocket>
 #include "constants.h"
 
 class Path;
 class UnitManager;
+class Network;
 
 /*!
  * \brief The main manager of the DDX
@@ -96,23 +94,23 @@ public slots:
 	 */
 	void init();
 	
+	QVariant s(const QString &key);
+	
 	void request(QJsonObject params, QString dest, bool response = false);
 	
 	void alert(const QString msg);
 	
 	void log(const QString msg);
 	
-	void handleSocketConnection();
-	
-	void handleNetworkError(QAbstractSocket::SocketError error);
-	
 	void quit(int returnCode=0);
-
+	
+private slots:
+	
 private:
 	//! stdout wrapper used for logging
 	QTextStream *qout;
 	
-	QTcpServer *tcpServer;
+	Network *n;
 	
 	//! Used to direct RPC responses to their requestor
 	QHash<int, QString> responseDirector;
@@ -132,14 +130,6 @@ private:
 	int nextRequestId;
 	
 	bool quitting;
-	
-	/*!
-	 * \brief Install a connection listener on the appropriate port
-	 * 
-	 * Note that this function may quit the application on failure.  Callers
-	 * should be prepared to do so cleanly if necessary.
-	 */
-	void setupTcpServer();
 	
 	void loadDefaultSettings();
 	
