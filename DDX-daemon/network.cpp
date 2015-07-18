@@ -50,7 +50,7 @@ void Network::setupTcpServer() {
 		return;
 	}
 	connect(server, &QTcpServer::acceptError, this, &Network::handleNetworkError);
-	connect(server, &QTcpServer::newConnection, this, &Network::handleSocketConnection);
+	connect(server, &QTcpServer::newConnection, this, &Network::handleConnection);
 }
 
 void Network::shutdown() {
@@ -58,9 +58,12 @@ void Network::shutdown() {
 	// TODO:  Close all connections gracefully without using event loop
 	// This function must be thread-safe with regards to being called by
 	// the daemon
+	server->close();
 }
 
 void Network::handleData() {
+	// TODO:  Add buffer size checks; if they exceed value (setting),
+	// clear the buffer and send an error
 	QHash<QString, QAbstractSocket*>::const_iterator it;
 	for (it = sockets.constBegin(); it != sockets.constEnd(); ++it) {
 		if ((*it)->canReadLine()) {
@@ -75,7 +78,7 @@ void Network::handleData() {
 	}
 }
 
-void Network::handleSocketConnection() {
+void Network::handleConnection() {
 	QTcpSocket *s;
 	while ((s = server->nextPendingConnection())) {
 		if (s->state() != QAbstractSocket::ConnectedState)
@@ -85,14 +88,43 @@ void Network::handleSocketConnection() {
 		if (s->peerAddress() != QHostAddress(QHostAddress::LocalHost)) {
 			d->log("Connection not from ipv4 localhost");
 		}
-		connect(s, &QTcpSocket::readyRead, this, &Network::handleData);
 		ur_sockets.append(s);
+		// QTcpServer::error is overloaded, so we need to use this nasty thing
+		connect(s, static_cast<void(QTcpSocket::*)(QAbstractSocket::SocketError)>(&QTcpSocket::error),
+				this, &Network::handleNetworkError);
+		connect(s, &QTcpSocket::disconnected, this, &Network::handleDisconnection);
+		connect(s, &QTcpSocket::readyRead, this, &Network::handleData);
+		if (s->bytesAvailable()) handleData();
 	}
+}
+
+void Network::handleDisconnection() {
+	QHash<QString, QAbstractSocket*>::iterator it = sockets.begin();
+	while (it != sockets.end()) {
+		if ((*it)->state() == QAbstractSocket::UnconnectedState) {
+			delete *it;
+			it = sockets.erase(it);
+		}
+		else ++it;
+	}
+	for (int i = 0; i < ur_sockets.size();) {
+		if (ur_sockets.at(i)->state() == QAbstractSocket::UnconnectedState ) {
+			delete ur_sockets.at(i);
+			ur_sockets.removeAt(i);
+		}
+		else i++;
+	}
+	//d->log(QString("Disconnected; there are %1 active connections").arg(QString::number(sockets.size()+ur_sockets.size())));
+	//d->log("Disconnect");
+	// This should loop through all active RPC requests and return an error
+	// for any that relied on the connection that failed
 }
 
 void Network::handleNetworkError(QAbstractSocket::SocketError error) {
 	// TODO
+	
+	// RemoteClosedError is emitted even on normal disconnections
+	if (error == QAbstractSocket::RemoteHostClosedError) return;
+	
 	d->log(QString("DDX bug: Unhandled network error (QAbstractSocket): '%1'").arg(error));
-	// This should loop through all active RPC requests and return an error
-	// for any that relied on the connection that failed
 }

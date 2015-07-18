@@ -33,6 +33,8 @@ Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	unitManager = 0;
 	nextRequestId = 1;
 	quitting = false;
+	// TODO: Make this work with new syntax
+	connect(parent, SIGNAL(aboutToQuit()), this, SLOT(quit()));
 }
 
 Daemon::~Daemon() {

@@ -42,6 +42,7 @@ private:
 	QTcpSocket *s;
 	QLabel *l;
 	QString n;
+	int c;
 };
 
 #endif // MAINWINDOW_H

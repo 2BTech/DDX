@@ -55,6 +55,7 @@
 #define POSTPROCESS_EVENT_HANDLING_TIMEOUT	200  // Timeout on call to QEventLoop::processEvents() after every Path::process()
 
 // BUFFERING
+#define MAX_SOCKET_BUFFER_SIZE		104857600  // 104857600 = 100mb
 #define DEFAULT_SLOW_BUFFER_SIZE	1048576  // 1048576 = 1mb
 #define DEFAULT_FAST_BUFFER_SIZE	104857600  // 104857600 = 100mb
 

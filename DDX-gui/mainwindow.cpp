@@ -29,6 +29,7 @@ MainWindow::MainWindow(QWidget *parent)
 	this->setCentralWidget(l);
 	n = QString::number(QTime::currentTime().msec());
 	t->start();
+	c = 0;
 }
 
 MainWindow::~MainWindow()
@@ -38,11 +39,18 @@ MainWindow::~MainWindow()
 
 void MainWindow::boop() {
 	if (s->state() == QAbstractSocket::ConnectedState) {  // Connected
+		if (c >= 5) {
+			s->disconnectFromHost();
+			l->setText("Disconnected");
+			return;
+		}
 		s->write(QString("{\"test\":\"%1\"}\n").arg(n).toLatin1());
 		s->flush();
 		l->setText(tr("Connected (%1)").arg(n));
+		c++;
 	}
 	else {  // Not connected
+		c = 0;
 		if (s->state() == QAbstractSocket::HostLookupState
 			|| s->state() == QAbstractSocket::ConnectingState)
 			return;

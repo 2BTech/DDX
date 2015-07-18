@@ -52,7 +52,9 @@ private slots:
 	
 	void handleData();
 	
-	void handleSocketConnection();
+	void handleConnection();
+	
+	void handleDisconnection();
 	
 	void handleNetworkError(QAbstractSocket::SocketError error);
 	
