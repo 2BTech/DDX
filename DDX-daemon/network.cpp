@@ -33,8 +33,7 @@ void Network::setupTcpServer() {
 	int port = d->s("network/GUIPort").toInt();
 	if ( ! server->listen(QHostAddress::Any, port)) {
 		d->alert(tr("Server creation failed with error '%1'.  This is likely "
-				 "because another DDX daemon is already running on this "
-				 "machine.  This instance will now terminate.")
+				 "because another DDX daemon is already running on this machine.")
 			  .arg(server->errorString()));
 		d->quit(E_TCP_SERVER_FAILED);
 		return;

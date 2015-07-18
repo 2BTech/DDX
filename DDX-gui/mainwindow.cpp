@@ -27,8 +27,8 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(t, &QTimer::timeout, this, &MainWindow::boop);
 	l = new QLabel("Initial");
 	this->setCentralWidget(l);
-	t->start();
 	n = QString::number(QTime::currentTime().msec());
+	t->start();
 }
 
 MainWindow::~MainWindow()

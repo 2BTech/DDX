@@ -144,11 +144,11 @@ void Daemon::log(const QString msg) {
 }
 
 void Daemon::quit(int returnCode) {
-	if (quitting) return;
+	if (quitting) return;  // Prevent recursion
 	quitting = true;
 	// TODO: make this call finishing stuff
-	if (returnCode) log(tr("Quitting"));
-	else log(tr("Terminating (%1)").arg(returnCode));
+	if (returnCode) log(tr("Terminating (%1)").arg(returnCode));
+	else log(tr("Quitting"));
 	qApp->exit(returnCode);
 }
 
