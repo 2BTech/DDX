@@ -39,9 +39,17 @@ MainWindow::~MainWindow()
 
 void MainWindow::boop() {
 	if (s->state() == QAbstractSocket::ConnectedState) {  // Connected
-		if (c >= 5) {
-			s->disconnectFromHost();
+		if (c >= 10) {
+			s->write("exit\n");
+			s->flush();
+			l->setText("Sent exit");
+			c = 0;
+			return;
+		}
+		if (c == 5) {
+			//s->disconnectFromHost();
 			l->setText("Disconnected");
+			c++;
 			return;
 		}
 		s->write(QString("{\"test\":\"%1\"}\n").arg(n).toLatin1());
@@ -50,7 +58,6 @@ void MainWindow::boop() {
 		c++;
 	}
 	else {  // Not connected
-		c = 0;
 		if (s->state() == QAbstractSocket::HostLookupState
 			|| s->state() == QAbstractSocket::ConnectingState)
 			return;

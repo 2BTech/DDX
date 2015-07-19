@@ -46,6 +46,9 @@ public:
 	
 signals:
 	
+	//! Emitted to log an event.  _Note:_ use log() when logging events.
+	void sendLog(const QString msg) const;
+	
 public slots:
 	
 private slots:
@@ -67,6 +70,8 @@ private:
 	Daemon *d;
 	
 	QTcpServer *server;
+	
+	void log(const QString msg) const;
 	
 };
 

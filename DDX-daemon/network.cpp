@@ -22,6 +22,7 @@ Network::Network(Daemon *parent) : QObject(parent)
 {
 	d = parent;
 	server = new QTcpServer(this);
+	connect(this, &Network::sendLog, parent, &Daemon::log);
 }
 
 Network::~Network() {
@@ -43,7 +44,8 @@ Network::~Network() {
 void Network::setupTcpServer() {
 	int port = d->s("network/GUIPort").toInt();
 	if ( ! server->listen(QHostAddress::Any, port)) {
-		d->alert(tr("Server creation failed with error '%1'.  This is likely "
+		// TODO:  Should be alert
+		log(tr("Server creation failed with error '%1'.  This is likely "
 				 "because another DDX daemon is already running on this machine.")
 			  .arg(server->errorString()));
 		d->quit(E_TCP_SERVER_FAILED);
@@ -54,7 +56,7 @@ void Network::setupTcpServer() {
 }
 
 void Network::shutdown() {
-	d->log(tr("Closing network connections"));
+	log(tr("Closing network connections"));
 	// TODO:  Close all connections gracefully without using event loop
 	// This function must be thread-safe with regards to being called by
 	// the daemon
@@ -67,13 +69,15 @@ void Network::handleData() {
 	QHash<QString, QAbstractSocket*>::const_iterator it;
 	for (it = sockets.constBegin(); it != sockets.constEnd(); ++it) {
 		if ((*it)->canReadLine()) {
-			d->log("Can read data");
+			log("Can read data");
 		}
 	}
 	for (int i = 0; i < ur_sockets.size(); i++) {
 		if (ur_sockets.at(i)->canReadLine()) {
 			QString line = QString(ur_sockets.at(i)->readLine()).trimmed();
-			d->log(QString("Device said '%1'").arg(line));
+			log(QString("Device said '%1'").arg(line));
+			if (QString::compare(line, "exit") == 0)
+				metaObject()->invokeMethod(d, "quit", Qt::QueuedConnection);
 		}
 	}
 }
@@ -82,11 +86,11 @@ void Network::handleConnection() {
 	QTcpSocket *s;
 	while ((s = server->nextPendingConnection())) {
 		if (s->state() != QAbstractSocket::ConnectedState)
-			d->log("Not in connected state?");
-		d->log("Connection found");
+			log("Not in connected state?");
+		log("Connection found");
 		//if ( ! d->s("network/AllowExternalManagement").toBool())
 		if (s->peerAddress() != QHostAddress(QHostAddress::LocalHost)) {
-			d->log("Connection not from ipv4 localhost");
+			log("Connection not from ipv4 localhost");
 		}
 		ur_sockets.append(s);
 		// QTcpServer::error is overloaded, so we need to use this nasty thing
@@ -96,6 +100,7 @@ void Network::handleConnection() {
 		connect(s, &QTcpSocket::readyRead, this, &Network::handleData);
 		if (s->bytesAvailable()) handleData();
 	}
+	log(tr("Server has %1 children").arg(QString::number(server->children().size())));
 }
 
 void Network::handleDisconnection() {
@@ -105,24 +110,20 @@ void Network::handleDisconnection() {
 		if ((*it)->state() == QAbstractSocket::UnconnectedState) {
 			s = *it;
 			it = sockets.erase(it);
-			delete s;
-			d->log("Removed registered connection");
+			s->deleteLater();
 		}
 		else ++it;
-		d->log("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
 	}
 	for (int i = 0; i < ur_sockets.size();) {
 		if (ur_sockets.at(i)->state() == QAbstractSocket::UnconnectedState ) {
 			s = ur_sockets.at(i);
 			ur_sockets.removeAt(i);
-			delete s;
-			d->log("Removed unregistered connection");
+			s->deleteLater();
 		}
 		else i++;
-		d->log("loop");
 	}
-	//d->log(QString("Disconnected; there are %1 active connections").arg(QString::number(sockets.size()+ur_sockets.size())));
-	//d->log("Disconnect");
+	log(QString("Disconnected; there are %1 active connections").arg(QString::number(sockets.size()+ur_sockets.size())));
+	//log("Disconnect");
 	// This should loop through all active RPC requests and return an error
 	// for any that relied on the connection that failed
 }
@@ -133,5 +134,12 @@ void Network::handleNetworkError(QAbstractSocket::SocketError error) {
 	// RemoteClosedError is emitted even on normal disconnections
 	if (error == QAbstractSocket::RemoteHostClosedError) return;
 	
-	d->log(QString("DDX bug: Unhandled network error (QAbstractSocket): '%1'").arg(error));
+	log(QString("DDX bug: Unhandled network error (QAbstractSocket): '%1'").arg(error));
+}
+
+void Network::log(const QString msg) const {
+	// TODO
+	QString out("network:");
+	out.append(msg);
+	emit sendLog(out);
 }
