@@ -100,19 +100,26 @@ void Network::handleConnection() {
 
 void Network::handleDisconnection() {
 	QHash<QString, QAbstractSocket*>::iterator it = sockets.begin();
+	QAbstractSocket *s;
 	while (it != sockets.end()) {
 		if ((*it)->state() == QAbstractSocket::UnconnectedState) {
-			delete *it;
+			s = *it;
 			it = sockets.erase(it);
+			delete s;
+			d->log("Removed registered connection");
 		}
 		else ++it;
+		d->log("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
 	}
 	for (int i = 0; i < ur_sockets.size();) {
 		if (ur_sockets.at(i)->state() == QAbstractSocket::UnconnectedState ) {
-			delete ur_sockets.at(i);
+			s = ur_sockets.at(i);
 			ur_sockets.removeAt(i);
+			delete s;
+			d->log("Removed unregistered connection");
 		}
 		else i++;
+		d->log("loop");
 	}
 	//d->log(QString("Disconnected; there are %1 active connections").arg(QString::number(sockets.size()+ur_sockets.size())));
 	//d->log("Disconnect");
