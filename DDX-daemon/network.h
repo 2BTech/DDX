@@ -35,14 +35,6 @@ public:
 	explicit Network(Daemon *daemon);
 	~Network();
 	
-	/*!
-	 * \brief Install a TCP server on the appropriate port
-	 * 
-	 * Note that this function may quit the application on failure.  Callers
-	 * Callers should be prepared to do so cleanly if necessary.
-	 */
-	void setupServer();
-	
 	void shutdown();
 	
 signals:
@@ -51,6 +43,14 @@ signals:
 	void sendLog(const QString msg) const;
 	
 public slots:
+	
+	/*!
+	 * \brief Install a TCP server on the appropriate port
+	 * 
+	 * Note that this function may quit the application on failure.  Callers
+	 * Callers should be prepared to do so cleanly if necessary.
+	 */
+	void init();
 	
 private slots:
 	

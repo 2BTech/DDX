@@ -22,13 +22,15 @@ Network::Network(Daemon *daemon) : QObject(0)
 {
 	// Initialization
 	d = daemon;
-	server = new QTcpServer(this);
 	// Connections
-	connect(server, &QTcpServer::acceptError, this, &Network::handleNetworkError);
-	connect(server, &QTcpServer::newConnection, this, &Network::handleConnection);
 	connect(this, &Network::sendLog, daemon, &Daemon::log);
-	// Start
-	//t->start();
+	// Threading
+	QThread *t = new QThread(daemon);
+	moveToThread(t);
+	connect(t, &QThread::started, this, &Network::init);
+	connect(this, &Network::destroyed, t, &QThread::quit);
+	connect(t, &QThread::finished, t, &QThread::deleteLater);
+	t->start();
 }
 
 Network::~Network() {
@@ -38,11 +40,16 @@ Network::~Network() {
 	// These send disconnect signals - this needs to be handled.
 	qDeleteAll(sockets);
 	qDeleteAll(ur_sockets);
-	delete server;
-
+	// server will be automatically deleted
 }
 
-void Network::setupServer() {
+void Network::init() {
+	// Initializations
+	server = new QTcpServer(this);
+	// TODO: add a QNetworkAccessManager and related stuff so Modules can use the high-level APIs
+	// Connections
+	connect(server, &QTcpServer::acceptError, this, &Network::handleNetworkError);
+	connect(server, &QTcpServer::newConnection, this, &Network::handleConnection);
 	int port = d->s("network/GUIPort").toInt();
 	// TODO:  Determine if system is using ipv6
 	QHostAddress a(QHostAddress::LocalHost);

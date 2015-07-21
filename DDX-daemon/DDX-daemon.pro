@@ -49,7 +49,8 @@ SOURCES += main.cpp \
     modules/genmod.cpp \
     modules/examplemodule.cpp \
     modules/module_register.cpp \
-    network.cpp
+    network.cpp \
+    settings.cpp
 
 HEADERS += \
     constants.h \
@@ -62,7 +63,8 @@ HEADERS += \
     unitmanager.h \
     modules/genmod.h \
     modules/examplemodule.h \
-    network.h
+    network.h \
+    settings.h
 
 DISTFILES += \
     DaemonCommandLineArguments.txt \

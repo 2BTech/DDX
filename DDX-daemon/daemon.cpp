@@ -63,16 +63,9 @@ void Daemon::init() {
 	else log(tr("Loading settings last reset on ").append(settings->value("SettingsResetOn").toString()));
 
 	//! ### Network Manager Initialization
-	/*log("STARTING");
+	log("STARTING");
 	n = new Network(this);
-	// Threading
-	QThread *t = new QThread(this);
-	n->moveToThread(t);
-	connect(t, &QThread::started, n, &Network::setupServer);
-	connect(n, &Network::destroyed, t, &QThread::quit);
-	connect(t, &QThread::finished, t, &QThread::deleteLater);
 	log("finished");
-	t->start();*/
 	
 	// Determine whether log should be saved to file
 	if (args.contains("-l") || settings->value("logging/AlwaysLogToFile").toBool()) {
