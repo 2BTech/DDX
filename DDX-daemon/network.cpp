@@ -20,12 +20,6 @@
 
 Network::Network(Daemon *daemon) : QObject(0)
 {
-	// Threading
-	QThread *t = new QThread();
-	moveToThread(t);
-	connect(t, &QThread::started, this, &Network::setupServer);
-	connect(this, &Network::destroyed, t, &QThread::quit);
-	connect(t, &QThread::finished, t, &QThread::deleteLater);
 	// Initialization
 	d = daemon;
 	server = new QTcpServer(this);
@@ -34,7 +28,7 @@ Network::Network(Daemon *daemon) : QObject(0)
 	connect(server, &QTcpServer::newConnection, this, &Network::handleConnection);
 	connect(this, &Network::sendLog, daemon, &Daemon::log);
 	// Start
-	t->start();
+	//t->start();
 }
 
 Network::~Network() {

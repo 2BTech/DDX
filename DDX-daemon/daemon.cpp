@@ -28,7 +28,7 @@ Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	// Open stdout stream for logging
 	qout = new QTextStream(stdout);
 	// Initialize other variables
-	n = new Network(this);
+	//n = new Network(this);
 	umRefCount = 0;
 	unitManager = 0;
 	nextRequestId = 1;
@@ -63,9 +63,16 @@ void Daemon::init() {
 	else log(tr("Loading settings last reset on ").append(settings->value("SettingsResetOn").toString()));
 
 	//! ### Network Manager Initialization
-	log("STARTING");
+	/*log("STARTING");
 	n = new Network(this);
+	// Threading
+	QThread *t = new QThread(this);
+	n->moveToThread(t);
+	connect(t, &QThread::started, n, &Network::setupServer);
+	connect(n, &Network::destroyed, t, &QThread::quit);
+	connect(t, &QThread::finished, t, &QThread::deleteLater);
 	log("finished");
+	t->start();*/
 	
 	// Determine whether log should be saved to file
 	if (args.contains("-l") || settings->value("logging/AlwaysLogToFile").toBool()) {
@@ -99,6 +106,7 @@ void Daemon::testPath(QByteArray scheme, int log) {
 }
 
 void Daemon::addPath(QString name, int log) {
+	this->log("fail");
 	UnitManager *um = getUnitManager();
 	QByteArray scheme = um->getPathScheme(name);
 	// TODO add error checking for scheme not found
