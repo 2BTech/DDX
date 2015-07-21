@@ -32,7 +32,7 @@ class Network : public QObject
 {
 	Q_OBJECT
 public:
-	explicit Network(Daemon *parent);
+	explicit Network(Daemon *daemon);
 	~Network();
 	
 	/*!
@@ -41,7 +41,7 @@ public:
 	 * Note that this function may quit the application on failure.  Callers
 	 * Callers should be prepared to do so cleanly if necessary.
 	 */
-	void setupTcpServer();
+	void setupServer();
 	
 	void shutdown();
 	

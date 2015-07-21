@@ -18,11 +18,23 @@
 
 #include "network.h"
 
-Network::Network(Daemon *parent) : QObject(parent)
+Network::Network(Daemon *daemon) : QObject(0)
 {
-	d = parent;
+	// Threading
+	QThread *t = new QThread();
+	moveToThread(t);
+	connect(t, &QThread::started, this, &Network::setupServer);
+	connect(this, &Network::destroyed, t, &QThread::quit);
+	connect(t, &QThread::finished, t, &QThread::deleteLater);
+	// Initialization
+	d = daemon;
 	server = new QTcpServer(this);
-	connect(this, &Network::sendLog, parent, &Daemon::log);
+	// Connections
+	connect(server, &QTcpServer::acceptError, this, &Network::handleNetworkError);
+	connect(server, &QTcpServer::newConnection, this, &Network::handleConnection);
+	connect(this, &Network::sendLog, daemon, &Daemon::log);
+	// Start
+	t->start();
 }
 
 Network::~Network() {
@@ -36,9 +48,13 @@ Network::~Network() {
 
 }
 
-void Network::setupTcpServer() {
+void Network::setupServer() {
 	int port = d->s("network/GUIPort").toInt();
-	if ( ! server->listen(QHostAddress::Any, port)) {
+	// TODO:  Determine if system is using ipv6
+	QHostAddress a(QHostAddress::LocalHost);
+	if (d->s("network/AllowExternalManagement").toBool())
+		a = QHostAddress::Any;
+	if ( ! server->listen(a, port)) {
 		// TODO:  Should be alert
 		log(tr("Server creation failed with error '%1'.  This is likely "
 				 "because another DDX daemon is already running on this machine.")
@@ -46,8 +62,6 @@ void Network::setupTcpServer() {
 		d->quit(E_TCP_SERVER_FAILED);
 		return;
 	}
-	connect(server, &QTcpServer::acceptError, this, &Network::handleNetworkError);
-	connect(server, &QTcpServer::newConnection, this, &Network::handleConnection);
 }
 
 void Network::shutdown() {

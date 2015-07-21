@@ -53,7 +53,7 @@ class Path : public QObject
 	Q_OBJECT
 public:
 	
-	explicit Path(Daemon *parent, const QString name, const QByteArray scheme);
+	explicit Path(Daemon *daemon, const QString name, const QByteArray scheme);
 	
 	~Path();
 	

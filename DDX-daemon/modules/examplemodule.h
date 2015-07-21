@@ -24,18 +24,18 @@
 
 class Path;
 
-class ExampleModule : public Module
+class ExampleModule Q_DECL_FINAL : public Module
 {
 	Q_OBJECT  // Required
 public:
 	using Module::Module;  // Required
 	~ExampleModule();  // Required
-	void init(const QJsonObject settings);  // Required
-	void process();  // Required
-	QJsonObject publishSettings() const;  // Optional
-	QJsonObject publishActions() const;  // Optional
-	void cleanup();  // Required
-	void handleReconfigure();  // Required
+	void init(const QJsonObject settings) Q_DECL_OVERRIDE;  // Required
+	void process() Q_DECL_OVERRIDE;  // Required
+	QJsonObject publishSettings() const Q_DECL_OVERRIDE;  // Optional
+	QJsonObject publishActions() const Q_DECL_OVERRIDE;  // Optional
+	void cleanup() Q_DECL_OVERRIDE;  // Required
+	void handleReconfigure() Q_DECL_OVERRIDE;  // Required
 private:
 	QString echo;
 };

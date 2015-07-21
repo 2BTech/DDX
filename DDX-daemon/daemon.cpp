@@ -62,7 +62,10 @@ void Daemon::init() {
 		 || args.contains("-reconfigure")) loadDefaultSettings();
 	else log(tr("Loading settings last reset on ").append(settings->value("SettingsResetOn").toString()));
 
-	n->setupTcpServer();
+	//! ### Network Manager Initialization
+	log("STARTING");
+	n = new Network(this);
+	log("finished");
 	
 	// Determine whether log should be saved to file
 	if (args.contains("-l") || settings->value("logging/AlwaysLogToFile").toBool()) {
@@ -76,7 +79,7 @@ void Daemon::init() {
 	
 	
 	QByteArray testScheme = "{\"n\":\"Test path\",\"d\":\"This is a test path\",\"DDX_author\":\"2B Technologies\",\"DDX_version\":\"0\",\"modules\":[{\"n\":\"Test inlet\",\"t\":\"ExampleInlet\",\"s\":{\"SampleSetting\":\"42\"}},{\"n\":\"Test module 1\",\"t\":\"ExampleModule\"},{\"n\":\"Test module 2\",\"t\":\"ExampleModule\",\"s\":{\"Flow_Rate\":\"12\",\"Analog_Inputs\":{\"items\":[{\"n\":\"Temperature Sensor\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"3.3\",\"Min_Voltage\":\"0\"},{\"n\":\"Power Meter\",\"t\":\"Current_AI\",\"Max_Current\":\"20\",\"Min_Current\":\"0\"},{\"n\":\"Barometer\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"2\",\"Min_Voltage\":\"1\"}]}}}]}";
-	releaseUnitManager();
+	testScheme.size();
 	
 	
 	// Set up as system service (platform-dependent)

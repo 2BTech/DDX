@@ -42,10 +42,12 @@ int main(int argc, char *argv[])
 	QCoreApplication::setApplicationVersion(VERSION_FULL_TEXT);
 
 	Daemon daemon(&a);
+	
+	// TODO:  install a message handler with qInstallMessageHandler
 
 	daemon.log(APP_NAME_UNTRANSLATABLE " " VERSION_FULL_TEXT);
 
 	// Begin execution
-	QTimer::singleShot(0, &daemon, &Daemon::init);
+	QMetaObject::invokeMethod(&daemon, "init", Qt::QueuedConnection);
 	return a.exec();
 }

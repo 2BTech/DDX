@@ -22,19 +22,19 @@
 #include "inlet.h"
 #include "unitmanager.h"
 
-Path::Path(Daemon *parent, const QString name, const QByteArray scheme) : QObject(parent)
+Path::Path(Daemon *daemon, const QString name, const QByteArray scheme) : QObject(0)
 {
 	this->name = name;
 	this->scheme = scheme;
-	d = parent;
+	d = daemon;
 	isReady = false;
 	isRunning = false;
 	lastInitIndex = 0;
 	processPosition = 1;
 	terminated = false;
 	
-	connect(this, &Path::sendAlert, parent, &Daemon::alert);
-	connect(this, &Path::sendLog, parent, &Daemon::log);
+	connect(this, &Path::sendAlert, daemon, &Daemon::alert);
+	connect(this, &Path::sendLog, daemon, &Daemon::log);
 	// TODO:  Check the validity of this
 	connect(this, &Path::readyForDeletion, this, &Path::deleteLater);
 }
