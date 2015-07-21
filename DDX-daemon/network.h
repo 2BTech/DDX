@@ -24,6 +24,7 @@
 #include <QTcpSocket>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QtAlgorithms>
 #include "constants.h"
 #include "daemon.h"
 

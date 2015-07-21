@@ -28,17 +28,12 @@ Network::Network(Daemon *parent) : QObject(parent)
 Network::~Network() {
 	// Forcibly close open connections (should have been gracefully handled in
 	// shutdown() if possible)
-	QHash<QString, QAbstractSocket*>::const_iterator it;
-	for (it = sockets.constBegin(); it != sockets.constEnd(); ++it) {
-		(*it)->abort();
-		delete *it;
-	}
-	for (int i = 0; i < ur_sockets.size(); i++) {
-		ur_sockets.at(i)->abort();
-		delete ur_sockets.at(i);
-	}
 	server->close();
+	// These send disconnect signals - this needs to be handled.
+	qDeleteAll(sockets);
+	qDeleteAll(ur_sockets);
 	delete server;
+
 }
 
 void Network::setupTcpServer() {
@@ -76,8 +71,10 @@ void Network::handleData() {
 		if (ur_sockets.at(i)->canReadLine()) {
 			QString line = QString(ur_sockets.at(i)->readLine()).trimmed();
 			log(QString("Device said '%1'").arg(line));
-			if (QString::compare(line, "exit") == 0)
+			if (QString::compare(line, "exit") == 0) {
 				metaObject()->invokeMethod(d, "quit", Qt::QueuedConnection);
+				return;
+			}
 		}
 	}
 }
