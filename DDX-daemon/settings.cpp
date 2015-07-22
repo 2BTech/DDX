@@ -46,8 +46,7 @@ bool Settings::set(const QString &key, const QVariant &val, const QString &categ
 	QWriteLocker l(&lock);
 	Q_ASSERT(s.contains(k));
 	QHash<QString, Setting>::iterator it = s.find(k);
-	if ( ! val.canConvert(it->t))
-		return false;
+	if ( ! val.canConvert(it->t)) return false;
 	it->v = val;
 	it->v.convert(it->t);
 	if (save) systemSettings.setValue(k, it->v);
