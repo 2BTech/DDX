@@ -42,13 +42,11 @@ public:
 	
 	QVariant getDefault(const QString &key, const QString &category = QString()) const;
 	
-	bool set(const QString &key, const QVariant &val, const QString &category = QString());
+	bool set(const QString &key, const QVariant &val, const QString &category = QString(), bool save = true);
 	
 	void reset(const QString &key, const QString &category = QString());
 	
 	void resetAll();
-	
-	QJsonObject enumerateSettings() const;
 	
 signals:
 	
@@ -57,30 +55,26 @@ public slots:
 private:
 	
 	struct Setting {
-		Setting(const QVariant value, const QVariant defaultValue, QMetaType::Type type) {
+		Setting(const QVariant value, const QVariant defaultValue,
+				QMetaType::Type type) {
 			v = value;
 			d = defaultValue;
 			t = type;
 		}
-		Setting() {
-			v = QVariant();
-			d = QVariant();
-		}
+		Setting(){}
 		QVariant v;
 		QVariant d;
 		QMetaType::Type t;
 	};
 	struct SetEnt {
-		SetEnt(const QString key, const QString name, const QString desc,
+		SetEnt(const QString key, const QString desc,
 			   const QVariant defaultVal, QMetaType::Type type) {
 			this->key = key;
-			this->name = name;
 			this->desc = desc;
 			this->defVal = defaultVal;
 			this->type = type;
 		}
 		QString key;
-		QString name;
 		QString desc;
 		QVariant defVal;
 		QMetaType::Type type;
@@ -93,6 +87,8 @@ private:
 	QHash<QString, Setting> s;
 	
 	mutable QReadWriteLock lock;
+	
+	QJsonObject enumerateSettings() const;
 	
 	inline QString getKey(const QString &subKey, const QString &cat) const;
 	
