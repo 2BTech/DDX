@@ -42,13 +42,11 @@ public:
 	
 	QVariant getDefault(const QString &key, const QString &category = QString()) const;
 	
-	bool set(const QString &key, const QVariant &val, const QString &category = QString());
+	bool set(const QString &key, const QVariant &val, const QString &category = QString(), bool save = true);
 	
 	void reset(const QString &key, const QString &category = QString());
 	
 	void resetAll();
-	
-	QJsonObject enumerateSettings() const;
 	
 signals:
 	
@@ -93,6 +91,8 @@ private:
 	QHash<QString, Setting> s;
 	
 	mutable QReadWriteLock lock;
+	
+	QJsonObject enumerateSettings() const;
 	
 	inline QString getKey(const QString &subKey, const QString &cat) const;
 	

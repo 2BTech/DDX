@@ -38,10 +38,10 @@ QVariant Settings::getDefault(const QString &key, const QString &category) const
 	QString k = getKey(key, category);
 	QReadLocker l(&lock);
 	Q_ASSERT(s.contains(k));
-	return s.value(k).v;
+	return s.value(k).d;
 }
 
-bool Settings::set(const QString &key, const QVariant &val, const QString &category) {
+bool Settings::set(const QString &key, const QVariant &val, const QString &category, bool save) {
 	QString k = getKey(key, category);
 	QWriteLocker l(&lock);
 	Q_ASSERT(s.contains(k));
@@ -49,6 +49,9 @@ bool Settings::set(const QString &key, const QVariant &val, const QString &categ
 	if ( ! val.canConvert(setting->t))
 		return false;
 	setting->v = val;
+	setting->v.convert(setting->t);
+	if (save)
+		systemSettings.setValue(k, setting->v);
 	return true;
 }
 
@@ -56,23 +59,27 @@ void Settings::reset(const QString &key, const QString &category) {
 	QString k = getKey(key, category);
 	QWriteLocker l(&lock);
 	Q_ASSERT(s.contains(k));
-	QHash<QString, Setting>::iterator setting = s.find(k);
-	setting->v = setting->d;
+	QHash<QString, Setting>::iterator it = s.find(k);
+	it->v = it->d;
+	systemSettings.setValue(k, it->v);
 }
 
 void Settings::resetAll() {
 	QWriteLocker l(&lock);
 	QHash<QString, Setting>::iterator it;
-	for (it = s.begin(); it != s.end(); ++it)
+	for (it = s.begin(); it != s.end(); ++it) {
 		it->v = it->d;
+		systemSettings.setValue(it.key(), it->d);
+	}
+	systemSettings.sync();
 }
 
-QJsonObject Settings::listAllSettings() const {
+QJsonObject Settings::enumerateSettings() const {
 	
 }
 
 inline QString Settings::getKey(const QString &subKey, const QString &cat) const {
+	if (cat.isNull()) return subKey;
 	QString key(subKey);
-	if ( ! cat.isNull()) key.append("/").append(cat);
-	return key;
+	return key.append("/").append(cat);
 }
