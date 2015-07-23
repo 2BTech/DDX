@@ -38,13 +38,14 @@ public:
 	
 	~Settings();
 	
-	QVariant value(const QString &key, const QString &category = QString()) const;
+	QVariant value(const QString &key, const QString &group = QString()) const;
 	
-	QVariant getDefault(const QString &key, const QString &category = QString()) const;
+	QVariant getDefault(const QString &key, const QString &group = QString()) const;
 	
-	bool set(const QString &key, const QVariant &val, const QString &category = QString(), bool save = true);
+	bool set(const QString &key, const QVariant &val, const QString &group = QString(),
+			 bool save = true, bool hold = false);
 	
-	void reset(const QString &key, const QString &category = QString());
+	void reset(const QString &key, const QString &group = QString());
 	
 	void resetAll();
 	
@@ -55,9 +56,9 @@ public slots:
 private:
 	
 	struct Setting {
-		Setting(const QVariant value, const QVariant defaultValue,
+		Setting(const QVariant defaultValue,
 				QMetaType::Type type) {
-			v = value;
+			v = defaultValue;
 			d = defaultValue;
 			t = type;
 		}
@@ -83,18 +84,18 @@ private:
 	
 	struct SettingsBuilder {
 		SettingsBuilder(){}
-		void add(const QString key, const QString desc,
-				 const QVariant defaultVal, QMetaType::Type type) {
+		void add(QString key, QString desc,
+				 QVariant defaultVal, QMetaType::Type type) {
 			SetEnt se(key, desc, defaultVal, type);
-			if (currentCat.isNull()) list.append(se);
-			se.key.prepend(currentCat);
+			if (currentGroup.isNull()) list.append(se);
+			se.key.prepend(currentGroup);
 			list.append(se);
 		}
-		void enterCategory(QString &category) {
-			if (category.isNull()) currentCat.clear();
-			else currentCat = category.append("/");
+		void enterGroup(QString group) {
+			if (group.isNull()) currentGroup.clear();
+			else currentGroup = group.append("/");
 		}
-		QString currentCat;
+		QString currentGroup;
 		QList<SetEnt> list;
 	};
 	
@@ -106,7 +107,7 @@ private:
 	
 	QList<SetEnt> enumerateSettings() const;
 	
-	inline QString getKey(const QString &subKey, const QString &cat) const;
+	inline QString getKey(const QString &subKey, const QString &group) const;
 	
 };
 

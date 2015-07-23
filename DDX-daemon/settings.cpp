@@ -20,12 +20,27 @@
 #include "daemon.h"
 
 Settings::Settings(Daemon *parent) : QObject(parent) {
-	QWriteLocker l(&lock);
-	
-	enumerateSettings();
-	
+	//QWriteLocker l(&lock);
+	// Initialize
 	systemSettings = new QSettings(APP_AUTHOR_FULL, APP_NAME_SHORT, this);
-	
+	QList<SetEnt> loaded = enumerateSettings();
+	foreach (const SetEnt &set, loaded)
+		s.insert(set.key, Setting(set.defVal, set.type));
+	// Check existing settings
+	if ( ! systemSettings->contains("Version")) resetAll();
+	/*if (systemSettings->value("Version") > VERSION_FULL_TEXT) {
+		parent->log(tr("Settings are for higher version"));
+		parent->quit(E_SETTINGS_VERSION);
+		return;
+	}
+	if (systemSettings->value("Version") < VERSION_FULL_TEXT) {
+		// TODO
+	}
+	else for (QHash<QString, Setting>::iterator it = s.begin(); it != s.end(); ++it) {
+		if (systemSettings->contains(it.key())) {
+			Q_ASSERT(can cast);
+		}
+	}*/
 }
 
 Settings::~Settings() {
@@ -33,22 +48,23 @@ Settings::~Settings() {
 	delete systemSettings;  // Auto-syncs
 }
 
-QVariant Settings::value(const QString &key, const QString &category) const {
-	QString k = getKey(key, category);
+QVariant Settings::value(const QString &key, const QString &group) const {
+	QString k = getKey(key, group);
 	QReadLocker l(&lock);
 	Q_ASSERT(s.contains(k));
 	return s.value(k).v;
 }
 
-QVariant Settings::getDefault(const QString &key, const QString &category) const {
-	QString k = getKey(key, category);
+QVariant Settings::getDefault(const QString &key, const QString &group) const {
+	QString k = getKey(key, group);
 	QReadLocker l(&lock);
 	Q_ASSERT(s.contains(k));
 	return s.value(k).d;
 }
 
-bool Settings::set(const QString &key, const QVariant &val, const QString &category, bool save) {
-	QString k = getKey(key, category);
+bool Settings::set(const QString &key, const QVariant &val, const QString &group,
+				   bool save, bool hold) {
+	QString k = getKey(key, group);
 	QWriteLocker l(&lock);
 	Q_ASSERT(s.contains(k));
 	QHash<QString, Setting>::iterator it = s.find(k);
@@ -56,11 +72,12 @@ bool Settings::set(const QString &key, const QVariant &val, const QString &categ
 	it->v = val;
 	it->v.convert(it->t);
 	if (save) systemSettings->setValue(k, it->v);
+	// TODO:  If hold and save, only change the stored setting, not the live one
 	return true;
 }
 
-void Settings::reset(const QString &key, const QString &category) {
-	QString k = getKey(key, category);
+void Settings::reset(const QString &key, const QString &group) {
+	QString k = getKey(key, group);
 	QWriteLocker l(&lock);
 	Q_ASSERT(s.contains(k));
 	QHash<QString, Setting>::iterator it = s.find(k);
@@ -70,6 +87,7 @@ void Settings::reset(const QString &key, const QString &category) {
 
 void Settings::resetAll() {
 	QWriteLocker l(&lock);
+	systemSettings->clear();
 	QHash<QString, Setting>::iterator it;
 	for (it = s.begin(); it != s.end(); ++it) {
 		it->v = it->d;
@@ -79,15 +97,28 @@ void Settings::resetAll() {
 }
 
 QList<Settings::SetEnt> Settings::enumerateSettings() const {
-	Settings::SettingsBuilder b;
+	SettingsBuilder b;
 	
+	b.add("SettingsResetOn", tr("The date of last full settings reset"),
+		  QDateTime::currentDateTime(), QMetaType::QDateTime);
+	b.add("Version", tr("The DDX version these settings correspond to"),
+		  VERSION_FULL_TEXT, QMetaType::QString);
+	b.add("LastShutdownSafe", tr("Whether the previous shutdown was completed normally"),
+		  false, QMetaType::Bool);
 	
+	b.enterGroup("network");
+	b.add("GUIPort", tr("The network port used by the GUI to manage the daemon"),
+		  4388, QMetaType::Int);
+	b.add("UseIPv6Localhost", tr("Whether to use IPv6 localhost rather than IPv4"),
+		  false, QMetaType::Bool);
+	b.add("AllowExternalGUI", tr("Whether to allow non-local GUI to manage the daemon"),
+		  false, QMetaType::Bool);
 	
 	return b.list;
 }
 
-inline QString Settings::getKey(const QString &subKey, const QString &cat) const {
-	if (cat.isNull()) return subKey;
+inline QString Settings::getKey(const QString &subKey, const QString &group) const {
+	if (group.isNull()) return subKey;
 	QString key(subKey);
-	return key.append("/").append(cat);
+	return key.append("/").append(group);
 }

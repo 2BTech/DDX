@@ -61,7 +61,8 @@
 
 
 // ERROR CODES
-#define E_TCP_SERVER_FAILED 10
+#define E_SETTINGS_VERSION	10
+#define E_TCP_SERVER_FAILED 20
 
 
 #endif // CONSTANTS_H
