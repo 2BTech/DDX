@@ -75,7 +75,7 @@ public:
 	
 	QStringList args;
 	
-	QSettings *settings;
+	//QSettings *settings;
 
 signals:
 
@@ -100,6 +100,7 @@ public slots:
 	 * 
 	 * ## Planned Future Additions
 	 * - Configuring network UPnP with the BRisa framework
+	 * - Using bearer management to automatically configure network interfaces
 	 */
 	void init();
 	

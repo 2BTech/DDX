@@ -16,38 +16,24 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#include <QCoreApplication>
-#include <QTextStream>  // Temporary debug console output
-#include <QTimer>  // For calling init() after exec()
-#include "constants.h"
-#include "daemon.h"
+#ifndef LOGGER_H
+#define LOGGER_H
 
-/*!
- * \brief main
- * \param argc argument count
- * \param argv argument vector
- * \return exit code
- * \sa Daemon::init()
- * The main function instantiates QCoreApplication and then the Daemon class,
- * which manages all functions of the daemon.  It then schedules Daemon::init()
- * function and begins the event loop.
- */
-int main(int argc, char *argv[])
+#include <QObject>
+
+class Daemon;
+
+class Logger : public QObject
 {
-	QCoreApplication::setOrganizationName(APP_AUTHOR_FULL);
-	QCoreApplication::setOrganizationDomain(APP_AUTHOR_DOMAIN);
-	QCoreApplication::setApplicationName(APP_NAME_SHORT);
-	QCoreApplication::setApplicationVersion(VERSION_FULL_TEXT);
+	friend class Daemon;
+	Q_OBJECT
+public:
+	explicit Logger(Daemon *parent);
+	~Logger();
 	
-	QCoreApplication a(argc, argv);
-
-	Daemon daemon(&a);
+signals:
 	
-	// TODO:  install a message handler with qInstallMessageHandler
+public slots:
+};
 
-	daemon.log(APP_NAME " " VERSION_FULL_TEXT);
-
-	// Begin execution
-	QMetaObject::invokeMethod(&daemon, "init", Qt::QueuedConnection);
-	return a.exec();
-}
+#endif // LOGGER_H

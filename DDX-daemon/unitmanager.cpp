@@ -20,6 +20,7 @@
 #include "module.h"
 #include "daemon.h"
 #include "path.h"
+#include "settings.h"
 // TODO: Remove
 #include "modules/genmod.h"
 
@@ -27,8 +28,8 @@ UnitManager::UnitManager(Daemon *parent) : QObject(parent)
 {
 	registerModules();
 	schemeFileNeedsRewriting = false;
-	QString schemeFileName = parent->settings->value("paths/configPath").toString();
-	schemeFileName.append(parent->settings->value("units/unitFile").toString());
+	//QString schemeFileName = settings->value("paths/configPath").toString();
+	//schemeFileName.append(settings->value("units/unitFile").toString());
 	// TODO: load paths
 }
 

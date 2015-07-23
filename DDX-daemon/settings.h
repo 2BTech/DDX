@@ -27,6 +27,7 @@
 #include <QReadWriteLock>
 #include <QReadLocker>
 #include <QWriteLocker>
+#include <QGlobalStatic>
 
 class Daemon;
 
@@ -42,8 +43,8 @@ public:
 	
 	QVariant getDefault(const QString &key, const QString &group = QString()) const;
 	
-	bool set(const QString &key, const QVariant &val, const QString &group = QString(),
-			 bool save = true, bool hold = false);
+	bool set(const QString &key, const QVariant &val,
+			 const QString &group = QString(), bool save = true);
 	
 	void reset(const QString &key, const QString &group = QString());
 	

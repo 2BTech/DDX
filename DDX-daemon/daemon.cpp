@@ -21,6 +21,7 @@
 #include "path.h"
 #include "network.h"
 #include "modules/genmod.h"
+#include "settings.h"
 
 Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	// Load command line arguments
@@ -57,10 +58,10 @@ void Daemon::init() {
 	 */
 	// TODO:  Add a see also to the above comment about the GUI's option which
 	// removes "SettingsResetOn"
-	settings = new QSettings(parent());
-	if ( ! settings->contains("SettingsResetOn")
+	//settings = new QSettings(parent());
+	/*if ( ! settings->contains("SettingsResetOn")
 		 || args.contains("-reconfigure")) loadDefaultSettings();
-	else log(tr("Loading settings last reset on ").append(settings->value("SettingsResetOn").toString()));
+	else log(tr("Loading settings last reset on ").append(settings->value("SettingsResetOn").toString()));*/
 
 	//! ### Network Manager Initialization
 	log("STARTING");
@@ -68,10 +69,10 @@ void Daemon::init() {
 	log("finished");
 	
 	// Determine whether log should be saved to file
-	if (args.contains("-l") || settings->value("logging/AlwaysLogToFile").toBool()) {
+	//if (args.contains("-l") || settings->value("logging/AlwaysLogToFile").toBool()) {
 		// TODO
 		// Also, consider adding the option to show the console rather than hide it
-	}
+	//}
 	
 	// Determine whether last instance shut down correctly
 	
@@ -89,7 +90,8 @@ void Daemon::init() {
 
 QVariant Daemon::s(const QString &key) {
 	// TODO: assert(settings != 0);
-	return settings->value(key);
+	//return settings->value(key);
+	// TODO
 }
 
 void Daemon::testPath(QByteArray scheme, int log) {
@@ -205,7 +207,7 @@ int Daemon::versionCompare(QString testVersion) {
 
 void Daemon::loadDefaultSettings() {
 	log("Loading default settings");
-	settings->clear();
+	/*settings->clear();
 	settings->setValue("SettingsResetOn",
 					   QDateTime::currentDateTime().toString("yyyy/MM/dd HH:mm:ss"));
 	
@@ -233,7 +235,7 @@ void Daemon::loadDefaultSettings() {
 	// Crash checking
 	settings->setValue("crash/LastShutdownSafe", false);
 	
-	settings->sync();
+	settings->sync();*/
 	// TODO: restart Daemon?????
 }
 

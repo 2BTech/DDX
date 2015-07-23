@@ -50,7 +50,8 @@ SOURCES += main.cpp \
     modules/examplemodule.cpp \
     modules/module_register.cpp \
     network.cpp \
-    settings.cpp
+    settings.cpp \
+    logger.cpp
 
 HEADERS += \
     constants.h \
@@ -64,7 +65,8 @@ HEADERS += \
     modules/genmod.h \
     modules/examplemodule.h \
     network.h \
-    settings.h
+    settings.h \
+    logger.h
 
 DISTFILES += \
     DaemonCommandLineArguments.txt \

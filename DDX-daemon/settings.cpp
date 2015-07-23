@@ -20,13 +20,12 @@
 #include "daemon.h"
 
 Settings::Settings(Daemon *parent) : QObject(parent) {
-	//QWriteLocker l(&lock);
 	// Initialize
 	systemSettings = new QSettings(APP_AUTHOR_FULL, APP_NAME_SHORT, this);
 	QList<SetEnt> loaded = enumerateSettings();
 	foreach (const SetEnt &set, loaded)
 		s.insert(set.key, Setting(set.defVal, set.type));
-	// Check existing settings
+	// Check whether a full reset is required
 	if ( ! systemSettings->contains("Version")
 		|| parent->args.contains("-reconfigure")) {
 		resetAll();
@@ -75,8 +74,8 @@ QVariant Settings::getDefault(const QString &key, const QString &group) const {
 	return s.value(k).d;
 }
 
-bool Settings::set(const QString &key, const QVariant &val, const QString &group,
-				   bool save, bool hold) {
+bool Settings::set(const QString &key, const QVariant &val,
+				   const QString &group, bool save) {
 	QString k = getKey(key, group);
 	QWriteLocker l(&lock);
 	Q_ASSERT(s.contains(k));
@@ -106,6 +105,7 @@ void Settings::resetAll() {
 		it->v = it->d;
 		systemSettings->setValue(it.key(), it->d);
 	}
+	systemSettings->setValue("SettingsResetOn", QDateTime::currentDateTime());
 	systemSettings->sync();
 }
 
