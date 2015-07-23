@@ -20,11 +20,17 @@
 #include "daemon.h"
 
 Settings::Settings(Daemon *parent) : QObject(parent) {
+	QWriteLocker l(&lock);
+	
+	enumerateSettings();
+	
+	systemSettings = new QSettings(APP_AUTHOR_FULL, APP_NAME_SHORT, this);
 	
 }
 
 Settings::~Settings() {
-	
+	QWriteLocker l(&lock);
+	delete systemSettings;  // Auto-syncs
 }
 
 QVariant Settings::value(const QString &key, const QString &category) const {
@@ -49,7 +55,7 @@ bool Settings::set(const QString &key, const QVariant &val, const QString &categ
 	if ( ! val.canConvert(it->t)) return false;
 	it->v = val;
 	it->v.convert(it->t);
-	if (save) systemSettings.setValue(k, it->v);
+	if (save) systemSettings->setValue(k, it->v);
 	return true;
 }
 
@@ -59,7 +65,7 @@ void Settings::reset(const QString &key, const QString &category) {
 	Q_ASSERT(s.contains(k));
 	QHash<QString, Setting>::iterator it = s.find(k);
 	it->v = it->d;
-	systemSettings.setValue(k, it->v);
+	systemSettings->setValue(k, it->v);
 }
 
 void Settings::resetAll() {
@@ -67,13 +73,17 @@ void Settings::resetAll() {
 	QHash<QString, Setting>::iterator it;
 	for (it = s.begin(); it != s.end(); ++it) {
 		it->v = it->d;
-		systemSettings.setValue(it.key(), it->d);
+		systemSettings->setValue(it.key(), it->d);
 	}
-	systemSettings.sync();
+	systemSettings->sync();
 }
 
-QJsonObject Settings::enumerateSettings() const {
+QList<Settings::SetEnt> Settings::enumerateSettings() const {
+	Settings::SettingsBuilder b;
 	
+	
+	
+	return b.list;
 }
 
 inline QString Settings::getKey(const QString &subKey, const QString &cat) const {

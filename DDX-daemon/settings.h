@@ -66,6 +66,7 @@ private:
 		QVariant d;
 		QMetaType::Type t;
 	};
+	
 	struct SetEnt {
 		SetEnt(const QString key, const QString desc,
 			   const QVariant defaultVal, QMetaType::Type type) {
@@ -80,15 +81,30 @@ private:
 		QMetaType::Type type;
 	};
 	
-	QSettings systemSettings;
+	struct SettingsBuilder {
+		SettingsBuilder(){}
+		void add(const QString key, const QString desc,
+				 const QVariant defaultVal, QMetaType::Type type) {
+			SetEnt se(key, desc, defaultVal, type);
+			if (currentCat.isNull()) list.append(se);
+			se.key.prepend(currentCat);
+			list.append(se);
+		}
+		void enterCategory(QString &category) {
+			if (category.isNull()) currentCat.clear();
+			else currentCat = category.append("/");
+		}
+		QString currentCat;
+		QList<SetEnt> list;
+	};
 	
-	QStringList categories;
+	QSettings *systemSettings;
 	
 	QHash<QString, Setting> s;
 	
 	mutable QReadWriteLock lock;
 	
-	QJsonObject enumerateSettings() const;
+	QList<SetEnt> enumerateSettings() const;
 	
 	inline QString getKey(const QString &subKey, const QString &cat) const;
 	

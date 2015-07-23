@@ -38,14 +38,14 @@ int main(int argc, char *argv[])
 
 	QCoreApplication::setOrganizationName(APP_AUTHOR_FULL);
 	QCoreApplication::setOrganizationDomain(APP_AUTHOR_DOMAIN);
-	QCoreApplication::setApplicationName(APP_NAME_UNTRANSLATABLE_SHORT);
+	QCoreApplication::setApplicationName(APP_NAME_SHORT);
 	QCoreApplication::setApplicationVersion(VERSION_FULL_TEXT);
 
 	Daemon daemon(&a);
 	
 	// TODO:  install a message handler with qInstallMessageHandler
 
-	daemon.log(APP_NAME_UNTRANSLATABLE " " VERSION_FULL_TEXT);
+	daemon.log(APP_NAME " " VERSION_FULL_TEXT);
 
 	// Begin execution
 	QMetaObject::invokeMethod(&daemon, "init", Qt::QueuedConnection);
