@@ -27,20 +27,33 @@ Settings::Settings(Daemon *parent) : QObject(parent) {
 	foreach (const SetEnt &set, loaded)
 		s.insert(set.key, Setting(set.defVal, set.type));
 	// Check existing settings
-	if ( ! systemSettings->contains("Version")) resetAll();
-	/*if (systemSettings->value("Version") > VERSION_FULL_TEXT) {
-		parent->log(tr("Settings are for higher version"));
+	if ( ! systemSettings->contains("Version")
+		|| parent->args.contains("-reconfigure")) {
+		resetAll();
+		return;
+	}
+	int vc = Daemon::versionCompare(systemSettings->value("Version").toString());
+	if (vc > 0) {
+		parent->log(tr("Settings are for higher version or corrupted. "
+					   "Run latest version or launch daemon with '-reconfigure' "
+					   "option to reset all settings."));
+		// TODO:  Quit here
 		parent->quit(E_SETTINGS_VERSION);
 		return;
 	}
-	if (systemSettings->value("Version") < VERSION_FULL_TEXT) {
+	if (vc < 0) {
 		// TODO
 	}
-	else for (QHash<QString, Setting>::iterator it = s.begin(); it != s.end(); ++it) {
+	else for (QHash<QString,Setting>::iterator it = s.begin(); it != s.end(); ++it) {
 		if (systemSettings->contains(it.key())) {
-			Q_ASSERT(can cast);
+			QVariant value = systemSettings->value(it.key());
+			if (((QMetaType::Type) value.type()) != it->t) {
+				parent->log(tr("Saved setting '%1' is invalid; keeping default").arg(it.key()));
+				continue;
+			}
+			it->v = value;
 		}
-	}*/
+	}
 }
 
 Settings::~Settings() {

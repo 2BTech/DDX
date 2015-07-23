@@ -180,6 +180,29 @@ void Daemon::releaseUnitManager() {
 #endif
 }
 
+int Daemon::versionCompare(QString testVersion) {
+	QString currentVersion = QString::fromLatin1(VERSION_FULL_TEXT);
+	int cMajor, cMinor, tMajor, tMinor;
+	QStringList current = currentVersion.split('.');
+	QStringList test = testVersion.split(QChar('.'));
+	if (current.size() != 2 || test.size() != 2)
+		return 10;
+	bool ok;
+	cMajor = current[0].toInt(&ok);
+	if ( ! ok) return 10;
+	cMinor = current[1].toInt(&ok);
+	if ( ! ok) return 10;
+	tMajor = test[0].toInt(&ok);
+	if ( ! ok) return 10;
+	tMinor = test[1].toInt(&ok);
+	if ( ! ok) return 10;
+	if (cMajor > tMajor) return -1;
+	if (cMajor < tMajor) return 1;
+	if (cMinor > tMinor) return -1;
+	if (cMinor < tMinor) return 1;
+	return 0;
+}
+
 void Daemon::loadDefaultSettings() {
 	log("Loading default settings");
 	settings->clear();

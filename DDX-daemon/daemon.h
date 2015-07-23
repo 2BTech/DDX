@@ -64,6 +64,15 @@ public:
 	
 	void releaseUnitManager();
 	
+	/*!
+	 * \brief Compare a version string with this application's version
+	 * \param testVersion The test version string (must be in the format "4.2")
+	 * \return 0 if equivalent, -1 if testVersion is less, 1 if testVersion is more
+	 * 
+	 * Returns 10 on error.
+	 */
+	static int versionCompare(QString testVersion);
+	
 	QStringList args;
 	
 	QSettings *settings;
