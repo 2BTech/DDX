@@ -20,20 +20,50 @@
 #define LOGGER_H
 
 #include <QObject>
+#include <QMessageLogContext>
+#include <QString>
+#include <QTextStream>
+#include <QQueue>
+#include <QMutex>
+#include <QMutexLocker>
 
 class Daemon;
+
+void globalHandleMessage(QtMsgType t, const QMessageLogContext &c, const QString &m);
 
 class Logger : public QObject
 {
 	friend class Daemon;
 	Q_OBJECT
 public:
-	explicit Logger(Daemon *parent);
+	
+	static Logger* get();
+	
 	~Logger();
+	
+	void handleMsg(QtMsgType t, const QMessageLogContext &c, const QString &m);
 	
 signals:
 	
 public slots:
+	
+private:
+	
+	//! stdout wrapper used for logging
+	QTextStream *sout;
+	
+	//! stderr wrapper used for logging
+	QTextStream *serr;
+	
+	QQueue<QString> q;
+	
+	QMutex qLock;
+	
+	Logger();
+	
+	void process();
+	
+	
 };
 
 #endif // LOGGER_H

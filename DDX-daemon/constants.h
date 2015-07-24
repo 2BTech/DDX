@@ -47,13 +47,6 @@
 // PLATFORM SPECIALIZATION
 
 
-// BEACON REMOVAL
-// #define BEACONS
-
-
-// PROCESSING
-#define POSTPROCESS_EVENT_HANDLING_TIMEOUT	200  // Timeout on call to QEventLoop::processEvents() after every Path::process()
-
 // BUFFERING
 #define MAX_SOCKET_BUFFER_SIZE		104857600  // 104857600 = 100mb
 #define DEFAULT_SLOW_BUFFER_SIZE	1048576  // 1048576 = 1mb
@@ -61,8 +54,20 @@
 
 
 // ERROR CODES
-#define E_SETTINGS_VERSION	10
-#define E_TCP_SERVER_FAILED 20
+#define E_QT_FATAL				1
+#define E_QT_CRITICAL			2
+#define E_SETTINGS_VERSION		10
+#define E_TCP_SERVER_FAILED		20
 
+// LOGGING
+#define LOGGING_INCLUDE_TIMESTAMP
+
+// Log function aliases
+#define debug(msg) (qDebug((msg).toLatin1()))
+// TODO:  Update to use qInfo (qt5.5+)
+#define info(msg) (qDebug((msg).toLatin1()))
+#define warning(msg) (qWarning((msg).toLatin1()))
+#define critical(msg) (qCritical((msg).toLatin1()))
+#define fatal(msg) (qFatal((msg).toLatin1()))
 
 #endif // CONSTANTS_H

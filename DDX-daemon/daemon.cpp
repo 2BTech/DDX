@@ -27,7 +27,6 @@ Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	// Load command line arguments
 	args = parent->arguments();
 	// Open stdout stream for logging
-	qout = new QTextStream(stdout);
 	// Initialize other variables
 	//n = new Network(this);
 	umRefCount = 0;
@@ -146,9 +145,7 @@ void Daemon::alert(const QString msg) {
 void Daemon::log(const QString msg) {
 	QString finalMsg = QDateTime::currentDateTime().toString("[yyyy/MM/dd HH:mm:ss.zzz] ");
 	finalMsg.append(msg);
-#ifdef LOGGING_ENABLE_STDOUT
-	*qout << finalMsg << endl;
-#endif
+	debug(finalMsg);
 }
 
 void Daemon::quit(int returnCode) {

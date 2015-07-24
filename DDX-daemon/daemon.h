@@ -20,7 +20,6 @@
 #define DAEMON_H
 
 #include <QObject>
-#include <QTextStream>  // For outputting to stdout
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QSettings>
@@ -117,8 +116,6 @@ public slots:
 private slots:
 	
 private:
-	//! stdout wrapper used for logging
-	QTextStream *qout;
 	
 	Network *n;
 	

@@ -19,13 +19,50 @@
 #include "logger.h"
 #include "daemon.h"
 
-Logger::Logger(Daemon *parent) : QObject(parent)
+void globalHandleMessage(QtMsgType t, const QMessageLogContext &c, const QString &m) {
+	Logger::get()->handleMsg(t, c, m);
+}
+
+Logger* Logger::get() {
+	static Logger instance;
+	return &instance;
+}
+
+Logger::Logger() : QObject(qApp)
 {
-	
+	sout = new QTextStream(stdout);
+	serr = new QTextStream(stderr);
 }
 
 Logger::~Logger()
 {
-	
+	QMutexLocker l(&qLock);
+	delete sout;
+	delete serr;
 }
 
+void Logger::handleMsg(QtMsgType t, const QMessageLogContext &c, const QString &m) {
+#ifdef LOGGING_INCLUDE_TIMESTAMP
+	QString echo(QDateTime::currentDateTime().toString("[yyyy/MM/dd HH:mm:ss.zzz] "));
+#else
+	QString echo(m);
+#endif
+	
+	if (t == QtFatalMsg) {
+		*serr << echo << endl;
+		// TODO:  Does this need to be the system abort?  Should it be exit() or qApp->abort()?
+		abort();
+	}
+	if (t == QtCriticalMsg) {
+		*serr << echo << endl;
+		daemon
+	}
+	
+	
+	
+	*sout << echo << endl;
+}
+
+void Logger::process() {
+	
+}

@@ -93,7 +93,6 @@ void Path::process() {
 		(*it)->process();
 	}
 	processPosition = 1;
-	QCoreApplication::processEvents(QEventLoop::AllEvents, POSTPROCESS_EVENT_HANDLING_TIMEOUT);
 }
 
 void Path::reconfigure() {

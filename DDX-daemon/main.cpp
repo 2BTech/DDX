@@ -21,6 +21,7 @@
 #include <QTimer>  // For calling init() after exec()
 #include "constants.h"
 #include "daemon.h"
+#include "logger.h"
 
 /*!
  * \brief main
@@ -38,6 +39,7 @@ int main(int argc, char *argv[])
 	QCoreApplication::setOrganizationDomain(APP_AUTHOR_DOMAIN);
 	QCoreApplication::setApplicationName(APP_NAME_SHORT);
 	QCoreApplication::setApplicationVersion(VERSION_FULL_TEXT);
+	qInstallMessageHandler(&globalHandleMessage);
 	
 	QCoreApplication a(argc, argv);
 
