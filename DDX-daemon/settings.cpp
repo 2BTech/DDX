@@ -18,22 +18,24 @@
 
 #include "settings.h"
 #include "daemon.h"
+#include "logger.h"
 
 Settings::Settings(Daemon *parent) : QObject(parent) {
 	// Initialize
+	logger = Logger::get();
 	systemSettings = new QSettings(APP_AUTHOR_FULL, APP_NAME_SHORT, this);
 	QList<SetEnt> loaded = enumerateSettings();
 	foreach (const SetEnt &set, loaded)
 		s.insert(set.key, Setting(set.defVal, set.type));
 	// Check whether a full reset is required
 	if ( ! systemSettings->contains("Version")
-		|| parent->args.contains("-reconfigure")) {
+		|| parent->args.contains("-reconfigure", Qt::CaseInsensitive)) {
 		resetAll();
 		return;
 	}
 	int vc = Daemon::versionCompare(systemSettings->value("Version").toString());
 	if (vc > 0) {
-		parent->log(tr("Settings are for higher version or corrupted. "
+		logger->alert(tr("Settings are for higher version or corrupted. "
 					   "Run latest version or launch daemon with '-reconfigure' "
 					   "option to reset all settings."));
 		// TODO:  Quit here
@@ -47,11 +49,12 @@ Settings::Settings(Daemon *parent) : QObject(parent) {
 		if (systemSettings->contains(it.key())) {
 			QVariant value = systemSettings->value(it.key());
 			if (((QMetaType::Type) value.type()) != it->t) {
-				parent->log(tr("Saved setting '%1' is invalid; keeping default").arg(it.key()));
+				logger->log(tr("Saved setting '%1' is invalid; keeping default").arg(it.key()));
 				continue;
 			}
 			it->v = value;
 		}
+		// TODO:  Check startup arguments and live-load them if necessary
 	}
 }
 
@@ -98,6 +101,7 @@ void Settings::reset(const QString &key, const QString &group) {
 }
 
 void Settings::resetAll() {
+	logger->log(tr("Resetting all settings"));
 	QWriteLocker l(&lock);
 	systemSettings->clear();
 	QHash<QString, Setting>::iterator it;

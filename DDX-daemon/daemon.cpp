@@ -22,11 +22,13 @@
 #include "network.h"
 #include "modules/genmod.h"
 #include "settings.h"
+#include "logger.h"
 
 Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
+	logger = Logger::get();
+	logger->daemon = this;
 	// Load command line arguments
 	args = parent->arguments();
-	// Open stdout stream for logging
 	// Initialize other variables
 	//n = new Network(this);
 	umRefCount = 0;
@@ -63,9 +65,9 @@ void Daemon::init() {
 	else log(tr("Loading settings last reset on ").append(settings->value("SettingsResetOn").toString()));*/
 
 	//! ### Network Manager Initialization
-	log("STARTING");
+	logger->log("STARTING");
 	n = new Network(this);
-	log("finished");
+	logger->log("finished");
 	
 	// Determine whether log should be saved to file
 	//if (args.contains("-l") || settings->value("logging/AlwaysLogToFile").toBool()) {
@@ -100,7 +102,7 @@ void Daemon::testPath(QByteArray scheme, int log) {
 }
 
 void Daemon::addPath(QString name, int log) {
-	this->log("fail");
+	this->logger->log("fail");
 	UnitManager *um = getUnitManager();
 	QByteArray scheme = um->getPathScheme(name);
 	// TODO add error checking for scheme not found
@@ -123,7 +125,7 @@ void Daemon::request(QJsonObject params, QString dest, bool response) {
 		 * call is queued, so Daemon data elements should be safe to access. */
 		int id = nextRequestId++;
 		if (nextRequestId == INT_MAX) {
-			log("RPC ID value maxed; resetting.  May cause undefined behavior.");
+			logger->log("RPC ID value maxed; resetting.  May cause undefined behavior.");
 			nextRequestId = 100;  // Some random relatively low value
 			/* TODO:  In future versions, it may be better to trigger and daemon
 			 * restart when this happens. */
@@ -135,33 +137,20 @@ void Daemon::request(QJsonObject params, QString dest, bool response) {
 	dest.size();
 }
 
-void Daemon::alert(const QString msg) {
-	// TODO
-	QString out("alert:");
-	out.append(msg);
-	log(msg);
-}
-
-void Daemon::log(const QString msg) {
-	QString finalMsg = QDateTime::currentDateTime().toString("[yyyy/MM/dd HH:mm:ss.zzz] ");
-	finalMsg.append(msg);
-	debug(finalMsg);
-}
-
 void Daemon::quit(int returnCode) {
 	if (quitting) return;  // Prevent recursion
 	quitting = true;
 	// TODO: make this call finishing stuff
 	n->shutdown();  // May take a while
-	if (returnCode) log(tr("Terminating (%1)").arg(returnCode));
-	else log(tr("Quitting"));
+	if (returnCode) logger->log(tr("Terminating (%1)").arg(returnCode));
+	else logger->log(tr("Quitting"));
 	qApp->exit(returnCode);
 }
 
 UnitManager* Daemon::getUnitManager() {
 	if ( ! unitManager) unitManager = new UnitManager(this);
 #ifndef KEEP_UNITMANAGER
-	log("Unit manager requested");
+	logger->log("Unit manager requested");
 	umRefCount++;
 #endif
 	return unitManager;
@@ -181,11 +170,11 @@ void Daemon::releaseUnitManager() {
 
 int Daemon::versionCompare(QString testVersion) {
 	QString currentVersion = QString::fromLatin1(VERSION_FULL_TEXT);
-	int cMajor, cMinor, tMajor, tMinor;
 	QStringList current = currentVersion.split('.');
 	QStringList test = testVersion.split(QChar('.'));
 	if (current.size() != 2 || test.size() != 2)
 		return 10;
+	int cMajor, cMinor, tMajor, tMinor;
 	bool ok;
 	cMajor = current[0].toInt(&ok);
 	if ( ! ok) return 10;
@@ -203,7 +192,7 @@ int Daemon::versionCompare(QString testVersion) {
 }
 
 void Daemon::loadDefaultSettings() {
-	log("Loading default settings");
+	logger->log("Loading default settings");
 	/*settings->clear();
 	settings->setValue("SettingsResetOn",
 					   QDateTime::currentDateTime().toString("yyyy/MM/dd HH:mm:ss"));

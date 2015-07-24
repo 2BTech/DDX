@@ -37,6 +37,8 @@
 class Path;
 class UnitManager;
 class Network;
+class Settings;
+class Logger;
 
 /*!
  * \brief The main manager of the DDX
@@ -74,7 +76,7 @@ public:
 	
 	QStringList args;
 	
-	//QSettings *settings;
+	Settings *settings;
 
 signals:
 
@@ -107,15 +109,13 @@ public slots:
 	
 	void request(QJsonObject params, QString dest, bool response = false);
 	
-	void alert(const QString msg);
-	
-	void log(const QString msg);
-	
 	void quit(int returnCode=0);
 	
 private slots:
 	
 private:
+	
+	Logger *logger;
 	
 	Network *n;
 	
@@ -141,6 +141,10 @@ private:
 	void loadDefaultSettings();
 	
 	void setupService();
+	
+	void publishLog(QString msg);
+	
+	void publishAlert(QString msg);
 };
 
 #endif // DAEMON_H

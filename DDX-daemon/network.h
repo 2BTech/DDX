@@ -28,6 +28,8 @@
 #include "constants.h"
 #include "daemon.h"
 
+class Logger;
+
 class Network : public QObject
 {
 	Q_OBJECT
@@ -38,9 +40,6 @@ public:
 	void shutdown();
 	
 signals:
-	
-	//! Emitted to log an event.  _Note:_ use log() when logging events.
-	void sendLog(const QString msg) const;
 	
 public slots:
 	
@@ -63,6 +62,8 @@ private slots:
 	void handleNetworkError(QAbstractSocket::SocketError error);
 	
 private:
+	
+	Logger *logger;
 	
 	QHash<QString, QAbstractSocket*> sockets;
 	

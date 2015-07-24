@@ -30,6 +30,7 @@
 #include <QGlobalStatic>
 
 class Daemon;
+class Logger;
 
 class Settings : public QObject
 {
@@ -99,6 +100,8 @@ private:
 		QString currentGroup;
 		QList<SetEnt> list;
 	};
+	
+	Logger *logger;
 	
 	QSettings *systemSettings;
 	

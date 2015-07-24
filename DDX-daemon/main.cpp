@@ -43,11 +43,9 @@ int main(int argc, char *argv[])
 	
 	QCoreApplication a(argc, argv);
 
-	Daemon daemon(&a);
-	
-	// TODO:  install a message handler with qInstallMessageHandler
+	Logger::get()->log(APP_NAME " " VERSION_FULL_TEXT);
 
-	daemon.log(APP_NAME " " VERSION_FULL_TEXT);
+	Daemon daemon(&a);
 
 	// Begin execution
 	QMetaObject::invokeMethod(&daemon, "init", Qt::QueuedConnection);

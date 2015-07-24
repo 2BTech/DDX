@@ -62,12 +62,5 @@
 // LOGGING
 #define LOGGING_INCLUDE_TIMESTAMP
 
-// Log function aliases
-#define debug(msg) (qDebug((msg).toLatin1()))
-// TODO:  Update to use qInfo (qt5.5+)
-#define info(msg) (qDebug((msg).toLatin1()))
-#define warning(msg) (qWarning((msg).toLatin1()))
-#define critical(msg) (qCritical((msg).toLatin1()))
-#define fatal(msg) (qFatal((msg).toLatin1()))
 
 #endif // CONSTANTS_H

@@ -21,20 +21,20 @@
 #include "module.h"
 #include "inlet.h"
 #include "unitmanager.h"
+#include "logger.h"
 
 Path::Path(Daemon *daemon, const QString name, const QByteArray scheme) : QObject(0)
 {
 	this->name = name;
 	this->scheme = scheme;
 	d = daemon;
+	logger = Logger::get();
 	isReady = false;
 	isRunning = false;
 	lastInitIndex = 0;
 	processPosition = 1;
 	terminated = false;
 	
-	connect(this, &Path::sendAlert, daemon, &Daemon::alert);
-	connect(this, &Path::sendLog, daemon, &Daemon::log);
 	// TODO:  Check the validity of this
 	connect(this, &Path::readyForDeletion, this, &Path::deleteLater);
 }
@@ -221,7 +221,7 @@ void Path::alert(const QString msg, const Module *m) const {
 	if (m) out.append(":").append(m->getName());
 	// Append & send
 	out.append(": ").append(msg);
-	emit sendAlert(out);
+	logger->log(out, true);
 }
 
 void Path::log(const QString msg, const Module *m) const {
@@ -231,5 +231,5 @@ void Path::log(const QString msg, const Module *m) const {
 	if (m) out.append(":").append(m->getName());
 	// Append & send
 	out.append(": ").append(msg);
-	emit sendLog(out);
+	logger->log(out);
 }

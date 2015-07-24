@@ -26,22 +26,55 @@
 #include <QQueue>
 #include <QMutex>
 #include <QMutexLocker>
+#include <QPointer>
 
 class Daemon;
 
+//! For use by Qt's internal messages only
 void globalHandleMessage(QtMsgType t, const QMessageLogContext &c, const QString &m);
 
+/*!
+ * \brief Manages global logging
+ * 
+ * The Logger class works tightly with the Daemon class to manage logging.  The
+ * remote-operated nature of many DDX installations means that all logging must
+ * potentially be duplicated to various locations.  The Logger class helps to
+ * abstract all logging and alerting functionality with regards to other DDX
+ * daemon components.
+ * 
+ * _Note:_ With the exception of process(), all functions in this class are
+ * thread-safe.
+ */
 class Logger : public QObject
 {
 	friend class Daemon;
 	Q_OBJECT
 public:
 	
+	/*!
+	 * \brief Retrieve the Logger instance
+	 * \return The application's Logger
+	 * 
+	 * Because Qt's internal logging functions require logging to be tied to a
+	 * global function, the Logger class is simplest to implement as a
+	 * singleton.  For this reason, no public constructor is given.  This should
+	 * be how components gain access to the logging system.
+	 * 
+	 * This function is thread-safe.
+	 */
 	static Logger* get();
 	
 	~Logger();
 	
-	void handleMsg(QtMsgType t, const QMessageLogContext &c, const QString &m);
+	void log(const QString &msg, bool isAlert = false);
+	
+	/*!
+	 * \brief Send a high-level message to the user
+	 * \param msg The message
+	 * 
+	 * Convenience wrapper around log()
+	 */
+	void alert(const QString &msg) {log(msg, true);}
 	
 signals:
 	
@@ -49,17 +82,33 @@ public slots:
 	
 private:
 	
+	struct Entry {
+		Entry(const QString &msg, bool isAlert) {
+			this->msg = msg;
+			this->isAlert = isAlert;
+		}
+		QString msg;
+		bool isAlert;
+	};
+	
+	static QMutex constructionLock;
+	
+	QPointer<Daemon> daemon;
+	
 	//! stdout wrapper used for logging
 	QTextStream *sout;
 	
 	//! stderr wrapper used for logging
 	QTextStream *serr;
 	
-	QQueue<QString> q;
+	QQueue<Entry> q;
 	
 	QMutex qLock;
 	
 	Logger();
+	
+	void handleMsg(QtMsgType t, const QMessageLogContext &c, const QString &m);
+	friend void globalHandleMessage(QtMsgType t, const QMessageLogContext &c, const QString &m);
 	
 	void process();
 	

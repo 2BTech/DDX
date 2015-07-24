@@ -30,6 +30,7 @@ class Module;
 class Inlet;
 class Daemon;
 class UnitManager;
+class Logger;
 
 /*!
  * \brief A complete string of consecutive Modules which handles data lines
@@ -151,12 +152,6 @@ signals:
 	//! Emitted when all cleanup operations have finished
 	void readyForDeletion() const;
 	
-	//! Emitted to send an alert.  _Note:_ use alert() when sending alerts.
-	void sendAlert(const QString msg) const;
-	
-	//! Emitted to log an event.  _Note:_ use log() when logging events.
-	void sendLog(const QString msg) const;
-	
 public slots:
 	/*!
 	 * Parse scheme and Module::init() constituents
@@ -174,6 +169,9 @@ public slots:
 protected:
 	
 private:
+	
+	Logger *logger;
+	
 	//! This Path's name (not editable after construction)
 	QString name;
 	

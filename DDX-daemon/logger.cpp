@@ -23,7 +23,12 @@ void globalHandleMessage(QtMsgType t, const QMessageLogContext &c, const QString
 	Logger::get()->handleMsg(t, c, m);
 }
 
+//! Used to ensure that Logger construction is thread-safe
+QMutex loggerConstructionLock;
+
 Logger* Logger::get() {
+	// TODO:  Check if this is safe
+	QMutexLocker l(&loggerConstructionLock);
 	static Logger instance;
 	return &instance;
 }
@@ -41,26 +46,31 @@ Logger::~Logger()
 	delete serr;
 }
 
-void Logger::handleMsg(QtMsgType t, const QMessageLogContext &c, const QString &m) {
+void Logger::log(const QString &msg, bool isAlert) {
 #ifdef LOGGING_INCLUDE_TIMESTAMP
 	QString echo(QDateTime::currentDateTime().toString("[yyyy/MM/dd HH:mm:ss.zzz] "));
+	echo.append(msg);
 #else
-	QString echo(m);
+	QString echo(msg);
 #endif
+	// Immediately echo to output streams
+	if (isAlert) *serr << echo << endl;
+	else *sout << echo << endl;
 	
-	if (t == QtFatalMsg) {
-		*serr << echo << endl;
-		// TODO:  Does this need to be the system abort?  Should it be exit() or qApp->abort()?
-		abort();
+	if ( ! daemon) {
+		QMutexLocker l(&qLock);
+		q.enqueue(Entry(echo, isAlert));
+		return;
 	}
-	if (t == QtCriticalMsg) {
-		*serr << echo << endl;
-		daemon
+	
+	if (daemon && isAlert) {
+		
 	}
-	
-	
-	
-	*sout << echo << endl;
+}
+
+void Logger::handleMsg(QtMsgType t, const QMessageLogContext &c, const QString &m) {
+	// TODO: especially set alert
+	log(QString("QT ERROR: ").append(m));
 }
 
 void Logger::process() {

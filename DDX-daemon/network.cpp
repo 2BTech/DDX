@@ -17,13 +17,14 @@
  ******************************************************************************/
 
 #include "network.h"
+#include "logger.h"
 
 Network::Network(Daemon *daemon) : QObject(0)
 {
 	// Initialization
 	d = daemon;
+	logger = Logger::get();
 	// Connections
-	connect(this, &Network::sendLog, daemon, &Daemon::log);
 	// Threading
 	QThread *t = new QThread(daemon);
 	moveToThread(t);
@@ -150,8 +151,7 @@ void Network::handleNetworkError(QAbstractSocket::SocketError error) {
 }
 
 void Network::log(const QString msg) const {
-	// TODO
-	QString out("network:");
+	QString out("network: ");
 	out.append(msg);
-	emit sendLog(out);
+	logger->log(msg);
 }
