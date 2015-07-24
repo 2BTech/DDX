@@ -18,12 +18,14 @@
 
 #include "network.h"
 #include "logger.h"
+#include "settings.h"
 
 Network::Network(Daemon *daemon) : QObject(0)
 {
 	// Initialization
 	d = daemon;
 	logger = Logger::get();
+	settings = daemon->getSettings();
 	// Connections
 	// Threading
 	QThread *t = new QThread(daemon);
@@ -51,10 +53,10 @@ void Network::init() {
 	// Connections
 	connect(server, &QTcpServer::acceptError, this, &Network::handleNetworkError);
 	connect(server, &QTcpServer::newConnection, this, &Network::handleConnection);
-	int port = d->s("network/GUIPort").toInt();
+	int port = settings->v("GUIPort", SG_NETWORK).toInt();
 	// TODO:  Determine if system is using ipv6
 	QHostAddress a(QHostAddress::LocalHost);
-	if (d->s("network/AllowExternalManagement").toBool())
+	if (settings->v("AllowExternalManagement", SG_NETWORK).toBool())
 		a = QHostAddress::Any;
 	if ( ! server->listen(a, port)) {
 		// TODO:  Should be alert

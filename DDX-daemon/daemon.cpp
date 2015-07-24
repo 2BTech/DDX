@@ -25,11 +25,13 @@
 #include "logger.h"
 
 Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
+	logReady = false;
 	logger = Logger::get();
 	logger->daemon = this;
 	// Load command line arguments
 	args = parent->arguments();
 	// Initialize other variables
+	settings = new Settings(this);
 	//n = new Network(this);
 	umRefCount = 0;
 	unitManager = 0;
@@ -68,6 +70,7 @@ void Daemon::init() {
 	logger->log("STARTING");
 	n = new Network(this);
 	logger->log("finished");
+	logger->log(QString("Queue length: %1").arg(logger->q.size()));
 	
 	// Determine whether log should be saved to file
 	//if (args.contains("-l") || settings->value("logging/AlwaysLogToFile").toBool()) {
@@ -87,12 +90,6 @@ void Daemon::init() {
 	// Set up as system service (platform-dependent)
 	//setupService();
 	
-}
-
-QVariant Daemon::s(const QString &key) {
-	// TODO: assert(settings != 0);
-	//return settings->value(key);
-	// TODO
 }
 
 void Daemon::testPath(QByteArray scheme, int log) {
@@ -169,7 +166,7 @@ void Daemon::releaseUnitManager() {
 }
 
 int Daemon::versionCompare(QString testVersion) {
-	QString currentVersion = QString::fromLatin1(VERSION_FULL_TEXT);
+	const QString currentVersion = QString::fromLatin1(VERSION_FULL_TEXT);
 	QStringList current = currentVersion.split('.');
 	QStringList test = testVersion.split(QChar('.'));
 	if (current.size() != 2 || test.size() != 2)

@@ -40,14 +40,14 @@ public:
 	
 	~Settings();
 	
-	QVariant value(const QString &key, const QString &group = QString()) const;
-	
-	QVariant getDefault(const QString &key, const QString &group = QString()) const;
+	QVariant v(const QString &key, const QString &group = QString()) const;
 	
 	bool set(const QString &key, const QVariant &val,
 			 const QString &group = QString(), bool save = true);
 	
 	void reset(const QString &key, const QString &group = QString());
+	
+	QVariant getDefault(const QString &key, const QString &group = QString()) const;
 	
 	void resetAll();
 	

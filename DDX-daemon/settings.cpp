@@ -25,8 +25,10 @@ Settings::Settings(Daemon *parent) : QObject(parent) {
 	logger = Logger::get();
 	systemSettings = new QSettings(APP_AUTHOR_FULL, APP_NAME_SHORT, this);
 	QList<SetEnt> loaded = enumerateSettings();
-	foreach (const SetEnt &set, loaded)
+	foreach (const SetEnt &set, loaded) {
+		Q_ASSERT(((QMetaType::Type) set.defVal.type()) == set.type);
 		s.insert(set.key, Setting(set.defVal, set.type));
+	}
 	// Check whether a full reset is required
 	if ( ! systemSettings->contains("Version")
 		|| parent->args.contains("-reconfigure", Qt::CaseInsensitive)) {
@@ -42,19 +44,23 @@ Settings::Settings(Daemon *parent) : QObject(parent) {
 		parent->quit(E_SETTINGS_VERSION);
 		return;
 	}
-	if (vc < 0) {
-		// TODO
-	}
-	else for (QHash<QString,Setting>::iterator it = s.begin(); it != s.end(); ++it) {
+	if (vc < 0)
+		logger->log(tr("Settings are for a previous version of the DDX; some "
+					   "expected functionality may not work. Defaults for the "
+					   "current version will be used where applicable. "
+					   "Reconfigure from the GUI menu or by running the daemon "
+					   "with the '-reconfigure' option to update settings."));
+	for (QHash<QString,Setting>::iterator it = s.begin(); it != s.end(); ++it) {
 		if (systemSettings->contains(it.key())) {
 			QVariant value = systemSettings->value(it.key());
-			if (((QMetaType::Type) value.type()) != it->t) {
-				logger->log(tr("Saved setting '%1' is invalid; keeping default").arg(it.key()));
+			if ( ! value.canConvert(it->t)) {
+				logger->log(tr("Saved setting '%1' is %2, not %3; keeping default")
+					.arg(it.key(), QMetaType::typeName(value.type()), QMetaType::typeName(it->t)));
 				continue;
 			}
 			it->v = value;
 		}
-		// TODO:  Check startup arguments and live-load them if necessary
+		// Todo:  Live-load command-line arguments ("-s'key':'value'")
 	}
 }
 
@@ -63,7 +69,7 @@ Settings::~Settings() {
 	delete systemSettings;  // Auto-syncs
 }
 
-QVariant Settings::value(const QString &key, const QString &group) const {
+QVariant Settings::v(const QString &key, const QString &group) const {
 	QString k = getKey(key, group);
 	QReadLocker l(&lock);
 	Q_ASSERT(s.contains(k));
@@ -123,7 +129,7 @@ QList<Settings::SetEnt> Settings::enumerateSettings() const {
 	b.add("LastShutdownSafe", tr("Whether the previous shutdown was completed normally"),
 		  false, QMetaType::Bool);
 	
-	b.enterGroup("network");
+	b.enterGroup(SG_NETWORK);
 	b.add("GUIPort", tr("The network port used by the GUI to manage the daemon"),
 		  4388, QMetaType::Int);
 	b.add("UseIPv6Localhost", tr("Whether to use IPv6 localhost rather than IPv4"),

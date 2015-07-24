@@ -29,12 +29,15 @@
 #include "daemon.h"
 
 class Logger;
+class Settings;
 
 class Network : public QObject
 {
 	Q_OBJECT
 public:
+	
 	explicit Network(Daemon *daemon);
+	
 	~Network();
 	
 	void shutdown();
@@ -64,6 +67,8 @@ private slots:
 private:
 	
 	Logger *logger;
+	
+	Settings *settings;
 	
 	QHash<QString, QAbstractSocket*> sockets;
 	

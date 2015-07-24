@@ -51,6 +51,7 @@ class Logger;
  */
 class Daemon : public QObject
 {
+	friend class Logger;
 	Q_OBJECT
 public:
 	explicit Daemon(QCoreApplication *parent);
@@ -64,6 +65,8 @@ public:
 	UnitManager *getUnitManager();
 	
 	void releaseUnitManager();
+	
+	Settings *getSettings() const {return settings;}
 	
 	/*!
 	 * \brief Compare a version string with this application's version
@@ -105,8 +108,6 @@ public slots:
 	 */
 	void init();
 	
-	QVariant s(const QString &key);
-	
 	void request(QJsonObject params, QString dest, bool response = false);
 	
 	void quit(int returnCode=0);
@@ -116,6 +117,8 @@ private slots:
 private:
 	
 	Logger *logger;
+	
+	bool logReady;
 	
 	Network *n;
 	

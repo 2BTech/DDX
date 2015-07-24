@@ -56,21 +56,33 @@ void Logger::log(const QString &msg, bool isAlert) {
 	// Immediately echo to output streams
 	if (isAlert) *serr << echo << endl;
 	else *sout << echo << endl;
-	
-	if ( ! daemon) {
+	//
+	if ( ! daemon || ! daemon->logReady) {
 		QMutexLocker l(&qLock);
 		q.enqueue(Entry(echo, isAlert));
 		return;
 	}
 	
-	if (daemon && isAlert) {
-		
-	}
 }
 
 void Logger::handleMsg(QtMsgType t, const QMessageLogContext &c, const QString &m) {
-	// TODO: especially set alert
-	log(QString("QT ERROR: ").append(m));
+#ifdef QT_DEBUG
+	QString msg("Qt %1:%2 [%3]: ");
+	msg = msg.arg(c.file, QString::number(c.line), c.function);
+	msg.append(m);
+#else
+	QString msg("DDX bug: ");
+	msg.append(m);
+#endif
+	
+#if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
+	bool alert = (t != QtDebugMsg);
+#else
+	bool alert = ! (t == QtDebugMsg || t == QtInfoMsg);
+#endif
+	
+	log(msg, alert);
+	// TODO:  See if Fatal needs us to quit for it
 }
 
 void Logger::process() {

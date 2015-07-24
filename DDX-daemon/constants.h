@@ -38,29 +38,18 @@
 #define KEEP_UNITMANAGER
 
 // LOGGING
-#ifdef ENABLE_DEBUG
-#define LOGGING_ENABLE_PRINT_ALL  // Comment to disable printing of all but errors
-#endif
-#define LOGGING_ENABLE_STDOUT  // Comment to disable printing of log messages to stdout
+#define LOGGING_INCLUDE_TIMESTAMP
 
+// SETTINGS GROUPS
+#define SG_NETWORK "network"
 
 // PLATFORM SPECIALIZATION
 
-
 // BUFFERING
 #define MAX_SOCKET_BUFFER_SIZE		104857600  // 104857600 = 100mb
-#define DEFAULT_SLOW_BUFFER_SIZE	1048576  // 1048576 = 1mb
-#define DEFAULT_FAST_BUFFER_SIZE	104857600  // 104857600 = 100mb
-
 
 // ERROR CODES
-#define E_QT_FATAL				1
-#define E_QT_CRITICAL			2
 #define E_SETTINGS_VERSION		10
 #define E_TCP_SERVER_FAILED		20
-
-// LOGGING
-#define LOGGING_INCLUDE_TIMESTAMP
-
 
 #endif // CONSTANTS_H
