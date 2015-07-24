@@ -73,8 +73,9 @@ public:
 	
 	/*!
 	 * \brief Add a path to the manager
-	 * \param scheme
-	 * \return 
+	 * \param scheme The path's scheme (will be verified)
+	 * \param save Whether to save the Path or not
+	 * \return The verification error string or a null QString on success
 	 */
 	QString addPath(const QByteArray scheme, bool save);
 	

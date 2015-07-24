@@ -51,7 +51,5 @@ int main(int argc, char *argv[])
 
 	Daemon daemon(&a);
 
-	// Begin execution
-	QMetaObject::invokeMethod(&daemon, "init", Qt::QueuedConnection);
 	return a.exec();
 }

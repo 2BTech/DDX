@@ -67,8 +67,11 @@ void Logger::log(const QString &msg, bool isAlert) {
 
 void Logger::handleMsg(QtMsgType t, const QMessageLogContext &c, const QString &m) {
 #ifdef QT_DEBUG
-	QString msg("Qt %1:%2 [%3]: ");
-	msg = msg.arg(c.file, QString::number(c.line), c.function);
+	QString msg;
+	if (c.file) {
+		msg = "Qt %1:%2 [%3]: ";
+		msg = msg.arg(c.file, QString::number(c.line), c.function);
+	}
 	msg.append(m);
 #else
 	QString msg("DDX bug: ");

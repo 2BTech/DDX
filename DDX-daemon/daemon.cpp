@@ -39,6 +39,7 @@ Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	quitting = false;
 	// TODO: Make this work with new syntax
 	connect(parent, SIGNAL(aboutToQuit()), this, SLOT(quit()));
+	QMetaObject::invokeMethod(this, "init", Qt::QueuedConnection);
 }
 
 Daemon::~Daemon() {
@@ -48,6 +49,13 @@ Daemon::~Daemon() {
 }
 
 void Daemon::init() {
+	
+	if (QString::compare(qVersion(), QT_VERSION_STR) != 0) logger->alert
+			(tr("The daemon was compiled to use Qt %1, but it is running on a "
+				"system with Qt %2. It will continue to run, but there may be "
+				"unexpected side effects. If problems occur, install the correct "
+				"version of Qt.").arg(QT_VERSION_STR, qVersion()));
+	
 	/*! ### Loading Settings
 	 * Settings are set to their default values at startup when one of these
 	 * conditions is met:
@@ -59,12 +67,8 @@ void Daemon::init() {
 	 * "SettingsResetOn" and then forces a full application restart.
 	 * \sa Daemon::loadDefaultSettings
 	 */
-	// TODO:  Add a see also to the above comment about the GUI's option which
-	// removes "SettingsResetOn"
-	//settings = new QSettings(parent());
-	/*if ( ! settings->contains("SettingsResetOn")
-		 || args.contains("-reconfigure")) loadDefaultSettings();
-	else log(tr("Loading settings last reset on ").append(settings->value("SettingsResetOn").toString()));*/
+	
+	
 
 	//! ### Network Manager Initialization
 	logger->log("STARTING");

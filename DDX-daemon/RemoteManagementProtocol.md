@@ -1,3 +1,4 @@
+<!---
 ################################################################################
 ##                         DATA DISPLAY APPLICATION X                         ##
 ##                            2B TECHNOLOGIES, INC.                           ##
@@ -15,63 +16,17 @@
 ##  For more information about the DDX, check out the 2B website or GitHub:   ##
 ##       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      ##
 ################################################################################
+-->
+
+# DDX Remote Management Protocol
+The DDX uses [JSON-RPC 2.0](http://www.jsonrpc.org/specification).  At the low level, each DDX daemon opens a TCP server, by default on port 4388, to which GUIs, other DDX daemons, and other data sources or sinks can connect. Every RPC object transmitted must be separated by exactly one line feed (`\n`).  All RPC objects will be ignored until a `register` request is accepted by the daemon.
+
+## Conventions
+
+## Registration & Disconnection
+Every connection must be registered before its requests will be honored.
+
+### Request: `register`
 
 
-#-------------------------------------------------
-#
-# Project created by QtCreator 2015-04-29T16:35:09
-#
-#-------------------------------------------------
-
-QT       += core \
-			network \
-			serialport \
-			bluetooth \
-			widgets \ # For tray icons & messages
-			testlib  # For temporary testing
-
-QT       -= gui
-
-TARGET = DDX-daemon
-CONFIG   += c++11
-CONFIG   += console
-CONFIG   -= app_bundle
-
-TEMPLATE = app
-
-
-SOURCES += main.cpp \
-    daemon.cpp \
-    inlet.cpp \
-    path.cpp \
-    module.cpp \
-    unitmanager.cpp \
-    modules/genmod.cpp \
-    modules/examplemodule.cpp \
-    modules/module_register.cpp \
-    network.cpp \
-    settings.cpp \
-    logger.cpp
-
-HEADERS += \
-    constants.h \
-    ../NoGit/private_constants.h \
-    daemon.h \
-    inlet.h \
-    path.h \
-    module.h \
-    data.h \
-    unitmanager.h \
-    modules/genmod.h \
-    modules/examplemodule.h \
-    network.h \
-    settings.h \
-    logger.h
-
-DISTFILES += \
-    DaemonCommandLineArguments.txt \
-    DevNotes.txt \
-    DataFlow.txt \
-    RemoteManagementProtocol.md
-
-RESOURCES += res/resources.qrc
+### Notification: `disconnect`
