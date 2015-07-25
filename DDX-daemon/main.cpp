@@ -23,7 +23,7 @@
 #include "daemon.h"
 #include "logger.h"
 
-#if (QT_VERSION > QT_VERSION_CHECK(5, 4, 0))
+#if (QT_VERSION < QT_VERSION_CHECK(5, 4, 0))
 #error Qt version 5.4 or greater required
 #endif
 

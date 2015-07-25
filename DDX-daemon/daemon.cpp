@@ -51,10 +51,10 @@ Daemon::~Daemon() {
 void Daemon::init() {
 	
 	if (QString::compare(qVersion(), QT_VERSION_STR) != 0) logger->alert
-			(tr("The daemon was compiled to use Qt %1, but it is running on a "
-				"system with Qt %2. It will continue to run, but there may be "
-				"unexpected side effects. If problems occur, install the correct "
-				"version of Qt.").arg(QT_VERSION_STR, qVersion()));
+		(tr("The daemon was compiled to use Qt %1, but it is running on a system "
+			"with Qt %2. It will continue to run, but there may be unexpected "
+			"side effects. If problems occur, install the correct version of "
+			"Qt.").arg(QT_VERSION_STR, qVersion()));
 	
 	/*! ### Loading Settings
 	 * Settings are set to their default values at startup when one of these

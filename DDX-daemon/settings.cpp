@@ -44,12 +44,13 @@ Settings::Settings(Daemon *parent) : QObject(parent) {
 		parent->quit(E_SETTINGS_VERSION);
 		return;
 	}
-	if (vc < 0)
-		logger->log(tr("Settings are for a previous version of the DDX; some "
-					   "expected functionality may not work. Defaults for the "
-					   "current version will be used where applicable. "
-					   "Reconfigure from the GUI menu or by running the daemon "
-					   "with the '-reconfigure' option to update settings."));
+	logger->log(tr("Reloading settings last reset on %1")
+		.arg(s.value("SettingsResetOn").v.toDateTime().toString("yyyy/MM/dd HH:mm:ss")));
+	if (vc < 0) logger->log
+		(tr("Settings are for a previous version of the DDX; some expected "
+			"functionality may not work. Defaults for the current version will "
+			"be used where applicable. Reconfigure from the GUI menu or by "
+			"running the daemon with the '-reconfigure' option to update settings."));
 	for (QHash<QString,Setting>::iterator it = s.begin(); it != s.end(); ++it) {
 		if (systemSettings->contains(it.key())) {
 			QVariant value = systemSettings->value(it.key());
@@ -72,7 +73,7 @@ Settings::~Settings() {
 QVariant Settings::v(const QString &key, const QString &group) const {
 	QString k = getKey(key, group);
 	QReadLocker l(&lock);
-	Q_ASSERT(s.contains(k));
+	Q_ASSERT_X(s.contains(k), "Settings::verifySettingExists", k.toLatin1());
 	return s.value(k).v;
 }
 
@@ -134,7 +135,7 @@ QList<Settings::SetEnt> Settings::enumerateSettings() const {
 		  4388, QMetaType::Int);
 	b.add("UseIPv6Localhost", tr("Whether to use IPv6 localhost rather than IPv4"),
 		  false, QMetaType::Bool);
-	b.add("AllowExternalGUI", tr("Whether to allow non-local GUI to manage the daemon"),
+	b.add("AllowExternalManagement", tr("Whether to allow non-local GUI to manage the daemon"),
 		  false, QMetaType::Bool);
 	
 	return b.list;
@@ -142,6 +143,6 @@ QList<Settings::SetEnt> Settings::enumerateSettings() const {
 
 inline QString Settings::getKey(const QString &subKey, const QString &group) const {
 	if (group.isNull()) return subKey;
-	QString key(subKey);
-	return key.append("/").append(group);
+	QString key(group);
+	return key.append("/").append(subKey);
 }

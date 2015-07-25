@@ -89,7 +89,6 @@ private:
 		void add(QString key, QString desc,
 				 QVariant defaultVal, QMetaType::Type type) {
 			SetEnt se(key, desc, defaultVal, type);
-			if (currentGroup.isNull()) list.append(se);
 			se.key.prepend(currentGroup);
 			list.append(se);
 		}
