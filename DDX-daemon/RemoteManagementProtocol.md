@@ -19,34 +19,71 @@
 -->
 
 # DDX Remote Management Protocol
-The DDX uses [JSON-RPC 2.0](http://www.jsonrpc.org/specification).  At the low level, each DDX daemon opens a TCP server, by default on port 4388, to which GUIs, other DDX daemons, and other data sources or sinks can connect.  Every RPC object transmitted must be separated by exactly one line feed (`\n`).  All text is encoded in UTF-8.  All RPC objects will be ignored until a `register` request is accepted by the daemon.
+The DDX uses strictly-compliant [JSON-RPC 2.0](http://www.jsonrpc.org/specification). 
+At the low level, each DDX daemon opens a TCP server, by default on port 4388, to 
+which GUIs, other DDX daemons, and other data sources or sinks can connect.  Every 
+RPC object transmitted must be separated by exactly one line feed (ASCII 10).  All 
+text is encoded in UTF-8.  SSL support is planned but not currently in development. 
+All RPC objects from a particular client will be ignored until a corresponding 
+`register` request is accepted by the daemon.
 
 <!--[TOC]-->
 
 ## Conventions
+This document displays the contents of JSON-RPC objects in a simplified way. 
+Every transmittable object begins with a header which identifies which device can 
+receive it, whether it is a request or notification, and its RPC `method` name. 
+For example, the header "Server request: `register`" indicates that the object 
+definition which follows represents to an RPC request object which can only be 
+sent to a server and will have the method name `register`.  A request or notification 
+that is marked "global" can be received by any device.  Object descriptions usually 
+include parameter tables which list the information included in the object as a param 
+or result.  Parameter tables must be represented as JSON objects.  Some objects will 
+document a different type of param/result, although developers of additional DDX 
+RPC commands should use this only where they are sure future versions are unlikely 
+to take additional parameters.  Requests have two parameter sets, one titled 
+"Params" and one titled "Result".  These correspond to the "params" element of a 
+request object and the "result" element of that request's response object.  Requests 
+also have an errors table, which enumerates all the errors which may be returned.  See the "Global Errors" section for infomation on global errors and the error handling of notifications.
+
+The `jsonrpc` and `id` members of objects are implied.
+
+## Defined Types
+- Enums - stored as string, list them here
+- "settings" is a type
+- "config" is a type (opposite of settings)
+
+## Global Errors
+TBD
 
 ## Registration & Disconnection
-Every connection must be registered before its requests will be honored.
 
 ### Server request: `register`
-Params:
+Every connection must be registered before its requests will be honored.
 
+Params:  
 Name|Info|Type
 ---|---|---
 `DDX_version`|The client's DDX version in the format "n.n"|string
 `DDX_author`|The client's DDX author|string
-`ClientType`|The client's type; see ClientTypes|string
+`CID`|The client-given, server-taken connection ID; see "Connection IDs"|string
+`ClientType`|The client's type|ClientType
 `Name`|The client's (usually) self-designated name|string
 `Timezone`|The client's timezone as TZdb string|string
+`Locale`|The client's locale|string
 
-Response params:
-
+Result:  
 Name|Info|Type
 ---|---|---
 `DDX_version`|The server's DDX version in the format "n.n"|string
 `DDX_author`|The server's DDX author|string
+`CID`|The server-given, client-taken connection ID; see "Connection IDs"|string
 `Name`|The server's (usually) self-designated name|string
 `Timezone`|The server's timezone as TZdb string|string
+`Locale`|The server's locale|string
+
+Response errors:
+
 
 
 ### Server notification: `disconnect`
