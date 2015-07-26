@@ -115,7 +115,7 @@ void Path::init() {
 	// Parse scheme
 #ifdef PATH_PARSING_CHECKS
 	QString parseError = um->verifyPathScheme(scheme);
-	if (parseError.isNull()) {
+	if ( ! parseError.isNull()) {
 		alert(tr("Path failed scheme verification, reported '%1'").arg(parseError));
 		terminate();
 		return;
