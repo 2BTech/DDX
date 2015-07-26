@@ -41,8 +41,8 @@ Name | Info | Type
 
 Response params:
 
-Name|Info|Type
--|-|-
+Name | Info | Type
+- | - | -
 `DDX_version`|The server's DDX version in the format "n.n"|string
 `DDX_author`|The server's DDX author|string
 `Name`|The server's (usually) self-designated name|string
