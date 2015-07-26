@@ -31,7 +31,7 @@ Every connection must be registered before its requests will be honored.
 ### Server request: `register`
 Params:
 Name | Info | Type
-- | - | -
+--- | --- | ---
 `DDX_version` | The client's DDX version in the format "n.n" | string
 `DDX_author` | The client's DDX author | string
 `ClientType` | The client's type; see ClientTypes | string
