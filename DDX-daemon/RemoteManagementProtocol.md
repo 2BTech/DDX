@@ -30,17 +30,17 @@ Every connection must be registered before its requests will be honored.
 
 ### Server request: `register`
 Params:
-Name|Info|Type
----|---|---
-`DDX_version`|The client's DDX version in the format "n.n"|string
-`DDX_author`|The client's DDX author|string
-`ClientType`|The client's type; see ClientTypes|string
-`Name`|The client's (usually) self-designated name|string
-`Timezone`|The client's timezone as TZdb string|string
+Name | Info | Type
+- | - | -
+`DDX_version` | The client's DDX version in the format "n.n" | string
+`DDX_author` | The client's DDX author | string
+`ClientType` | The client's type; see ClientTypes | string
+`Name` | The client's (usually) self-designated name | string
+`Timezone` | The client's timezone as TZdb string | string
 
 Response params:
-Name|Info|Type
----|---|---
+Name | Info | Type
+- | - | -
 `DDX_version`|The server's DDX version in the format "n.n"|string
 `DDX_author`|The server's DDX author|string
 `Name`|The server's (usually) self-designated name|string
