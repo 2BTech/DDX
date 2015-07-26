@@ -30,6 +30,7 @@ Every connection must be registered before its requests will be honored.
 
 ### Server request: `register`
 Params:
+
 Name | Info | Type
 --- | --- | ---
 `DDX_version` | The client's DDX version in the format "n.n" | string
