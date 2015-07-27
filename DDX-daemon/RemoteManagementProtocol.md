@@ -47,9 +47,9 @@ request object and the "result" element of that request's response object.  All
 parameters and results are required unless otherwise stated.  Requests 
 also have an errors table, which enumerates all the errors which may be returned. 
 See the "Global Errors" section for infomation on global errors and the error 
-handling of notifications.
-
-The `jsonrpc` and `id` members of objects are implied.
+handling of notifications.  The `jsonrpc` and `id` members of objects are implied.
+Messages are written in English in this document, but may be translated.  See the
+"Internationalization" section.
 
 ## Defined Types
 
@@ -75,7 +75,7 @@ more information in the `data` field.  The following server errors are also defi
 Code|Message|Macro
 ---|---|---
 -32000|Access denied|E_ACCESS_DENIED
-
+-32001|Parameters not stored in an object|E_PARAMETER_ARRAY
 
 ## Registration & Disconnection
 
@@ -110,7 +110,7 @@ Errors:
 
 Code|Message|Macro
 ---|---|---
-500|Server does not implent network communication (for future use)|E_NETWORK_DISABLED
+500|Server does not implement network communication (for future use)|E_NETWORK_DISABLED
 501|Server is not compatible with the client version|E_VERSION_FORBIDDEN
 502|Server does not allow external management (overrides E_ADDRESS_FORBIDDEN)|E_NO_OUTSIDE_MANAGEMENT
 503|Address forbidden|E_ADDRESS_FORBIDDEN
@@ -124,10 +124,29 @@ Code|Message|Macro
 
 ## Administration
 
+### Global notification: `log`
+Params:
+
+Name|Info|Type
+---|---|---
+`Message`|The message|string
+`Time`|Full time in "yyyy/MM/dd HH:mm:ss.zzz" format|string
+`IsAlert`|Whether this is destined for the user or for logging only|bool
+
+### Global request: `setLogFilters`
+Params:
+
+Name|Info|Type
+---|---|---
+`SendAlerts`|Whether sender should receive alerts|bool
+`SendLogs`|Whether sender should receive non-alert loglines|bool
+
+Result bool will be true on success.
+
 ### Global request: `editSetting`
 Currently, only settings which can be converted to and from strings or serialized
-into binary are supported.  If both `IsJson` and `IsBase64` are true, the string
-setting is base64-decoded prior to being JSON-decoded.
+into binary are supported.  If both `IsJson` and `IsBase64` are true, value
+is base64-decoded prior to being JSON-decoded.
 
 Params:
 
@@ -141,7 +160,7 @@ Name|Info|Type
 `IsBase64`|Whether the value is base-64 encoded; defaults to "false" if omitted|bool
 `IsJson`|Whether the value is encoded in JSON; defaults to "false" if omitted|bool
 
-Result bool will be true on success
+Result bool will be true on success.
 
 Errors:
 
