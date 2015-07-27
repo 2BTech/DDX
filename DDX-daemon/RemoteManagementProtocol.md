@@ -106,7 +106,8 @@ Name|Info|Type
 `CID`|The server-given, client-taken connection ID; see "Connection IDs"|string
 `Name`|The server's (usually) self-designated name|string
 `Timezone`|The server's timezone as TZdb string|string
-`DaylightSavingsEnabled`|Whether the server's timezone enables DST. _Note_: daemons disregard DST by default|bool
+`DaylightSavingsEnabled`|Whether the server's timezone enables DST. _Note_: daemons
+disregard DST by default|bool
 `Locale`|The server's locale|string
 
 Errors:
@@ -122,10 +123,11 @@ Code|Message|Macro
 
 
 ### Server notification: `disconnect`
-
+TODO
 
 ## Path Management
 
+### Global request: `openPath`
 ### Global request: `startPath`
 ### Global request: `stopPath`
 ### Global request: `pausePath`
@@ -134,6 +136,8 @@ Code|Message|Macro
 ### Global request: `modifyPath`
 ### Global request: `watchPath`
 ### Global request: `ignorePath`
+### Global notification: `pathEcho`
+### Global notification: `pathStateChanged`
 
 
 ## Administration
@@ -169,8 +173,10 @@ Name|Info|Type
 `Name`|The setting's name (case-sensitive)|string
 `Group`|The setting's group (case-sensitive, can be empty)|string
 `Value`|The setting's new value (case-sensitive)|string
-`ShouldSave`|Whether the setting should be permanently saved; defaults to "true" if omitted|bool
-`Default`|If true, ignore the given value and reset it to default; defaults to "false" if ommitted|bool
+`ShouldSave`|Whether the setting should be permanently saved; defaults to "true"
+if omitted|bool
+`Default`|If true, ignore the given value and reset it to default; defaults to
+"false" if ommitted|bool
 `IsBase64`|Whether the value is base-64 encoded; defaults to "false" if omitted|bool
 `IsJson`|Whether the value is encoded in JSON; defaults to "false" if omitted|bool
 
