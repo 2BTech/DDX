@@ -76,6 +76,10 @@ void Network::shutdown() {
 	server->close();
 }
 
+void Network::responseError(const Connection &conn, int code, const QString &msg = QString()) {
+	
+}
+
 void Network::handleData() {
 	// TODO:  Add buffer size checks; if they exceed value (setting),
 	// clear the buffer and send an error

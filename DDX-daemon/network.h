@@ -36,11 +36,22 @@ class Network : public QObject
 	Q_OBJECT
 public:
 	
+	struct Connection {
+		QString cid;
+		QString name;
+		QString locale;
+		QTimeZone tz;
+		// If necessary:
+		//int8_t p[sizeof(Network::PrivConnInfo)];
+	};
+	
 	explicit Network(Daemon *daemon);
 	
 	~Network();
 	
 	void shutdown();
+	
+	void responseError(const Connection *c, int code, const QString &msg = QString());
 	
 signals:
 	
