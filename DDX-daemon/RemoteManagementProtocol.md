@@ -62,6 +62,7 @@ Messages are written in English in this document, but may be translated.  See th
 #### `ClientType`
 Name|Value|Description
 ---|---|---
+`Server`|0|A DDX daemon capable of executing paths
 `Manager`|1|Usually a GUI instance
 `DataVertex`|2|A data responder or producer
 `Listener`|3|A destination for loglines and alerts
@@ -72,10 +73,12 @@ All errors explicitly specified by the JSON-RPC 2.0 specification can be used by
 the DDX.  Some of these errors, such as parse error and invalid params, may include
 more information in the `data` field.  The following server errors are also defined:
 
-Code|Message|Macro
+Code|Message|Meaning|Macro
 ---|---|---
--32000|Access denied|E_ACCESS_DENIED
--32001|Parameters not stored in an object|E_PARAMETER_ARRAY
+-32000|Access denied|The client's ClientType is not sufficient for the request|E_ACCESS_DENIED
+-32001|Parameters an object|The param element is not a JSON object|E_PARAMETER_OBJECT
+-32002|Not supported|The requested functionality is not supported by the server (e.g.,
+path management on a GUI)|E_NOT_SUPPORTED
 
 ## Registration & Disconnection
 
@@ -93,7 +96,6 @@ Name|Info|Type
 `Name`|The client's (usually) self-designated name|string
 `Timezone`|The client's timezone as TZdb string|string
 `Locale`|The client's locale|string
-`
 
 Result:
 
@@ -115,12 +117,22 @@ Code|Message|Macro
 502|Server does not allow external management (overrides E_ADDRESS_FORBIDDEN)|E_NO_OUTSIDE_MANAGEMENT
 503|Address forbidden|E_ADDRESS_FORBIDDEN
 504|Specified client type is explicitly forbidden|E_CLIENT_TYPE_FORBIDDEN
+505|Version unreadable|E_VERSION_UNREADABLE
 
 
 ### Server notification: `disconnect`
 
 
 ## Path Management
+
+### Global request: `startPath`
+### Global request: `stopPath`
+### Global request: `pausePath`
+### Global request: `testPath`
+### Global request: `addPath`
+### Global request: `watchPath`
+### Global request: `ignorePath`
+
 
 ## Administration
 
@@ -171,3 +183,10 @@ Code|Message|Macro
 122|Setting could not be base-64 or JSON decoded|E_SETTING_NODECODE
 123|Setting outside of requesting module|E_SETTING_DENIED
 124|Setting reset requests must be saved|E_SETTING_SAVEREQUIRED
+
+## Modules
+Modules instantiated in opened paths can send their own requests and publish handlers
+for specific notifications and requests.  Each of these has a bit of overhead built
+onto it to help direct incoming objects.
+
+### DataBeacon Module
