@@ -159,6 +159,29 @@ Name|Info|Type
 
 Result bool will be true on success.
 
+### Global request: `listSettings`
+List all of the program's settings.
+
+Takes no parameters.
+
+Result is an object with every setting listed inside.  If the setting's type cannot
+be serialized into a string despite the use of base64-encoding and JSON, Each entry is an object with
+this format:
+
+Name|Info|Type
+---|---|---
+[key]|The key, either just the name or "[group]/[name]" if it is in a group|string
+`Value`|The current value, encoded as a string.|string
+`Default`|The default value, encoded as a string.|string
+`Type`|The type name returned by `[QMetaType::typeName](http://doc.qt.io/qt-5/qmetatype.html#Type-enum)`|string
+`CannotConvert`|True if the type could not be serialized in any way. `Value` and `Default` should be ignored if true.|bool
+`IsBase64`|Whether the value is base-64 encoded; defaults to "false" if omitted|bool
+`IsJson`|Whether the value is encoded in JSON; defaults to "false" if omitted|bool
+
+Name|Info|Type
+---|---|---
+
+
 ### Global request: `editSetting`
 Currently, only settings which can be converted to and from strings or serialized
 into binary are supported.  If both `IsJson` and `IsBase64` are true, value
