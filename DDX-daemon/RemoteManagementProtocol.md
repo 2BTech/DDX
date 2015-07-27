@@ -43,7 +43,8 @@ document a different type of param/result, although developers of additional DDX
 RPC commands should use this only where they are sure future versions are unlikely 
 to take additional parameters.  Requests have two parameter sets, one titled 
 "Params" and one titled "Result".  These correspond to the "params" element of a 
-request object and the "result" element of that request's response object.  Requests 
+request object and the "result" element of that request's response object.  All
+parameters and results are required unless otherwise stated.  Requests 
 also have an errors table, which enumerates all the errors which may be returned. 
 See the "Global Errors" section for infomation on global errors and the error 
 handling of notifications.
@@ -51,12 +52,30 @@ handling of notifications.
 The `jsonrpc` and `id` members of objects are implied.
 
 ## Defined Types
-- Enums - stored as string, list them here
-- "settings" is a type
-- "config" is a type (opposite of settings)
+
+### The Settings Type
+
+### The Config Type
+
+### Enumerations
+
+#### `ClientType`
+Name|Value|Description
+---|---|---
+`Manager`|1|Usually a GUI instance
+`DataVertex`|2|A data responder or producer
+`Listener`|3|A destination for loglines and alerts
+
 
 ## Global Errors
-TBD
+All errors explicitly specified by the JSON-RPC 2.0 specification can be used by
+the DDX.  Some of these errors, such as parse error and invalid params, may include
+more information in the `data` field.  The following server errors are also defined:
+
+Code|Message|Macro
+---|---|---
+-32000|Access denied|E_ACCESS_DENIED
+
 
 ## Registration & Disconnection
 
@@ -70,10 +89,11 @@ Name|Info|Type
 `DDX_version`|The client's DDX version in the format "n.n"|string
 `DDX_author`|The client's DDX author|string
 `CID`|The client-given, server-taken connection ID; see "Connection IDs"|string
-`ClientType`|The client's type|ClientType
+`ClientType`|The client's type|`ClientType`
 `Name`|The client's (usually) self-designated name|string
 `Timezone`|The client's timezone as TZdb string|string
 `Locale`|The client's locale|string
+`
 
 Result:
 
@@ -92,10 +112,9 @@ Code|Message|Macro
 ---|---|---
 500|Server does not implent network communication (for future use)|E_NETWORK_DISABLED
 501|Server is not compatible with the client version|E_VERSION_FORBIDDEN
-502|Server does not allow external management (overrides ADDRESS_FORBIDDEN)|E_NO_OUTSIDE_MANAGEMENT
+502|Server does not allow external management (overrides E_ADDRESS_FORBIDDEN)|E_NO_OUTSIDE_MANAGEMENT
 503|Address forbidden|E_ADDRESS_FORBIDDEN
 504|Specified client type is explicitly forbidden|E_CLIENT_TYPE_FORBIDDEN
-
 
 
 ### Server notification: `disconnect`
@@ -106,9 +125,30 @@ Code|Message|Macro
 ## Administration
 
 ### Global request: `editSetting`
+Currently, only settings which can be converted to and from strings or serialized
+into binary are supported.  If both `IsJson` and `IsBase64` are true, the string
+setting is base64-decoded prior to being JSON-decoded.
+
+Params:
+
+Name|Info|Type
+---|---|---
+`Name`|The setting's name (case-sensitive)|string
+`Group`|The setting's group (case-sensitive)|string
+`Value`|The setting's new value (case-sensitive)|string
+`ShouldSave`|Whether the setting should be permanently saved; defaults to "true" if omitted|bool
+`Default`|If true, ignore the given value and reset it to default; defaults to "false" if ommitted|bool
+`IsBase64`|Whether the value is base-64 encoded; defaults to "false" if omitted|bool
+`IsJson`|Whether the value is encoded in JSON; defaults to "false" if omitted|bool
+
+Result bool will be true on success
 
 Errors:
 
 Code|Message|Macro
 ---|---|---
-100|Access denied|E_ACCESS_DENIED
+120|Setting does not exist|E_SETTING_NONEXISTENT
+121|Setting could not be converted to target type|E_SETTING_NOCONVERT
+122|Setting could not be base-64 or JSON decoded|E_SETTING_NODECODE
+123|Setting outside of requesting module|E_SETTING_DENIED
+124|Setting reset requests must be saved|E_SETTING_SAVEREQUIRED
