@@ -27,7 +27,7 @@ text must be encoded in UTF-8.  SSL support is planned but not currently in deve
 All RPC objects from a particular client will be ignored until a corresponding 
 `register` request is accepted by the daemon.
 
-<!--[TOC]-->
+[TOC]
 
 ## Conventions
 This document displays the contents of JSON-RPC objects in a simplified way. 
@@ -77,8 +77,7 @@ Code|Message|Meaning|Macro
 ---|---|---|---
 -32000|Access denied|The client's ClientType is not sufficient for the request|E_ACCESS_DENIED
 -32001|Parameters not an object|The param element is not a JSON object|E_PARAMETER_OBJECT
--32002|Not supported|The requested functionality is not supported by the server (e.g.,
-path management on a GUI)|E_NOT_SUPPORTED
+-32002|Not supported|The requested functionality is not supported by the server (e.g., path management on a GUI)|E_NOT_SUPPORTED
 
 ## Registration & Disconnection
 
@@ -106,8 +105,7 @@ Name|Info|Type
 `CID`|The server-given, client-taken connection ID; see "Connection IDs"|string
 `Name`|The server's (usually) self-designated name|string
 `Timezone`|The server's timezone as TZdb string|string
-`DaylightSavingsEnabled`|Whether the server's timezone enables DST. _Note_: daemons
-disregard DST by default|bool
+`DaylightSavingsEnabled`|Whether the server's timezone enables DST. _Note_: daemons disregard DST by default|bool
 `Locale`|The server's locale|string
 
 Errors:
@@ -173,10 +171,8 @@ Name|Info|Type
 `Name`|The setting's name (case-sensitive)|string
 `Group`|The setting's group (case-sensitive, can be empty)|string
 `Value`|The setting's new value (case-sensitive)|string
-`ShouldSave`|Whether the setting should be permanently saved; defaults to "true"
-if omitted|bool
-`Default`|If true, ignore the given value and reset it to default; defaults to
-"false" if ommitted|bool
+`ShouldSave`|Whether the setting should be permanently saved; defaults to "true" if omitted|bool
+`Default`|If true, ignore the given value and reset it to default; defaults to "false" if ommitted|bool
 `IsBase64`|Whether the value is base-64 encoded; defaults to "false" if omitted|bool
 `IsJson`|Whether the value is encoded in JSON; defaults to "false" if omitted|bool
 
