@@ -74,9 +74,9 @@ the DDX.  Some of these errors, such as parse error and invalid params, may incl
 more information in the `data` field.  The following server errors are also defined:
 
 Code|Message|Meaning|Macro
----|---|---
+---|---|---|---
 -32000|Access denied|The client's ClientType is not sufficient for the request|E_ACCESS_DENIED
--32001|Parameters an object|The param element is not a JSON object|E_PARAMETER_OBJECT
+-32001|Parameters not an object|The param element is not a JSON object|E_PARAMETER_OBJECT
 -32002|Not supported|The requested functionality is not supported by the server (e.g.,
 path management on a GUI)|E_NOT_SUPPORTED
 
@@ -106,6 +106,7 @@ Name|Info|Type
 `CID`|The server-given, client-taken connection ID; see "Connection IDs"|string
 `Name`|The server's (usually) self-designated name|string
 `Timezone`|The server's timezone as TZdb string|string
+`DaylightSavingsEnabled`|Whether the server's timezone enables DST. _Note_: daemons disregard DST by default|bool
 `Locale`|The server's locale|string
 
 Errors:
@@ -114,7 +115,7 @@ Code|Message|Macro
 ---|---|---
 500|Server does not implement network communication (for future use)|E_NETWORK_DISABLED
 501|Server is not compatible with the client version|E_VERSION_FORBIDDEN
-502|Server does not allow external management (overrides E_ADDRESS_FORBIDDEN)|E_NO_OUTSIDE_MANAGEMENT
+502|Server does not allow external management|E_NO_OUTSIDE_MANAGEMENT
 503|Address forbidden|E_ADDRESS_FORBIDDEN
 504|Specified client type is explicitly forbidden|E_CLIENT_TYPE_FORBIDDEN
 505|Version unreadable|E_VERSION_UNREADABLE
@@ -130,6 +131,7 @@ Code|Message|Macro
 ### Global request: `pausePath`
 ### Global request: `testPath`
 ### Global request: `addPath`
+### Global request: `modifyPath`
 ### Global request: `watchPath`
 ### Global request: `ignorePath`
 
@@ -142,7 +144,7 @@ Params:
 Name|Info|Type
 ---|---|---
 `Message`|The message|string
-`Time`|Full time in "yyyy/MM/dd HH:mm:ss.zzz" format|string
+`Time`|Full time in "yyyy/MM/dd HH:mm:ss.zzz" format (in server's timezone)|string
 `IsAlert`|Whether this is destined for the user or for logging only|bool
 
 ### Global request: `setLogFilters`
@@ -165,7 +167,7 @@ Params:
 Name|Info|Type
 ---|---|---
 `Name`|The setting's name (case-sensitive)|string
-`Group`|The setting's group (case-sensitive)|string
+`Group`|The setting's group (case-sensitive, can be empty)|string
 `Value`|The setting's new value (case-sensitive)|string
 `ShouldSave`|Whether the setting should be permanently saved; defaults to "true" if omitted|bool
 `Default`|If true, ignore the given value and reset it to default; defaults to "false" if ommitted|bool
@@ -179,8 +181,8 @@ Errors:
 Code|Message|Macro
 ---|---|---
 120|Setting does not exist|E_SETTING_NONEXISTENT
-121|Setting could not be converted to target type|E_SETTING_NOCONVERT
-122|Setting could not be base-64 or JSON decoded|E_SETTING_NODECODE
+121|Setting could not be converted to target type|E_SETTING_CONVERT
+122|Setting could not be base-64 or JSON decoded|E_SETTING_DECODE
 123|Setting outside of requesting module|E_SETTING_DENIED
 124|Setting reset requests must be saved|E_SETTING_SAVEREQUIRED
 

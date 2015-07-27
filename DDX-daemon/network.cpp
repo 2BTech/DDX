@@ -76,7 +76,7 @@ void Network::shutdown() {
 	server->close();
 }
 
-void Network::responseError(const Connection &conn, int code, const QString &msg = QString()) {
+void Network::responseError(const Connection *c, int code, const QString &msg) {
 	
 }
 

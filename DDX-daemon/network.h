@@ -40,7 +40,7 @@ public:
 		QString cid;
 		QString name;
 		QString locale;
-		QTimeZone tz;
+		//QTimeZone tz;
 		// If necessary:
 		//int8_t p[sizeof(Network::PrivConnInfo)];
 	};

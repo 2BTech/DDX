@@ -130,6 +130,14 @@ QList<Settings::SetEnt> Settings::enumerateSettings() const {
 	b.add("LastShutdownSafe", tr("Whether the previous shutdown was completed normally"),
 		  false, QMetaType::Bool);
 	
+	b.enterGroup(SG_TIME);
+	b.add("Timezone", tr("The local timezone"),
+		  QTimeZone::systemTimeZoneId(), QMetaType::QString);
+	b.add("IgnoreDST", tr("Whether to ignore daylight savings time"),
+		  true, QMetaType::Bool);
+	b.add("ForceUTC", tr("Whether to force the use of UTC"),
+		  false, QMetaType::Bool);
+	
 	b.enterGroup(SG_NETWORK);
 	b.add("GUIPort", tr("The network port used by the GUI to manage the daemon"),
 		  4388, QMetaType::Int);

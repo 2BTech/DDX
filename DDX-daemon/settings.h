@@ -28,6 +28,7 @@
 #include <QReadLocker>
 #include <QWriteLocker>
 #include <QGlobalStatic>
+#include <QTimeZone>
 
 class Daemon;
 class Logger;
