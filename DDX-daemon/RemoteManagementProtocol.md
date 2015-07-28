@@ -51,22 +51,48 @@ handling of notifications.  The `jsonrpc` and `id` members of objects are implie
 Messages are written in English in this document, but may be translated.  See the
 "Internationalization" section.
 
+### Receiver Types
+In addition to any member of the ClientType enumeration, the following receivers are
+defined for use in this document:
+
+Name|Info
+---|---
+Server|A device which received a `register` request (this should always be the device which built a TCP server)
+Client|A device which made a connection by sending a `register` request (this should always be the device which connected to an existing TCP server)
+
 ## Defined Types
 
-### The Settings Type
+### `DataLine` Type
+This type represents a single data line.  It is an array of objects where each object
+represents a single column.  Column ordering is maintained.  Each column object
+contains the following members:
 
-### The Config Type
+Name|Info|Type
+---|---|---
+`Column`|The name of the column|string
+`Data`|The actual data payload|string
 
-### Enumerations
+### `Settings` Type
 
-#### `ClientType`
+### `Config` Type
+
+### `ClientType` Enumeration
 Name|Value|Description
 ---|---|---
-`Server`|0|A DDX daemon capable of executing paths
+`Daemon`|0|A DDX daemon capable of executing paths
 `Manager`|1|Usually a GUI instance
-`DataVertex`|2|A data responder or producer
+`Vertex`|2|A data responder or producer which does not run paths
 `Listener`|3|A destination for loglines and alerts
 
+### `PathState`	Enumeration
+Name|Value|Description
+---|---|---
+`Vacant`|0|The path does not exist or has not been loaded
+`Initializing`|1|The path is in the process of being initialized
+`Ready`|2|The path is ready to be started
+`Running`|3|The path is actively running
+`Finished`|4|The path has finished processing all data (finite inlets only)
+`Terminated`|5|A fatal error occurred that prevented the path from starting
 
 ## Global Errors
 All errors explicitly specified by the JSON-RPC 2.0 specification can be used by
@@ -94,6 +120,7 @@ Name|Info|Type
 `ClientType`|The client's type|`ClientType`
 `Name`|The client's (usually) self-designated name|string
 `Timezone`|The client's timezone as TZdb string|string
+`DaylightSavingsEnabled`|Whether the client's timezone enables DST. _Note_: devices should ignore DST by default|bool
 `Locale`|The client's locale|string
 
 Result:
@@ -105,8 +132,16 @@ Name|Info|Type
 `CID`|The server-given, client-taken connection ID; see "Connection IDs"|string
 `Name`|The server's (usually) self-designated name|string
 `Timezone`|The server's timezone as TZdb string|string
-`DaylightSavingsEnabled`|Whether the server's timezone enables DST. _Note_: daemons disregard DST by default|bool
+`DaylightSavingsEnabled`|Whether the server's timezone enables DST. _Note_: devices should ignore DST by default|bool
 `Locale`|The server's locale|string
+
+Upon connection to a daemon, actions will occur based on the connected client type:
+
+- `Daemon`:  All active modules will be notified that a new daemon has connected
+- `Manager`:  The client will automatically start watching all opened paths and will
+start receiving alerts (but not regular log lines)
+- `Vertex`:  All active modules will be notified that a new vertex has connected
+- `Listener`:  The client will be registered to receive alerts (but not regular log lines)
 
 Errors:
 
@@ -120,31 +155,102 @@ Code|Message|Macro
 505|Version unreadable|E_VERSION_UNREADABLE
 
 
-### Server notification: `disconnect`
+### Global notification: `disconnect`
 - not this
 
 ## Path Management
 
-### Global request: `listPaths`
-### Global request: `openPath`
-- Make automatic
-### Global request: `startPath`
-- this
-### Global request: `stopPath`
-- this
-### Global request: `pausePath`
-- this?
-### Global request: `testPath`
-### Global request: `addPath`
-### Global request: `modifyPath`
-### Global request: `watchPath`
-- Make automatic
-### Global request: `ignorePath`
-### Daemon notification: `pathEcho`
-- THIS!
-### Daemon notification: `pathStateChanged`
-- this
+### Daemon request: `listPaths`
+### Daemon request: `openPath`
+Initialize a given path.  It will be automatically watched.  Params:
 
+Name|Info|Type
+---|---|---
+`Name`|The name of the path to be opened|string
+`AutoStart`|Whether to start the path once it is ready|bool
+
+Result bool will be true on success.  _Note_: this will be sent before the path
+is ready for execution.  Users should wait for a `pathStateChanged` to know
+when the path is ready for execution.
+
+Errors:
+
+Code|Message|Macro
+---|---|---
+200|Path does not exist|E_PATH_NONEXISTENT
+
+### Daemon request: `startPath`
+Start data processing on a given path.  The path will be initialized and then started
+if it is not already open.  It will be automatically watched.  Params:
+
+Name|Info|Type
+---|---|---
+`Name`|The name of the path to be started|string
+
+Result bool will be true on success.
+
+Errors:
+
+Code|Message|Macro
+---|---|---
+200|Path does not exist|E_PATH_NONEXISTENT
+
+### Daemon request: `stopPath`
+Stop data processing on a given path.  Params:
+
+Name|Info|Type
+---|---|---
+`Name`|The name of the path to be stopped.|string
+
+Result bool will be true on success.
+
+Errors:
+
+Code|Message|Macro
+---|---|---
+200|Path does not exist|E_PATH_NONEXISTENT
+
+### Daemon request: `pausePath`
+### Daemon request: `testPath`
+### Daemon request: `addPath`
+### Daemon request: `modifyPath`
+### Daemon request: `watchPath`
+Start watching a path.  Watching a path means a client will receive its
+`pathStateChanged` notifications and echoed lines.  To ignore a path,
+send this with "false" for both Listen parameters.
+
+Name|Info|Type
+---|---|---
+`Name`|The name of the path to be watched|string
+`AllPaths`|If true, ignore the name and apply this to all running paths; defaults to false if omitted|bool
+`StateListen`|Whether to listen to state changes|bool
+`EchoListen`|Whether to listen to echoed lines|bool
+
+Result bool will be true on success.
+
+Errors:
+
+Code|Message|Macro
+---|---|---
+200|Path does not exist|E_PATH_NONEXISTENT
+
+### Daemon notification: `pathEcho`
+When a path contains the Echo module, every data line it receives will be echoed
+out to any watchers of the containing path.  The params of this notification will
+contain the following:
+
+Name|Info|Type
+---|---|---
+`Path`|The name of the path this is coming from|string
+`Data`|The echoed data line|`DataLine`
+
+### Daemon notification: `pathStateChanged`
+Sent whenever a watched path changes state.  Params:
+
+Name|Info|Type
+---|---|---
+`Path`|The name of the path|string
+`State`|The path's new state|`PathState`
 
 ## Administration
 
