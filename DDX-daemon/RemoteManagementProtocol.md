@@ -57,8 +57,8 @@ defined for use in this document:
 
 Name|Info
 ---|---
-Server|A device which received a `register` request (this should always be the device which built a TCP server)
-Client|A device which made a connection by sending a `register` request (this should always be the device which connected to an existing TCP server)
+Server|A device which received a `register` request (this should be the device which built a TCP server)
+Client|A device which made a connection by sending a `register` request (this should be the device which connected to an existing TCP server)
 
 ## Defined Types
 
@@ -137,10 +137,10 @@ Name|Info|Type
 
 Upon connection to a daemon, actions will occur based on the connected client type:
 
-- `Daemon`:  All active modules will be notified that a new daemon has connected
+- `Daemon`:  All listening modules will be notified that a new daemon has connected
 - `Manager`:  The client will automatically start watching all opened paths and will
 start receiving alerts (but not regular log lines)
-- `Vertex`:  All active modules will be notified that a new vertex has connected
+- `Vertex`:  All listening modules will be notified that a new vertex has connected
 - `Listener`:  The client will be registered to receive alerts (but not regular log lines)
 
 Errors:
@@ -166,12 +166,12 @@ Initialize a given path.  It will be automatically watched.  Params:
 
 Name|Info|Type
 ---|---|---
-`Name`|The name of the path to be opened|string
+`Path`|The name of the path to be opened|string
 `AutoStart`|Whether to start the path once it is ready|bool
 
 Result bool will be true on success.  _Note_: this will be sent before the path
-is ready for execution.  Users should wait for a `pathStateChanged` to know
-when the path is ready for execution.
+is ready for execution.  Users should wait for a `pathStateChanged` notification
+to know when the path is ready for execution.
 
 Errors:
 
@@ -185,7 +185,7 @@ if it is not already open.  It will be automatically watched.  Params:
 
 Name|Info|Type
 ---|---|---
-`Name`|The name of the path to be started|string
+`Path`|The name of the path to be started|string
 
 Result bool will be true on success.
 
@@ -200,7 +200,7 @@ Stop data processing on a given path.  Params:
 
 Name|Info|Type
 ---|---|---
-`Name`|The name of the path to be stopped.|string
+`Path`|The name of the path to be stopped.|string
 
 Result bool will be true on success.
 
@@ -221,7 +221,7 @@ send this with "false" for both Listen parameters.
 
 Name|Info|Type
 ---|---|---
-`Name`|The name of the path to be watched|string
+`Path`|The name of the path to be watched|string
 `AllPaths`|If true, ignore the name and apply this to all running paths; defaults to false if omitted|bool
 `StateListen`|Whether to listen to state changes|bool
 `EchoListen`|Whether to listen to echoed lines|bool
