@@ -54,6 +54,15 @@ class Path : public QObject
 	Q_OBJECT
 public:
 	
+	enum State {
+		Vacant,
+		Initializing,
+		Ready,
+		Running,
+		Finished,
+		Terminated
+	};
+	
 	explicit Path(Daemon *daemon, const QString name, const QByteArray scheme);
 	
 	~Path();
@@ -187,20 +196,13 @@ private:
 	//! Convenience pointer to parent daemon
 	Daemon *d;
 	
-	//! Whether the Path is ready to start
-	bool isReady;
-	
-	//! Whether the Path is currently running
-	bool isRunning;
+	State state;
 	
 	//! Keeps track of which modules have been initiated in case of termination
 	int lastInitIndex;
 	
 	//! Manages the current processing index for return after reconfiguration
 	int processPosition;
-	
-	//! Used to break out of configuration loops in init() if terminated
-	bool terminated;
 };
 
 #endif // PATH_H

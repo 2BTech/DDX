@@ -25,18 +25,22 @@
 
 Path::Path(Daemon *daemon, const QString name, const QByteArray scheme) : QObject(0)
 {
+	state = State::Initializing;
 	this->name = name;
 	this->scheme = scheme;
 	d = daemon;
 	logger = Logger::get();
-	isReady = false;
-	isRunning = false;
 	lastInitIndex = 0;
 	processPosition = 1;
-	terminated = false;
 	
-	// TODO:  Check the validity of this
-	connect(this, &Path::readyForDeletion, this, &Path::deleteLater);
+	// TODO:  Check the validity of this:
+	// Threading
+	QThread *t = new QThread(daemon);
+	moveToThread(t);
+	connect(t, &QThread::started, this, &Path::init);
+	connect(this, &Path::destroyed, t, &QThread::quit);
+	connect(t, &QThread::finished, t, &QThread::deleteLater);
+	t->start();
 }
 
 Path::~Path()
@@ -68,20 +72,20 @@ QJsonObject Path::publishActions() const {
 }
 
 void Path::terminate() {
-	if (isReady) {
+	if (state != State::Initializing) {
 		alert("DDX bug:  Something tried to terminate outside of init()");
 		return;
 	}
 	// TODO:  Ensure this is safe to use here
 	d->releaseUnitManager();
-	terminated = true;
+	state = State::Terminated;
 	alert(tr("This is fatal; terminating path"));
 	cleanup();
 }
 
 void Path::process() {
 #ifdef CAUTIOUS_CHECKS
-	if ( ! isRunning) {
+	if (state != State::Running) {
 		alert("DDX bug: process() called while not running");
 		return;
 	}
@@ -97,7 +101,7 @@ void Path::process() {
 
 void Path::reconfigure() {
 #ifdef CAUTIOUS_CHECKS
-	if ( ! isReady) {
+	if (state != State::Running) {
 		alert("DDX bug: reconfigure() called while not running");
 		return;
 	}
@@ -151,7 +155,7 @@ void Path::init() {
 	
 	for (lastInitIndex = 0; lastInitIndex < modules.size(); ++lastInitIndex) {
 		modules.at(lastInitIndex)->init(QJsonObject());
-		if (terminated) return;
+		if (state == State::Terminated) return;
 	}
 	
 	
@@ -183,24 +187,24 @@ void Path::init() {
 	
 	// Send initial reconfigure
 	reconfigure();
-	isReady = true;
+	state = State::Ready;
 	emit ready(name);
 	alert("finished init");
 }
 
 void Path::start() {
-	if ( ! isReady) {
+	if (state != State::Ready) {
 		alert(tr("Path started before it was ready"));
 		return;
 	}
-	isRunning = true;
+	state = State::Running;
 	emit running(name);
 	inlet->start();
 }
 
 void Path::stop() {
 	inlet->stop();
-	isRunning = false;
+	state = State::Ready;
 	emit stopped(name);
 }
 

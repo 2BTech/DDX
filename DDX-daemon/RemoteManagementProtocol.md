@@ -63,7 +63,7 @@ Client|A device which made a connection by sending a `register` request (this sh
 ## Defined Types
 
 ### `DataLine` Type
-This type represents a single data line.  It is an array of objects where each object
+Represents a single data line.  It is an array of objects where each object
 represents a single column.  Column ordering is maintained.  Each column object
 contains the following members:
 
@@ -306,7 +306,7 @@ Name|Info|Type
 `Group`|The setting's group (case-sensitive, can be empty)|string
 `Value`|The setting's new value (case-sensitive)|string
 `ShouldSave`|Whether the setting should be permanently saved; defaults to "true" if omitted|bool
-`Default`|If true, ignore the given value and reset it to default; defaults to "false" if ommitted|bool
+`Reset`|If true, ignore the given value and reset it to default; defaults to "false" if ommitted|bool
 `IsBase64`|Whether the value is base-64 encoded; defaults to "false" if omitted|bool
 `IsJson`|Whether the value is encoded in JSON; defaults to "false" if omitted|bool
 
