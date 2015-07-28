@@ -27,7 +27,7 @@ text must be encoded in UTF-8.  SSL support is planned but not currently in deve
 All RPC objects from a particular client will be ignored until a corresponding 
 `register` request is accepted by the daemon.
 
-[TOC]
+<!--[TOC]-->
 
 ## Conventions
 This document displays the contents of JSON-RPC objects in a simplified way. 
@@ -121,21 +121,29 @@ Code|Message|Macro
 
 
 ### Server notification: `disconnect`
-TODO
+- not this
 
 ## Path Management
 
+### Global request: `listPaths`
 ### Global request: `openPath`
+- Make automatic
 ### Global request: `startPath`
+- this
 ### Global request: `stopPath`
+- this
 ### Global request: `pausePath`
+- this?
 ### Global request: `testPath`
 ### Global request: `addPath`
 ### Global request: `modifyPath`
 ### Global request: `watchPath`
+- Make automatic
 ### Global request: `ignorePath`
-### Global notification: `pathEcho`
-### Global notification: `pathStateChanged`
+### Daemon notification: `pathEcho`
+- THIS!
+### Daemon notification: `pathStateChanged`
+- this
 
 
 ## Administration
@@ -170,17 +178,13 @@ this format:
 
 Name|Info|Type
 ---|---|---
-[key]|The key, either just the name or "[group]/[name]" if it is in a group|string
+[key]|Either just the name or `[group]/[name]` if it is in a group|string
 `Value`|The current value, encoded as a string.|string
 `Default`|The default value, encoded as a string.|string
-`Type`|The type name returned by `[QMetaType::typeName](http://doc.qt.io/qt-5/qmetatype.html#Type-enum)`|string
+`Type`|The type name returned by [`QMetaType::typeName`](http://doc.qt.io/qt-5/qmetatype.html#Type-enum)|string
 `CannotConvert`|True if the type could not be serialized in any way. `Value` and `Default` should be ignored if true.|bool
-`IsBase64`|Whether the value is base-64 encoded; defaults to "false" if omitted|bool
-`IsJson`|Whether the value is encoded in JSON; defaults to "false" if omitted|bool
-
-Name|Info|Type
----|---|---
-
+`IsBase64`|Whether `Value` and `Default` are base-64 encodedq defaults to "false" if omitted|bool
+`IsJson`|Whether `Value` and `Default` are encoded in JSON; defaults to "false" if omitted|bool
 
 ### Global request: `editSetting`
 Currently, only settings which can be converted to and from strings or serialized
