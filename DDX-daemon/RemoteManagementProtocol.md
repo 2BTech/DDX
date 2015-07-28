@@ -279,8 +279,9 @@ List all of the program's settings.
 Takes no parameters.
 
 Result is an object with every setting listed inside.  If the setting's type cannot
-be serialized into a string despite the use of base64-encoding and JSON, Each entry is an object with
-this format:
+be serialized into a string despite the use of base64-encoding and JSON, `CannotConvert`
+will be true and the `Value` and `Default` parameters are undefined. Each entry
+is an object with this format:
 
 Name|Info|Type
 ---|---|---
