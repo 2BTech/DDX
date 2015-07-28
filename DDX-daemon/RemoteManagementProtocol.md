@@ -274,23 +274,23 @@ Name|Info|Type
 Result bool will be true on success.
 
 ### Global request: `listSettings`
-List all of the program's settings.
-
-Takes no parameters.
+List all of the program's settings.  Takes no parameters.
 
 Result is an object with every setting listed inside.  If the setting's type cannot
 be serialized into a string despite the use of base64-encoding and JSON, `CannotConvert`
-will be true and the `Value` and `Default` parameters are undefined. Each entry
-is an object with this format:
+will be true and the `Value` and `Default` parameters are undefined.  If both `IsJson`
+and `IsBase64` are true, values must be JSON-encoded prior to being base64-encoded.
+Each entry is an object with this format:
 
 Name|Info|Type
 ---|---|---
 [key]|Either just the name or `[group]/[name]` if it is in a group|string
-`Value`|The current value, encoded as a string.|string
-`Default`|The default value, encoded as a string.|string
+`Description`|A brief description of the setting's purpose|string
+`Value`|The current value, encoded as a string|string
+`Default`|The default value, encoded as a string|string
 `Type`|The type name returned by [`QMetaType::typeName`](http://doc.qt.io/qt-5/qmetatype.html#Type-enum)|string
 `CannotConvert`|True if the type could not be serialized in any way. `Value` and `Default` should be ignored if true.|bool
-`IsBase64`|Whether `Value` and `Default` are base-64 encodedq defaults to "false" if omitted|bool
+`IsBase64`|Whether `Value` and `Default` are base-64 encoded; defaults to "false" if omitted|bool
 `IsJson`|Whether `Value` and `Default` are encoded in JSON; defaults to "false" if omitted|bool
 
 ### Global request: `editSetting`

@@ -40,7 +40,15 @@
 // LOGGING
 #define LOGGING_INCLUDE_TIMESTAMP
 
+// DIRECTORIES
+#define D_INSTALL "install"
+#define D_LOGS "logs"
+#define D_DATA "data"
+#define D_CONFIG "config"
+
 // SETTINGS GROUPS
+#define SG_PATHS "paths"
+#define SG_GUI "gui"
 #define SG_TIME "time"
 #define SG_NETWORK "network"
 

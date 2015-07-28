@@ -130,6 +130,23 @@ QList<Settings::SetEnt> Settings::enumerateSettings() const {
 	b.add("LastShutdownSafe", tr("Whether the previous shutdown was completed normally"),
 		  false, QMetaType::Bool);
 	
+	b.enterGroup(SG_PATHS);
+	// TODO
+	/*b.add(D_INSTALL, tr("Where the DDX executables and libraries are"),
+		  "tbd", QMetaType::QString);
+	b.add(D_LOGS,
+	b.add(D_DATA,
+	b.add(D_CONFIG,
+	*/
+	
+	b.enterGroup(SG_GUI);
+	b.add("OpenOnStart", tr("Whether the GUI should be opened when the daemon starts"),
+		  true, QMetaType::Bool);
+	b.add("Executable", tr("The path to the GUI's executable"),
+		  "tbd", QMetaType::QString);
+	b.add("Arguments", tr("The GUI's process arguments"),
+		  "", QMetaType::QString);
+	
 	b.enterGroup(SG_TIME);
 	b.add("Timezone", tr("The local timezone"),
 		  QTimeZone::systemTimeZoneId(), QMetaType::QString);
