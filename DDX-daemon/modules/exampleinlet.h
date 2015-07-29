@@ -16,31 +16,35 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#ifndef MODULE_REGISTER_CPP
-#define MODULE_REGISTER_CPP
-#include "../unitmanager.h"
+#ifndef EXAMPLEINLET_H
+#define EXAMPLEINLET_H
 
-// Include Module headers here
-#include "examplemodule.h"
-#include "exampleinlet.h"
-#include "genmod.h"
+#include <QObject>
+#include <QList>
+#include <QTimer>
+#include "inlet.h"
 
-void UnitManager::registerModules() {
-	// List all Modules here (1 of 2)
-	modules.insert("ExampleModule", ExampleModule::staticMetaObject);
-	modules.insert("ExampleInlet", ExampleInlet::staticMetaObject);
-	modules.insert("GenMod", GenMod::staticMetaObject);
-}
+class Path;
 
-QMap<QString, QString> UnitManager::getModuleDescriptions() const {
-	QMap<QString, QString> m;
+class ExampleInlet final : public Inlet
+{
+	Q_OBJECT  // Required
+public:
+	using Inlet::Inlet;  // Required
+	~ExampleInlet();  // Required
+	void init(const QJsonObject settings) override;  // Required
+	void start() override;  // Required
+	void stop() override;  // Required
+	QJsonObject publishSettings() const override;  // Optional
+	QJsonObject publishActions() const override;  // Optional
+	void cleanup() override;  // Required
 	
-	// List all Modules here (2 of 2)
-	m.insert("ExampleModule", tr("An example module"));
-	m.insert("ExampleInlet", tr("An example inlet"));
-	m.insert("GenMod", tr("General modifications (TODO)"));
+private slots:
+	void trigger();
 	
-	return m;
-}
+private:
+	bool allowReconfigure;
+	QList<QTimer> timers;
+};
 
-#endif // MODULE_REGISTER_CPP
+#endif // EXAMPLEINLET_H

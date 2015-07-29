@@ -46,13 +46,13 @@ public:
 	 * \brief Determines whether the stream is synchronous or asynchronous
 	 * \return True if synchronous, false if asynchronous
 	 */
-	virtual bool isSynchronous() const;
+	bool isSynchronous() const;
 	
 	/*!
 	 * \brief Determines whether the stream is finite or continuous
 	 * \return True if finite, false if continuous
 	 */
-	virtual bool isFinite() const;
+	bool isFinite() const;
 	
 	/*!
 	 * \brief Flag Inlet for starting
@@ -75,11 +75,11 @@ private:
 	bool streamIsFinite;
 	
 #ifdef CAUTIOUS_ALERTS
-	void handleReconfigure() {alert("DDX bug: handleReconfigure() called on an inlet");}
-	void process() {alert("DDX bug: process() called on an inlet");}
+	void handleReconfigure() final {alert("DDX bug: handleReconfigure() called on an inlet");}
+	void process() final {alert("DDX bug: process() called on an inlet");}
 #else
-	void handleReconfigure() {}
-	void process() {}
+	void handleReconfigure() final {}
+	void process() final {}
 #endif
 };
 

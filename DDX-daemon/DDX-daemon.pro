@@ -51,7 +51,8 @@ SOURCES += main.cpp \
     modules/module_register.cpp \
     network.cpp \
     settings.cpp \
-    logger.cpp
+    logger.cpp \
+    modules/exampleinlet.cpp
 
 HEADERS += \
     constants.h \
@@ -66,7 +67,8 @@ HEADERS += \
     modules/examplemodule.h \
     network.h \
     settings.h \
-    logger.h
+    logger.h \
+    modules/exampleinlet.h
 
 DISTFILES += \
     DaemonCommandLineArguments.txt \

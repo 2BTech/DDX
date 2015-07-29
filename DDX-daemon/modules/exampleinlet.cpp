@@ -16,31 +16,36 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#ifndef MODULE_REGISTER_CPP
-#define MODULE_REGISTER_CPP
-#include "../unitmanager.h"
-
-// Include Module headers here
-#include "examplemodule.h"
 #include "exampleinlet.h"
-#include "genmod.h"
 
-void UnitManager::registerModules() {
-	// List all Modules here (1 of 2)
-	modules.insert("ExampleModule", ExampleModule::staticMetaObject);
-	modules.insert("ExampleInlet", ExampleInlet::staticMetaObject);
-	modules.insert("GenMod", GenMod::staticMetaObject);
+ExampleInlet::~ExampleInlet() {
+	
 }
 
-QMap<QString, QString> UnitManager::getModuleDescriptions() const {
-	QMap<QString, QString> m;
+void ExampleInlet::init(const QJsonObject settings) {
 	
-	// List all Modules here (2 of 2)
-	m.insert("ExampleModule", tr("An example module"));
-	m.insert("ExampleInlet", tr("An example inlet"));
-	m.insert("GenMod", tr("General modifications (TODO)"));
-	
-	return m;
 }
 
-#endif // MODULE_REGISTER_CPP
+void ExampleInlet::start() {
+	
+}
+
+void ExampleInlet::stop() {
+	
+}
+
+QJsonObject ExampleInlet::publishSettings() const {
+	
+}
+
+QJsonObject ExampleInlet::publishActions() const {
+	
+}
+
+void ExampleInlet::cleanup() {
+	
+}
+
+void ExampleInlet::trigger() {
+	
+}
