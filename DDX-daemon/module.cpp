@@ -17,6 +17,7 @@
  ******************************************************************************/
 
 #include "module.h"
+#include "path.h"
 
 Module::Module(Path *parent, const QString name) : QObject(parent)
 {

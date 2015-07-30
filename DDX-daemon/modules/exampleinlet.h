@@ -52,8 +52,8 @@ private:
 	QList<QTimer*> timers;
 	int chance;
 	bool failOnInit;
-	int ct;
-	QString *ctColumn, *randColumn;
+	int ct, ct2;
+	QString *ctColumn, *randColumn, *inColumn;
 };
 
 #endif // EXAMPLEINLET_H

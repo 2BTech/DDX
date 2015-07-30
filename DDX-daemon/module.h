@@ -23,7 +23,8 @@
 #include <QJsonObject>
 #include <QStringList>
 #include "data.h"
-#include "path.h"
+
+class Path;
 
 /*!
  * \brief An element in a Path which can manipulate and respond to data lines

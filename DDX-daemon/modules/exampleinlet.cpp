@@ -19,9 +19,10 @@
 #include "exampleinlet.h"
 
 ExampleInlet::ExampleInlet(Path *parent, const QString name) : Inlet(parent, name) {
-	std::seed_seq ss({210, QTime::currentTime().msec()});
+	std::seed_seq ss({210, QTime::currentTime().msec(), 34});
 	rg = std::mt19937(ss);
-	ct = 0;
+	ct = ct2 = 0;
+	inColumn = 0;
 }
 
 ExampleInlet::~ExampleInlet() {
@@ -43,7 +44,7 @@ void ExampleInlet::init(const QJsonObject settings) {
 	ctColumn = insertColumn("Index", 0);
 	randColumn = insertColumn("Random", 1);
 	QString *dummy = insertColumn("Dummy", 2);
-	*dummy = QString("this is a column");
+	*dummy = settings["Dummy_string"].toString();
 }
 
 void ExampleInlet::start() {
@@ -58,17 +59,18 @@ void ExampleInlet::stop() {
 
 QJsonObject ExampleInlet::publishSettings() const {
 	alert("ExampleInlet::publishSettings()");
-	QByteArray t("{\"Reconfigure_chance\":{\"t\":\"N\",\"d\":\"Probability of reconfigure on every chance\","
-				 "\"default\":10},\"Fail_on_init\":{\"t\":\"B\",\"d\":\"Should the module fail in init()?\","
-				 "\"default\":false},\"Timers\":{\"t\":\"C\",\"d\":\"Make as many timers as desirable\","
-				 "\"Timer\":{\"t\":\"I\",\"d\":\"A timer which generates a fake data line after every interval\","
-				 "\"Interval\":{\"t\":\"N\",\"d\":\"The interval, in milliseconds\",\"default\":10}}}}");
+	QByteArray t("{\"Reconfigure_chance\":{\"t\":\"int\",\"d\":\"Probability of reconfigure on every chance\","
+				 "\"default\":10},\"Fail_on_init\":{\"t\":\"bool\",\"d\":\"Should the module fail in init()?\","
+				 "\"default\":false},\"Dummy_string\":{\"t\":\"string\",\"d\":\"The dummy string to insert into a column\","
+				 "\"default\":\"this is a column\"},\"Timers\":{\"t\":\"cat\",\"d\":\"Make as many timers as desirable\","
+				 "\"Timer\":{\"t\":\"item\",\"d\":\"A timer which generates a fake data line after every interval\","
+				 "\"Interval\":{\"t\":\"int\",\"d\":\"The interval, in milliseconds\",\"default\":10}}}}");
 	QJsonDocument d = QJsonDocument::fromJson(t);
 	return d.object();
 }
 
 QJsonObject ExampleInlet::publishActions() const {
-	
+	return QJsonObject();
 }
 
 void ExampleInlet::cleanup() {
@@ -76,7 +78,19 @@ void ExampleInlet::cleanup() {
 }
 
 void ExampleInlet::trigger() {
-	// TODO:  reconfigure if chance works
-	*ctColumn = QString::number(ct++);
+	int n = abs(rg()) % 100;
+	if (n <= chance) {
+		if (outputColumns.size() == 3) {
+			inColumn = insertColumn("Inserted",2);
+			ct2 = 0;
+		}
+		else
+			removeColumn(findColumn("Inserted"));
+		path->reconfigure();
+	}
+	*ctColumn = QString::number(++ct);
 	*randColumn = QString::number(rg());
+	if (inColumn)
+		*inColumn = QString("Inserted %1 lines ago").arg(ct2++);
+	path->process();
 }

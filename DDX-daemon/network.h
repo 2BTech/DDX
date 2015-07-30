@@ -36,10 +36,20 @@ class Network : public QObject
 	Q_OBJECT
 public:
 	
+	enum DisconnectionReason {
+		UnknownReason,  //!< Unknown disconnection
+		ShuttingDown,  //!< The disconnecting member is shutting down by request
+		Restarting,  //!< The disconnecting member is restarting and will be back shortly
+		FatalError,  //!< The disconnecting member experienced a fatal error and is shutting down
+		ConnectionTerminated  //!< The connection was explicitly terminated
+	};
+	
 	struct Connection {
+		QTcpSocket *s;
 		QString cid;
 		QString name;
 		QString locale;
+		bool inbound;
 		//QTimeZone tz;
 		// If necessary:
 		//int8_t p[sizeof(Network::PrivConnInfo)];

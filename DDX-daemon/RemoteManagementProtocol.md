@@ -156,7 +156,26 @@ Code|Message|Macro
 
 
 ### Global notification: `disconnect`
-- not this
+This notification is usually sent immediately before a device terminates a connection.
+However, many cases for disconnection do not allow time for this notification to be
+sent, in which case the socket will disconnect without sending anything.
+
+Params:
+
+Name|Info|Type
+---|---|---
+`Reason`|The reason for disconnection|`DisconnectReason`
+
+`DisconnectReason` Enumeration:
+
+Name|Value|Description
+---|---|---
+`UnknownReason`|0|Unknown disconnection
+`ShuttingDown`|1|The disconnecting member is shutting down by request
+`Restarting`|2|The disconnecting member is restarting and will be back shortly
+`FatalError`|3|The disconnecting member experienced a fatal error and is shutting down
+`ConnectionTerminated`|4|The connection was explicitly terminated
+
 
 ## Path Management
 
