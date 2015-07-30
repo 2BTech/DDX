@@ -71,6 +71,7 @@ Name|Info|Type
 ---|---|---
 `Column`|The name of the column|string
 `Data`|The actual data payload|string
+`IsBase64`|Whether the `Data` member is base-64 encoded; defaults to false if omitted|bool
 
 ### `Settings` Type
 
