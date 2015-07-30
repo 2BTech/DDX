@@ -25,7 +25,7 @@ ExampleModule::~ExampleModule() {
 void ExampleModule::init(const QJsonObject settings) {
 	settings.size();
 	echo = settings.value("Echo_string").toString();
-	if (QString::compare(settings.value("Fail_on_init").toString(), "yes", Qt::CaseInsensitive))
+	if (settings.value("Fail_on_init").toBool())
 		terminate("Simulating a failure as requested by settings");
 	alert("ExampleModule::init()");
 }
@@ -39,11 +39,12 @@ QJsonObject ExampleModule::publishSettings() const {
 	alert("ExampleModule::publishSettings()");
 	QJsonObject s;
 	QJsonObject x;
-	x.insert("t","A");
+	x.insert("t","S");
 	x.insert("d","This string will be echoed by process()");
 	s.insert("Echo_string", x);
-	x.insert("d","Should the module fail in init()? Yes/no");
-	x.insert("default","no");
+	x.insert("t", "B");
+	x.insert("d","Should the module fail in init()?");
+	x.insert("default",false);
 	s.insert("Fail_on_init", x);
 	return s;
 }

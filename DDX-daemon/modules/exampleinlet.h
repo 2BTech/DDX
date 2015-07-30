@@ -21,7 +21,10 @@
 
 #include <QObject>
 #include <QList>
+#include <QTime>
 #include <QTimer>
+#include <QVariant>
+#include <random>
 #include "inlet.h"
 
 class Path;
@@ -30,7 +33,7 @@ class ExampleInlet final : public Inlet
 {
 	Q_OBJECT  // Required
 public:
-	using Inlet::Inlet;  // Required
+	ExampleInlet(Path *parent, const QString name);
 	~ExampleInlet();  // Required
 	void init(const QJsonObject settings) override;  // Required
 	void start() override;  // Required
@@ -39,12 +42,18 @@ public:
 	QJsonObject publishActions() const override;  // Optional
 	void cleanup() override;  // Required
 	
+	
 private slots:
 	void trigger();
 	
 private:
+	std::mt19937 rg;
 	bool allowReconfigure;
-	QList<QTimer> timers;
+	QList<QTimer*> timers;
+	int chance;
+	bool failOnInit;
+	int ct;
+	QString *ctColumn, *randColumn;
 };
 
 #endif // EXAMPLEINLET_H

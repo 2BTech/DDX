@@ -210,7 +210,6 @@ Code|Message|Macro
 ---|---|---
 200|Path does not exist|E_PATH_NONEXISTENT
 
-### Daemon request: `pausePath`
 ### Daemon request: `testPath`
 ### Daemon request: `addPath`
 ### Daemon request: `modifyPath`
