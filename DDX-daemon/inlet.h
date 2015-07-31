@@ -67,7 +67,7 @@ public:
 	
 	virtual void stop();
 	
-	explicit Inlet(Path *parent, const QString name);
+	explicit Inlet(Path *parent, const QByteArray &name);
 	
 	~Inlet();
 	

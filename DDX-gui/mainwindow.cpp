@@ -52,7 +52,7 @@ void MainWindow::boop() {
 			c++;
 			return;
 		}
-		s->write(QString("{\"test\":\"%1\"}\n").arg(n).toLatin1());
+		s->write(QString("{\"test\":\"%1\"}\n").arg(n).toUtf8());
 		s->flush();
 		l->setText(tr("Connected (%1)").arg(n));
 		c++;

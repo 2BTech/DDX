@@ -18,7 +18,7 @@
 
 #include "inlet.h"
 
-Inlet::Inlet(Path *parent, const QString name) : Module(parent, name)
+Inlet::Inlet(Path *parent, const QByteArray &name) : Module(parent, name)
 {
 	// TODO
 }

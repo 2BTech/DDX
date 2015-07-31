@@ -33,7 +33,7 @@ class ExampleInlet final : public Inlet
 {
 	Q_OBJECT  // Required
 public:
-	ExampleInlet(Path *parent, const QString name);
+	ExampleInlet(Path *parent, const QByteArray &name);
 	~ExampleInlet();  // Required
 	void init(const QJsonObject settings) override;  // Required
 	void start() override;  // Required
@@ -53,7 +53,7 @@ private:
 	int chance;
 	bool failOnInit;
 	int ct, ct2;
-	QString *ctColumn, *randColumn, *inColumn;
+	QByteArray *ctColumn, *randColumn, *inColumn;
 };
 
 #endif // EXAMPLEINLET_H

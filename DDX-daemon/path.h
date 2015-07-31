@@ -63,7 +63,7 @@ public:
 		Terminated
 	};
 	
-	explicit Path(Daemon *daemon, const QString name, const QByteArray scheme);
+	explicit Path(Daemon *daemon, const QByteArray &name, const QByteArray &scheme);
 	
 	~Path();
 	

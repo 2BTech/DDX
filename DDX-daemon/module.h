@@ -60,9 +60,9 @@ class Path;
  * which vary in case are disallowed.  Be wary, however, of the fact that a
  * column can be removed by one Module and replaced with another of the same
  * name by a Module downstream without complaint.  Relying on this hack is
- * not reccommended.
+ * not recommended.
  * 
- * ## %Module Settings
+ * ## %Module %Settings
  * Modules can publish a tree of settings which must be configured by someone
  * prior to use.  Settings can be reported with publishSettings(), which records
  * what settings this Module allows to be set.  Configured settings are passed
@@ -80,6 +80,8 @@ class Path;
  * saved in handleReconfigure() so that data can pass through process() without
  * causing a crash.  process() should be able to deal with incorrect or missing
  * data safely.  Inlets should buffer asynchronous data.
+ * 
+ * TODO:  Write about Path::terminate()
  * 
  * ## Module-Module Communication
  * Modules can communicate with each other with the use of Path::getModule() and
@@ -118,7 +120,7 @@ public:
 	 * This function is the core of a Module's work.  This is where line-by-line
 	 * processing occurs.  Any code here can make use of buffer pointers saved
 	 * by handleReconfigure() to read from and write to columns.  Upon entering
-	 * process, column buffers are already loaded with the values from the next
+	 * process(), column buffers are already loaded with the values from the next
 	 * module upstream.  Any changes to these buffers will then be passed to the
 	 * next module downstream.  This function must be failsafe; it can report
 	 * errors but cannot halt the data stream.  _This is a virtual function
@@ -181,8 +183,8 @@ public:
 	 * Settings must not be named "A", "I", "C", "n", "t", "d", "default", or
 	 * "items".  Duplicate names are checked case-insensitively, so variations
 	 * on capitalization of any reserved keywords will also fail.  It is
-	 * recommendend that you (and users) avoid non-alphanumeric characters in
-	 * names with the exceptions of hypens and underscores.
+	 * recommended that you (and users) avoid non-alphanumeric characters in
+	 * names with the exceptions of hyphens and underscores.
 	 * 
 	 * TODO:  Add booleans and selects???
 	 * 
@@ -253,7 +255,7 @@ public:
 	
 	virtual QJsonObject publishActions() const;
 	
-	explicit Module(Path *parent, const QString name);
+	explicit Module(Path *parent, const QByteArray &name);
 	
 	~Module();
 	
@@ -291,7 +293,7 @@ public:
 	 * \brief Get the Module's name
 	 * \return The Module's name
 	 */
-	inline QString getName() const {return name;}
+	inline QByteArray getName() const {return name;}
 	
 protected:
 	Path *path;
@@ -370,7 +372,7 @@ protected:
 	 * 
 	 * __Unsafe outside of reconfigure() or handleReconfigure()!__
 	 */
-	QString* insertColumn(const QString name, int index);
+	QByteArray *insertColumn(const QString name, int index);
 	
 	/*!
 	 * \brief Remove an output Column
@@ -388,7 +390,7 @@ protected:
 private:
 	
 	//! This Module's name (not editable after construction)
-	QString name;
+	QByteArray name;
 	
 	//! Pointer to external input columns (this is not owned!)
 	const DataDef *inputColumns;  // NOT OWNED

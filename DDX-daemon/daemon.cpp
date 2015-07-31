@@ -96,13 +96,13 @@ void Daemon::init() {
 	
 }
 
-void Daemon::testPath(QByteArray scheme, int log) {
+void Daemon::testPath(const QByteArray &scheme, int log) {
 	// TODO
 	scheme.size();
 	log += 2;
 }
 
-void Daemon::addPath(QString name, int log) {
+void Daemon::addPath(const QByteArray &name, int log) {
 	this->logger->log("fail");
 	UnitManager *um = getUnitManager();
 	QByteArray scheme = um->getPathScheme(name);

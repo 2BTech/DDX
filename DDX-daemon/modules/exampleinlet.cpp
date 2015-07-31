@@ -18,7 +18,7 @@
 
 #include "exampleinlet.h"
 
-ExampleInlet::ExampleInlet(Path *parent, const QString name) : Inlet(parent, name) {
+ExampleInlet::ExampleInlet(Path *parent, const QByteArray &name) : Inlet(parent, name) {
 	std::seed_seq ss({210, QTime::currentTime().msec(), 34});
 	rg = std::mt19937(ss);
 	ct = ct2 = 0;
@@ -43,8 +43,9 @@ void ExampleInlet::init(const QJsonObject settings) {
 	}
 	ctColumn = insertColumn("Index", 0);
 	randColumn = insertColumn("Random", 1);
-	QString *dummy = insertColumn("Dummy", 2);
-	*dummy = settings["Dummy_string"].toString();
+	QByteArray *dummyPtr = insertColumn("Dummy", 2);
+	QByteArray dummy = settings["Dummy_string"].toString().toUtf8();
+	*dummyPtr = dummy;
 }
 
 void ExampleInlet::start() {
@@ -84,13 +85,15 @@ void ExampleInlet::trigger() {
 			inColumn = insertColumn("Inserted",2);
 			ct2 = 0;
 		}
-		else
+		else {
 			removeColumn(findColumn("Inserted"));
+			inColumn = 0;
+		}
 		path->reconfigure();
 	}
-	*ctColumn = QString::number(++ct);
-	*randColumn = QString::number(rg());
+	*ctColumn = QByteArray::number(++ct);
+	*randColumn = QByteArray::number(rg());
 	if (inColumn)
-		*inColumn = QString("Inserted %1 lines ago").arg(ct2++);
+		*inColumn = QString("Inserted %1 lines ago").arg(ct2++).toUtf8();
 	path->process();
 }

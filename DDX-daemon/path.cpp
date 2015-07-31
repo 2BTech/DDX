@@ -23,7 +23,7 @@
 #include "unitmanager.h"
 #include "logger.h"
 
-Path::Path(Daemon *daemon, const QString name, const QByteArray scheme) : QObject(0)
+Path::Path(Daemon *daemon, const QByteArray &name, const QByteArray &scheme) : QObject(0)
 {
 	state = State::Initializing;
 	this->name = name;

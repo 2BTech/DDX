@@ -73,7 +73,7 @@ Settings::~Settings() {
 QVariant Settings::v(const QString &key, const QString &group) const {
 	QString k = getKey(key, group);
 	QReadLocker l(&lock);
-	Q_ASSERT_X(s.contains(k), "Settings::verifySettingExists", k.toLatin1());
+	Q_ASSERT_X(s.contains(k), "Settings::verifySettingExists", k.toUtf8());
 	return s.value(k).v;
 }
 
@@ -146,6 +146,8 @@ QList<Settings::SetEnt> Settings::enumerateSettings() const {
 		  "tbd", QMetaType::QString);
 	b.add("Arguments", tr("The GUI's process arguments"),
 		  "", QMetaType::QString);
+	b.add("KeepAlive", tr("Whether the GUI should be reopened if it crashes"),
+		  true, QMetaType::Bool);
 	
 	b.enterGroup(SG_TIME);
 	b.add("Timezone", tr("The local timezone"),

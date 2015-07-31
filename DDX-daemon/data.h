@@ -29,17 +29,16 @@ class Module;
  * \brief Stores the contents of and metadata about a column as it resides in a stream
  */
 struct Column {
-	QString c;  //!< The column's actual data buffer
+	QByteArray c;  //!< The column's actual data buffer
 	QString n; //!< The name and main identifier of the column as reported by its parent
 	Module *p;  //!< A pointer to the column's parent Module
 	
 	Column(QString name, Module *parent) {
-		QString c;
-		QString n(name);
+		n = name;
 		p = parent;
 	}
 	
-	QString* buffer() {return &c;}
+	QByteArray* buffer() {return &c;}
 };
 
 /*!

@@ -19,7 +19,7 @@
 #include "module.h"
 #include "path.h"
 
-Module::Module(Path *parent, const QString name) : QObject(parent)
+Module::Module(Path *parent, const QByteArray &name) : QObject(parent)
 {
 	path = parent;
 	this->name = name;
@@ -82,7 +82,7 @@ Column* Module::findColumn(const QString name) const {
 	return 0;
 }
 
-QString* Module::insertColumn(const QString name, int index) {
+QByteArray* Module::insertColumn(const QString name, int index) {
 	if (findColumn(name)) return 0;
 	if ( ! newColumns) newColumns = new DataDef();
 	Column *c = new Column(name, this);

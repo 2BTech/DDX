@@ -58,9 +58,9 @@ public:
 	
 	~Daemon();
 	
-	void testPath(QByteArray scheme, int log = 0);
+	void testPath(const QByteArray &scheme, int log = 0);
 	
-	void addPath(QString name, int log = 0);
+	void addPath(const QByteArray &name, int log = 0);
 	
 	UnitManager *getUnitManager();
 	

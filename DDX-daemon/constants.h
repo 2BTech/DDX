@@ -46,6 +46,8 @@
 #define D_DATA "data"
 #define D_CONFIG "config"
 
+// SETTINGS
+#define SETTINGS_INCLUDE_DESCRIPTIONS
 // SETTINGS GROUPS
 #define SG_PATHS "paths"
 #define SG_GUI "gui"
