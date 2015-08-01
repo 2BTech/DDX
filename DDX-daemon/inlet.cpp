@@ -50,3 +50,15 @@ void Inlet::start() {
 void Inlet::stop() {
 	alert("DDX bug: stop() not reimplemented");
 }
+
+void Inlet::handleReconfigure() {
+#ifdef CAUTIOUS_ALERTS
+		alert("DDX bug: handleReconfigure() called on an inlet");
+#endif
+}
+
+void Inlet::process() {
+#ifdef CAUTIOUS_ALERTS
+		alert("DDX bug: process() called on an inlet");
+#endif
+}

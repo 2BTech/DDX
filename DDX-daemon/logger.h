@@ -66,13 +66,27 @@ public:
 	
 	~Logger();
 	
+	/*!
+	 * \brief Write a log message to the log systems
+	 * \param msg The message to be logged
+	 * \param isAlert Whether it is destined for the user
+	 * 
+	 * Publishes a log message to any listening targets.  Output to stdout and
+	 * stderr happens immediately.  Messages then enter a queue to be output to
+	 * designated targets.  Note that no messages will be sent until all startup
+	 * targets either initialize or critically fail.  Since alerts are mainly
+	 * used to indicate errors of some sort, the isAlert argument also
+	 * determines whether the message is sent to stdout or stderr.
+	 * 
+	 * This function is thread-safe.
+	 */
 	void log(const QString &msg, bool isAlert = false);
 	
 	/*!
 	 * \brief Send a high-level message to the user
 	 * \param msg The message
 	 * 
-	 * Convenience wrapper around log()
+	 * Convenience wrapper around log().  This funciton is thread-safe.
 	 */
 	void alert(const QString &msg) {log(msg, true);}
 	

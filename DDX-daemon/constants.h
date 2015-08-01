@@ -19,6 +19,8 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#include <QtGlobal>
+
 // GENERAL PURPOSE INDICATIVES
 #define VERSION_FULL_TEXT "0.0"
 #define APP_NAME_SHORT "DDX"
@@ -29,9 +31,11 @@
 
 // DEBUGGING
 //! Comment to disable error checks that *shouldn't* be necessary in production
+#ifdef QT_DEBUG
 #define ENABLE_CAUTIOUS_ERROR_CHECKING
+#endif
 #ifdef ENABLE_CAUTIOUS_ERROR_CHECKING
-	//! Whether to check for rigorously check for JSON parsing errors in code which should come from the DDX itself
+	//! Whether to check for rigorously check for JSON parsing errors in schemes which should come from the DDX itself
 	#define PATH_PARSING_CHECKS
 	#define CAUTIOUS_CHECKS
 #endif

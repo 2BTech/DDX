@@ -75,13 +75,19 @@ private:
 	bool streamIsSynchronous;
 	bool streamIsFinite;
 	
-#ifdef CAUTIOUS_ALERTS
-	void handleReconfigure() final {alert("DDX bug: handleReconfigure() called on an inlet");}
-	void process() final {alert("DDX bug: process() called on an inlet");}
-#else
-	void handleReconfigure() final {}
-	void process() final {}
-#endif
+	/*!
+	 * \brief [DISABLED IN INLETS]
+	 * 
+	 * Inlets must never utilize or reimplement this function.
+	 */
+	void handleReconfigure() final;
+	
+	/*!
+	 * \brief [DISABLED IN INLETS]
+	 * 
+	 * Inlets must never utilize or reimplement this function.
+	 */
+	void process() final;
 };
 
 #endif // INLET_H
