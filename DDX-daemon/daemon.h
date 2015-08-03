@@ -22,6 +22,7 @@
 #include <QObject>
 #include <QCoreApplication>
 #include <QDateTime>
+#include <QTimeZone>
 #include <QSettings>
 #ifdef ICON
 	#include <QSystemTrayIcon>
@@ -67,6 +68,18 @@ public:
 	void releaseUnitManager();
 	
 	Settings *getSettings() const {return settings;}
+	
+	/*!
+	 * \brief Obtain the current date and time
+	 * \return The current time in DDX standard form
+	 * 
+	 * Because most DDX use cases aren't appropriate places for DST, "DDX time"
+	 * refers to the local timezone with DST disabled.  DST can be re-enabled in
+	 * settings, but this is generally not recommended.
+	 */
+	QDateTime getTime() const;
+	
+	const QTimeZone *getTimezone() const {return &tz;}
 	
 	/*!
 	 * \brief Compare a version string with this application's version
@@ -134,6 +147,8 @@ private:
 	QList<Path*> paths;
 	
 	UnitManager *unitManager;
+	
+	QTimeZone tz;
 	
 	int umRefCount;
 	

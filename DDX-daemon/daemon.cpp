@@ -32,7 +32,6 @@ Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	args = parent->arguments();
 	// Initialize other variables
 	settings = new Settings(this);
-	//n = new Network(this);
 	umRefCount = 0;
 	unitManager = 0;
 	nextRequestId = 1;
@@ -55,6 +54,47 @@ void Daemon::init() {
 			"with Qt %2. It will continue to run, but there may be unexpected "
 			"side effects. If problems occur, install the correct version of "
 			"Qt.").arg(QT_VERSION_STR, qVersion()), true);
+	
+	// Do locale stuff here?  AT least before timezone stuff
+	
+	QList<QByteArray> tzs = QTimeZone::availableTimeZoneIds();
+	foreach(const QByteArray &tt, tzs) {
+		logger->log(tt);
+	}
+
+	// Determine timezone for DDX time
+	/*b.add("Timezone", tr("The local timezone"),
+		  QTimeZone::systemTimeZoneId(), QMetaType::QByteArray);
+	b.add("IgnoreDST", tr("Whether to ignore daylight savings time"),
+		  true, QMetaType::Bool);
+	b.add("ForceUTC", tr("Whether to force the use of UTC"),
+		  false, QMetaType::Bool);*/
+	QByteArray requestedTzId = settings->v("Timezone", SG_TIME).toByteArray();
+	QTimeZone utc = QTimeZone(0);
+	if (settings->v("ForceUTC", SG_TIME).toBool()) tz = utc;
+	else {
+		if (requestedTzId != QTimeZone::systemTimeZoneId())
+			logger->log(tr("System timezone '%1' does not match requested timezone '%2'")
+						.arg(QString(requestedTzId), QString(QTimeZone::systemTimeZoneId())));
+		
+		QTimeZone requestedTz = QTimeZone(requestedTzId);
+		if (settings->v("IgnoreDST", SG_TIME).toBool()) {
+			int tzOffset = requestedTz.standardTimeOffset(QDateTime::currentDateTime());
+		}
+		else {
+			logger->log
+				(tr("Note: the DDX is not ignoring DST.  Time changes will not be reported "
+					"and may cause undefined behavior."));
+			
+		}
+
+		if ( ! (requestedTz.isValid() && tz.isValid())) {
+			logger->log(tr("The timezone could not be established"));
+			tz = utc;
+		}
+	}
+	logger->log(tr("Using timezone %1")
+				.arg(tz.displayName(QTimeZone::GenericTime, QTimeZone::OffsetName)));
 	
 	/*! ### Loading Settings
 	 * Settings are set to their default values at startup when one of these
