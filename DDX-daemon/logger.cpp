@@ -50,10 +50,8 @@ void Logger::log(const QString &msg, bool isAlert) {
 	// Immediately echo to output streams
 	QTextStream *outStream = isAlert ? serr : sout;
 	sLock.lock();
-	// Note: using msg is faster than e.msg because QTextStream::operator<<
-	// converts QByteArrays to QString anyway
 #ifdef LOG_STREAM_TIMESTAMP
-	*outStream << "[" << e.time.toString(LOG_STREAM_TIMESTAMP) << "] " << msg << endl;
+	*outStream << "[" << e.time.toLocalTime().toString(LOG_STREAM_TIMESTAMP) << "] " << msg << endl;
 #else
 	*outStream << msg << endl;
 #endif

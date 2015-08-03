@@ -77,6 +77,14 @@ Name|Info|Type
 
 ### `Config` Type
 
+### Temporal Types
+All dates and times are formatted according to [ISO 8601](http://www.iso.org/iso/catalogue_detail?csnumber=40874).
+
+Type|Description|Format
+---|---|---
+`TimeUtc`|The ISO 8601 format for UTC|`YYYY-MM-DDTHH:mm:ssZ`
+
+
 ### `ClientType` Enumeration
 Name|Value|Description
 ---|---|---
@@ -279,7 +287,7 @@ Params:
 Name|Info|Type
 ---|---|---
 `Message`|The message|string
-`Time`|Full time in "yyyy/MM/dd HH:mm:ss.zzz" format (in server's timezone)|string
+`Time`|Full time (without timezone)|`Time`
 `IsAlert`|Whether this is destined for the user or for logging only|bool
 
 ### Global request: `setLogFilters`

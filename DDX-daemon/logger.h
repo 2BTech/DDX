@@ -28,6 +28,7 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include <QPointer>
+#include <QJsonObject>
 #include "constants.h"
 
 class Daemon;
@@ -58,9 +59,9 @@ public:
 	 * \return The application's Logger
 	 * 
 	 * Because Qt's internal logging functions require logging to be tied to a
-	 * global function, the Logger class is simplest to implement as a
-	 * singleton.  No public constructor is given.  This should be how
-	 * components gain access to the logging system.
+	 * global function, the Logger class is implemented as a singleton.  No
+	 * public constructor is given.  This should be how components gain access
+	 * to the logging system.
 	 * 
 	 * This function is thread-safe.
 	 */
@@ -92,15 +93,20 @@ private:
 	
 	struct LogEntry {
 		LogEntry(const QString &msg, bool isAlert) {
+			time = QDateTime::currentDateTimeUtc();
 			this->msg = msg.toUtf8();
 			this->isAlert = isAlert;
-			time = QDateTime::currentDateTime();
-			timestamp = time.toString(LOG_TIMESTAMP_FORMAT).toUtf8();
 		}
-		QByteArray msg;  //!< The UTF-8 encoded message
+		QJsonObject toNetwork() {
+			QJsonObject o;
+			o.insert("Message", msg);
+			o.insert("Time", time.toString(Qt::ISODate));
+			o.insert("IsAlert", isAlert);
+			return o;
+		}
+		QString msg;  //!< The UTF-8 encoded message
 		bool isAlert;  //!< Whether this is destined for the user
-		QDateTime time;  //!< The time this log event was recorded
-		QByteArray timestamp;  //!< A string version of LogEntry#time based on LOG_TIMESTAMP_FORMAT
+		QDateTime time;  //!< The time this log event was recorded (in UTC)
 	};
 	
 	//! Locks Logger::Logger to prevent racing the singleton
