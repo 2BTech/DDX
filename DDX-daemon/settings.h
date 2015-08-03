@@ -20,6 +20,7 @@
 #define SETTINGS_H
 
 #include <QObject>
+#include <QByteArray>
 #include <QMetaType>
 #include <QVariant>
 #include <QJsonObject>
@@ -29,6 +30,7 @@
 #include <QWriteLocker>
 #include <QGlobalStatic>
 #include <QTimeZone>
+#include <QStandardPaths>
 
 class Daemon;
 class Logger;
@@ -41,16 +43,18 @@ public:
 	
 	~Settings();
 	
-	QVariant v(const QString &key, const QString &group = QString()) const;
+	QVariant v(const QByteArray &key, const QByteArray &group = "") const;
 	
-	bool set(const QString &key, const QVariant &val,
-			 const QString &group = QString(), bool save = true);
+	bool set(const QByteArray &key, const QVariant &val,
+			 const QByteArray &group ="", bool save = true);
 	
-	void reset(const QString &key, const QString &group = QString());
+	void reset(const QByteArray &key, const QByteArray &group = "");
 	
-	QVariant getDefault(const QString &key, const QString &group = QString()) const;
+	QVariant getDefault(const QByteArray &key, const QByteArray &group = "") const;
 	
 	void resetAll();
+	
+	void saveAll();
 	
 signals:
 	
@@ -58,6 +62,7 @@ public slots:
 	
 private:
 	
+	//! A simplified, long-term setting descriptor
 	struct Setting {
 		Setting(const QVariant defaultValue,
 				QMetaType::Type type) {
@@ -71,47 +76,69 @@ private:
 		QMetaType::Type t;
 	};
 	
+	//! A bulky, temporary setting descriptor
 	struct SetEnt {
-		SetEnt(const QString key, const QString desc,
+		SetEnt(const QByteArray key, const QString desc,
 			   const QVariant defaultVal, QMetaType::Type type) {
 			this->key = key;
 			this->desc = desc;
 			this->defVal = defaultVal;
 			this->type = type;
 		}
-		QString key;
+		QByteArray key;
 		QString desc;
 		QVariant defVal;
 		QMetaType::Type type;
 	};
 	
-	struct SettingsBuilder {
-		SettingsBuilder(){}
-		void add(QString key, QString desc,
+	//! Simplifies the registration of settings in enumerateSettings
+	struct SettingsFactory {
+		SettingsFactory(){}
+		void add(QByteArray key, QString desc,
 				 QVariant defaultVal, QMetaType::Type type) {
 			SetEnt se(key, desc, defaultVal, type);
 			se.key.prepend(currentGroup);
 			list.append(se);
 		}
-		void enterGroup(QString group) {
+		void enterGroup(QByteArray group) {
 			if (group.isNull()) currentGroup.clear();
 			else currentGroup = group.append("/");
 		}
-		QString currentGroup;
+		QByteArray currentGroup;
 		QList<SetEnt> list;
 	};
 	
+	//! Logger handle
 	Logger *logger;
 	
+	//! Maintains persistent storage of settings
 	QSettings *systemSettings;
 	
-	QHash<QString, Setting> s;
+	//! The master settings map
+	QHash<QByteArray, Setting> s;
 	
+	//! Locks the master settings map
 	mutable QReadWriteLock lock;
 	
+	/*!
+	 * \brief Register and list application-wide settings
+	 * \return A list of settings
+	 * 
+	 * This function publishes a list of all the application-wide settings
+	 * available.  Developers must register any settings they require in this
+	 * function to use the DDX settings management system.  This function
+	 * utilizes the SettingsFactory struct to list settings under the
+	 * appropriate group.  Look at existing entries to understand usage.
+	 * 
+	 * _Note:_ In debug builds, the default value of every setting is tested
+	 * against its type specification via an assert in the Settings constructor.
+	 * If this assert is failing, define `LIST_SETTINGS_STARTUP` to show which
+	 * entry causes the assertion fail.
+	 */
 	QList<SetEnt> enumerateSettings() const;
 	
-	inline QString getKey(const QString &subKey, const QString &group) const;
+	//! Builds a hash key from a setting name and group
+	inline QByteArray getKey(const QByteArray &subKey, const QByteArray &group) const;
 	
 };
 

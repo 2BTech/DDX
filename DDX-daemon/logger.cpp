@@ -41,40 +41,40 @@ Logger::Logger() : QObject(qApp)
 
 Logger::~Logger()
 {
-	QMutexLocker l(&qLock);
 	delete sout;
 	delete serr;
 }
 
 void Logger::log(const QString &msg, bool isAlert) {
-#ifdef LOGGING_INCLUDE_TIMESTAMP
-	QString echo(QDateTime::currentDateTime().toString("[yyyy/MM/dd HH:mm:ss.zzz] "));
-	echo.append(msg);
-#else
-	QString echo(msg);
-#endif
+	LogEntry e(msg, isAlert);
 	// Immediately echo to output streams
-	if (isAlert) *serr << echo << endl;
-	else *sout << echo << endl;
-	//
-	if ( ! daemon || ! daemon->logReady) {
-		QMutexLocker l(&qLock);
-		q.enqueue(Entry(echo, isAlert));
-		return;
-	}
-	
+	QTextStream *outStream = isAlert ? serr : sout;
+	sLock.lock();
+	// Note: using msg is faster than e.msg because QTextStream::operator<<
+	// converts QByteArrays to QString anyway
+#ifdef LOG_STREAM_TIMESTAMP
+	*outStream << "[" << e.time.toString(LOG_STREAM_TIMESTAMP) << "] " << msg << endl;
+#else
+	*outStream << msg << endl;
+#endif
+	sLock.unlock();
+	// Queue for dispatch
+	qLock.lock();
+	q.enqueue(e);
+	qLock.unlock();
+	// TODO:  Notify???
 }
 
 void Logger::handleMsg(QtMsgType t, const QMessageLogContext &c, const QString &m) {
 #ifdef QT_DEBUG
 	QString msg;
-	if (c.file) {
+	if (c.file && !m.contains("ASSERT")) {
 		msg = "Qt %1:%2 [%3]: ";
 		msg = msg.arg(c.file, QString::number(c.line), c.function);
 	}
 	msg.append(m);
 #else
-	QString msg("DDX bug: ");
+	QString msg("DDX: ");
 	msg.append(m);
 #endif
 	
@@ -86,8 +86,4 @@ void Logger::handleMsg(QtMsgType t, const QMessageLogContext &c, const QString &
 	
 	log(msg, alert);
 	// TODO:  See if Fatal needs us to quit for it
-}
-
-void Logger::process() {
-	
 }

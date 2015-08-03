@@ -38,17 +38,13 @@
 	//! Whether to check for rigorously check for JSON parsing errors in schemes which should come from the DDX itself
 	#define PATH_PARSING_CHECKS
 	#define CAUTIOUS_CHECKS
+	// #define LIST_SETTINGS_STARTUP
 #endif
 #define KEEP_UNITMANAGER
 
 // LOGGING
-#define LOGGING_INCLUDE_TIMESTAMP
-
-// DIRECTORIES
-#define D_INSTALL "install"
-#define D_LOGS "logs"
-#define D_DATA "data"
-#define D_CONFIG "config"
+// Comment to disable timestamping on stdout
+#define LOG_STREAM_TIMESTAMP "yyyy-MM-dd HH:mm:ss.zzz"
 
 // SETTINGS
 #define SETTINGS_INCLUDE_DESCRIPTIONS
@@ -57,6 +53,13 @@
 #define SG_GUI "gui"
 #define SG_TIME "time"
 #define SG_NETWORK "network"
+
+// DIRECTORIES
+#define ddx_path(path_macro) (SG_PATHS "/" path_macro)
+#define D_INSTALL "install"
+#define D_LOGS "logs"
+#define D_DATA "data"
+#define D_CONFIG "config"
 
 // PLATFORM SPECIALIZATION
 

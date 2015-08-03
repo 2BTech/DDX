@@ -127,7 +127,7 @@ QString UnitManager::addPath(const QByteArray scheme, bool save) {
 	QString error = verifyPathScheme(scheme);
 	if ( ! error.isEmpty()) return error;
 	// TODO
-	if (save) Logger::get()->alert("DDX bug: path saving not implemented yet (UnitManager::addPath())");
+	if (save) Logger::get()->log("DDX bug: path saving not implemented yet (UnitManager::addPath())", true);
 	return QString();
 }
 

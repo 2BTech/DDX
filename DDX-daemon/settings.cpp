@@ -26,6 +26,9 @@ Settings::Settings(Daemon *parent) : QObject(parent) {
 	systemSettings = new QSettings(APP_AUTHOR_FULL, APP_NAME_SHORT, this);
 	QList<SetEnt> loaded = enumerateSettings();
 	foreach (const SetEnt &set, loaded) {
+#ifdef LIST_SETTINGS_STARTUP
+		logger->log(QString("Found setting: ").append(set.key));
+#endif
 		Q_ASSERT(((QMetaType::Type) set.defVal.type()) == set.type);
 		s.insert(set.key, Setting(set.defVal, set.type));
 	}
@@ -37,9 +40,9 @@ Settings::Settings(Daemon *parent) : QObject(parent) {
 	}
 	int vc = Daemon::versionCompare(systemSettings->value("Version").toString());
 	if (vc > 0) {
-		logger->alert(tr("Settings are for higher version or corrupted. "
+		logger->log(tr("Settings are for higher version or corrupted. "
 					   "Run latest version or launch daemon with '-reconfigure' "
-					   "option to reset all settings."));
+					   "option to reset all settings."), true);
 		// TODO:  Quit here
 		parent->quit(E_SETTINGS_VERSION);
 		return;
@@ -51,7 +54,7 @@ Settings::Settings(Daemon *parent) : QObject(parent) {
 			"functionality may not work. Defaults for the current version will "
 			"be used where applicable. Reconfigure from the GUI menu or by "
 			"running the daemon with the '-reconfigure' option to update settings."));
-	for (QHash<QString,Setting>::iterator it = s.begin(); it != s.end(); ++it) {
+	for (QHash<QByteArray,Setting>::iterator it = s.begin(); it != s.end(); ++it) {
 		if (systemSettings->contains(it.key())) {
 			QVariant value = systemSettings->value(it.key());
 			if ( ! value.canConvert(it->t)) {
@@ -70,26 +73,26 @@ Settings::~Settings() {
 	delete systemSettings;  // Auto-syncs
 }
 
-QVariant Settings::v(const QString &key, const QString &group) const {
-	QString k = getKey(key, group);
+QVariant Settings::v(const QByteArray &key, const QByteArray &group) const {
+	QByteArray k = getKey(key, group);
 	QReadLocker l(&lock);
-	Q_ASSERT_X(s.contains(k), "Settings::verifySettingExists", k.toUtf8());
+	Q_ASSERT_X(s.contains(k), "Settings::verifySettingExists", k);
 	return s.value(k).v;
 }
 
-QVariant Settings::getDefault(const QString &key, const QString &group) const {
-	QString k = getKey(key, group);
+QVariant Settings::getDefault(const QByteArray &key, const QByteArray &group) const {
+	QByteArray k = getKey(key, group);
 	QReadLocker l(&lock);
 	Q_ASSERT(s.contains(k));
 	return s.value(k).d;
 }
 
-bool Settings::set(const QString &key, const QVariant &val,
-				   const QString &group, bool save) {
-	QString k = getKey(key, group);
+bool Settings::set(const QByteArray &key, const QVariant &val,
+				   const QByteArray &group, bool save) {
+	QByteArray k = getKey(key, group);
 	QWriteLocker l(&lock);
 	Q_ASSERT(s.contains(k));
-	QHash<QString, Setting>::iterator it = s.find(k);
+	QHash<QByteArray, Setting>::iterator it = s.find(k);
 	if ( ! val.canConvert(it->t)) return false;
 	it->v = val;
 	it->v.convert(it->t);
@@ -98,20 +101,20 @@ bool Settings::set(const QString &key, const QVariant &val,
 	return true;
 }
 
-void Settings::reset(const QString &key, const QString &group) {
-	QString k = getKey(key, group);
+void Settings::reset(const QByteArray &key, const QByteArray &group) {
+	QByteArray k = getKey(key, group);
 	QWriteLocker l(&lock);
 	Q_ASSERT(s.contains(k));
-	QHash<QString, Setting>::iterator it = s.find(k);
+	QHash<QByteArray, Setting>::iterator it = s.find(k);
 	it->v = it->d;
 	systemSettings->setValue(k, it->v);
 }
 
 void Settings::resetAll() {
-	logger->log(tr("Resetting all settings"));
+	logger->log(tr("Resetting all settings"), true);
 	QWriteLocker l(&lock);
 	systemSettings->clear();
-	QHash<QString, Setting>::iterator it;
+	QHash<QByteArray, Setting>::iterator it;
 	for (it = s.begin(); it != s.end(); ++it) {
 		it->v = it->d;
 		systemSettings->setValue(it.key(), it->d);
@@ -120,8 +123,17 @@ void Settings::resetAll() {
 	systemSettings->sync();
 }
 
+void Settings::saveAll() {
+	QWriteLocker l(&lock);
+	QHash<QByteArray, Setting>::iterator it;
+	for (it = s.begin(); it != s.end(); ++it) {
+		systemSettings->setValue(it.key(), it->v);
+	}
+	systemSettings->sync();
+}
+
 QList<Settings::SetEnt> Settings::enumerateSettings() const {
-	SettingsBuilder b;
+	SettingsFactory b;
 	
 	b.add("SettingsResetOn", tr("The date of last full settings reset"),
 		  QDateTime::currentDateTime(), QMetaType::QDateTime);
@@ -151,7 +163,7 @@ QList<Settings::SetEnt> Settings::enumerateSettings() const {
 	
 	b.enterGroup(SG_TIME);
 	b.add("Timezone", tr("The local timezone"),
-		  QTimeZone::systemTimeZoneId(), QMetaType::QString);
+		  QTimeZone::systemTimeZoneId(), QMetaType::QByteArray);
 	b.add("IgnoreDST", tr("Whether to ignore daylight savings time"),
 		  true, QMetaType::Bool);
 	b.add("ForceUTC", tr("Whether to force the use of UTC"),
@@ -168,8 +180,8 @@ QList<Settings::SetEnt> Settings::enumerateSettings() const {
 	return b.list;
 }
 
-inline QString Settings::getKey(const QString &subKey, const QString &group) const {
+inline QByteArray Settings::getKey(const QByteArray &subKey, const QByteArray &group) const {
 	if (group.isNull()) return subKey;
-	QString key(group);
+	QByteArray key(group);
 	return key.append("/").append(subKey);
 }

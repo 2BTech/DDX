@@ -21,12 +21,14 @@
 
 #include <QObject>
 #include <QMessageLogContext>
+#include <QDateTime>
 #include <QString>
 #include <QTextStream>
 #include <QQueue>
 #include <QMutex>
 #include <QMutexLocker>
 #include <QPointer>
+#include "constants.h"
 
 class Daemon;
 
@@ -57,8 +59,8 @@ public:
 	 * 
 	 * Because Qt's internal logging functions require logging to be tied to a
 	 * global function, the Logger class is simplest to implement as a
-	 * singleton.  For this reason, no public constructor is given.  This should
-	 * be how components gain access to the logging system.
+	 * singleton.  No public constructor is given.  This should be how
+	 * components gain access to the logging system.
 	 * 
 	 * This function is thread-safe.
 	 */
@@ -82,31 +84,29 @@ public:
 	 */
 	void log(const QString &msg, bool isAlert = false);
 	
-	/*!
-	 * \brief Send a high-level message to the user
-	 * \param msg The message
-	 * 
-	 * Convenience wrapper around log().  This funciton is thread-safe.
-	 */
-	void alert(const QString &msg) {log(msg, true);}
-	
 signals:
 	
 public slots:
 	
 private:
 	
-	struct Entry {
-		Entry(const QString &msg, bool isAlert) {
-			this->msg = msg;
+	struct LogEntry {
+		LogEntry(const QString &msg, bool isAlert) {
+			this->msg = msg.toUtf8();
 			this->isAlert = isAlert;
+			time = QDateTime::currentDateTime();
+			timestamp = time.toString(LOG_TIMESTAMP_FORMAT).toUtf8();
 		}
-		QString msg;
-		bool isAlert;
+		QByteArray msg;  //!< The UTF-8 encoded message
+		bool isAlert;  //!< Whether this is destined for the user
+		QDateTime time;  //!< The time this log event was recorded
+		QByteArray timestamp;  //!< A string version of LogEntry#time based on LOG_TIMESTAMP_FORMAT
 	};
 	
+	//! Locks Logger::Logger to prevent racing the singleton
 	static QMutex constructionLock;
 	
+	//! Daemon handle (set by Daemon::Daemon)
 	QPointer<Daemon> daemon;
 	
 	//! stdout wrapper used for logging
@@ -115,18 +115,22 @@ private:
 	//! stderr wrapper used for logging
 	QTextStream *serr;
 	
-	QQueue<Entry> q;
+	//! Output stream lock
+	QMutex sLock;
 	
+	//! The log queue
+	QQueue<LogEntry> q;
+	
+	//! Locks the log queue
 	QMutex qLock;
 	
+	//! Private, thread-safe constructor for singleton instantiation
 	Logger();
 	
+	//! For use by Qt's internal messages only
 	void handleMsg(QtMsgType t, const QMessageLogContext &c, const QString &m);
+	
 	friend void globalHandleMessage(QtMsgType t, const QMessageLogContext &c, const QString &m);
-	
-	void process();
-	
-	
 };
 
 #endif // LOGGER_H
