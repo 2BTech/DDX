@@ -67,8 +67,6 @@ public:
 	
 	void releaseUnitManager();
 	
-	Settings *getSettings() const {return settings;}
-	
 	/*!
 	 * \brief Obtain the current date and time
 	 * \return The current time in DDX standard form
@@ -80,6 +78,8 @@ public:
 	QDateTime getTime() const;
 	
 	const QTimeZone *getTimezone() const {return &tz;}
+	
+	Settings *getSettings() const {return settings;}
 	
 	/*!
 	 * \brief Compare a version string with this application's version

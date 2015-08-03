@@ -135,7 +135,7 @@ private:
 	 * If this assert is failing, define `LIST_SETTINGS_STARTUP` to show which
 	 * entry causes the assertion fail.
 	 */
-	QList<SetEnt> enumerateSettings() const;
+	QList<SetEnt> registerSettings() const;
 	
 	//! Builds a hash key from a setting name and group
 	inline QByteArray getKey(const QByteArray &subKey, const QByteArray &group) const;

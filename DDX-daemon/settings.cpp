@@ -24,7 +24,7 @@ Settings::Settings(Daemon *parent) : QObject(parent) {
 	// Initialize
 	logger = Logger::get();
 	systemSettings = new QSettings(APP_AUTHOR_FULL, APP_NAME_SHORT, this);
-	QList<SetEnt> loaded = enumerateSettings();
+	QList<SetEnt> loaded = registerSettings();
 	foreach (const SetEnt &set, loaded) {
 #ifdef LIST_SETTINGS_STARTUP
 		logger->log(QString("Found setting: ").append(set.key));
@@ -132,7 +132,7 @@ void Settings::saveAll() {
 	systemSettings->sync();
 }
 
-QList<Settings::SetEnt> Settings::enumerateSettings() const {
+QList<Settings::SetEnt> Settings::registerSettings() const {
 	SettingsFactory b;
 	
 	b.add("SettingsResetOn", tr("The date of last full settings reset"),
