@@ -82,7 +82,7 @@ All dates and times are formatted according to [ISO 8601](http://www.iso.org/iso
 
 Type|Description|Format
 ---|---|---
-`TimeUtc`|The ISO 8601 format for UTC|`YYYY-MM-DDTHH:mm:ssZ`
+`UtcTime`|The ISO 8601 format for UTC|`YYYY-MM-DDTHH:mm:ssZ`
 
 
 ### `ClientType` Enumeration
@@ -287,7 +287,7 @@ Params:
 Name|Info|Type
 ---|---|---
 `Message`|The message|string
-`Time`|Full time (without timezone)|`Time`
+`Time`|The time the message was sent|`UtcTime`
 `IsAlert`|Whether this is destined for the user or for logging only|bool
 
 ### Global request: `setLogFilters`

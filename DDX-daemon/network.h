@@ -45,15 +45,24 @@ public:
 	};
 	
 	struct Connection {
+		Connection(QTcpSocket *socket, bool inbound) {
+			s = socket;
+			this->inbound = inbound;
+		}
+		~Connection() {
+			delete s;
+		}
 		QTcpSocket *s;
-		QString cid;
-		QString name;
-		QString locale;
+		QByteArray cid;
+		QByteArray locale;
 		bool inbound;
 		//QTimeZone tz;
 		// If necessary:
 		//int8_t p[sizeof(Network::PrivConnInfo)];
 	};
+	
+	typedef QHash<QByteArray, Connection*> ConHash;
+	typedef QList<Connection*> ConList;
 	
 	explicit Network(Daemon *daemon);
 	
@@ -91,15 +100,15 @@ private:
 	
 	Settings *settings;
 	
-	QHash<QString, QAbstractSocket*> sockets;
-	
-	QList<QAbstractSocket*> ur_sockets;
+	QHash<QTcpSocket*, Connection> cons;
 	
 	Daemon *d;
 	
 	QTcpServer *server;
 	
 	void log(const QString msg) const;
+	
+	QByteArray generateCid(const QByteArray &base) const;
 	
 };
 

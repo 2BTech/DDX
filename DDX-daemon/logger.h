@@ -94,7 +94,7 @@ private:
 	struct LogEntry {
 		LogEntry(const QString &msg, bool isAlert) {
 			time = QDateTime::currentDateTimeUtc();
-			this->msg = msg.toUtf8();
+			this->msg = msg;
 			this->isAlert = isAlert;
 		}
 		QJsonObject toNetwork() {

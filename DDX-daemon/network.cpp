@@ -41,9 +41,12 @@ Network::~Network() {
 	// shutdown() if possible)
 	server->close();
 	// These send disconnect signals - this needs to be handled.
-	qDeleteAll(sockets);
-	qDeleteAll(ur_sockets);
-	// server will be automatically deleted
+	QHash<QTcpSocket*, Connection>::const_iterator it;
+	for (it = cons.constBegin(); it != cons.constEnd(); ++it) {
+		if (it->s->canReadLine()) {
+			log("Can read data");
+		}
+	}
 }
 
 void Network::init() {
@@ -83,13 +86,13 @@ void Network::responseError(const Connection *c, int code, const QString &msg) {
 void Network::handleData() {
 	// TODO:  Add buffer size checks; if they exceed value (setting),
 	// clear the buffer and send an error
-	QHash<QString, QAbstractSocket*>::const_iterator it;
-	for (it = sockets.constBegin(); it != sockets.constEnd(); ++it) {
-		if ((*it)->canReadLine()) {
+	QHash<QTcpSocket*, Connection>::const_iterator it;
+	for (it = cons.constBegin(); it != cons.constEnd(); ++it) {
+		if (it->s->canReadLine()) {
 			log("Can read data");
 		}
 	}
-	for (int i = 0; i < ur_sockets.size(); i++) {
+	/*for (int i = 0; i < ur_sockets.size(); i++) {
 		if (ur_sockets.at(i)->canReadLine()) {
 			QString line = QString(ur_sockets.at(i)->readLine()).trimmed();
 			log(QString("Device said '%1'").arg(line));
@@ -98,7 +101,7 @@ void Network::handleData() {
 				return;
 			}
 		}
-	}
+	}*/
 }
 
 void Network::handleConnection() {
@@ -111,37 +114,39 @@ void Network::handleConnection() {
 		if (s->peerAddress() != QHostAddress(QHostAddress::LocalHost)) {
 			log("Connection not from ipv4 localhost");
 		}
-		ur_sockets.append(s);
 		// QTcpServer::error is overloaded, so we need to use this nasty thing
 		connect(s, static_cast<void(QTcpSocket::*)(QAbstractSocket::SocketError)>(&QTcpSocket::error),
 				this, &Network::handleNetworkError);
 		connect(s, &QTcpSocket::disconnected, this, &Network::handleDisconnection);
 		connect(s, &QTcpSocket::readyRead, this, &Network::handleData);
-		if (s->bytesAvailable()) handleData();
+		cons.insert(s, Connection(s, true));
+		s->setParent(this);
+		// TODO:  Is this necessary?
+		//if (s->bytesAvailable()) handleData();
 	}
 	log(tr("Server has %1 children").arg(QString::number(server->children().size())));
 }
 
 void Network::handleDisconnection() {
-	QHash<QString, QAbstractSocket*>::iterator it = sockets.begin();
-	QAbstractSocket *s;
-	while (it != sockets.end()) {
-		if ((*it)->state() == QAbstractSocket::UnconnectedState) {
-			s = *it;
-			it = sockets.erase(it);
+	QHash<QTcpSocket*, Connection>::iterator it = cons.begin();
+	QTcpSocket *s;
+	while (it != cons.end()) {
+		if (it->s->state() == QAbstractSocket::UnconnectedState) {
+			s = it->s;
+			it = cons.erase(it);
 			s->deleteLater();
 		}
 		else ++it;
 	}
-	for (int i = 0; i < ur_sockets.size();) {
+	/*for (int i = 0; i < ur_sockets.size();) {
 		if (ur_sockets.at(i)->state() == QAbstractSocket::UnconnectedState ) {
 			s = ur_sockets.at(i);
 			ur_sockets.removeAt(i);
 			s->deleteLater();
 		}
 		else i++;
-	}
-	log(QString("Disconnected; there are %1 active connections").arg(QString::number(sockets.size()+ur_sockets.size())));
+	}*/
+	log(QString("Disconnected; there are %1 active connections").arg(QString::number(cons.size())));
 	//log("Disconnect");
 	// This should loop through all active RPC requests and return an error
 	// for any that relied on the connection that failed
@@ -160,4 +165,18 @@ void Network::log(const QString msg) const {
 	QString out("network: ");
 	out.append(msg);
 	logger->log(msg);
+}
+
+QByteArray Network::generateCid(const QByteArray &base) const {
+	int i = 0;
+	QByteArray cid;
+	do {
+		i++;
+		cid = base;
+		cid.append(QByteArray::number(i));
+	}
+	while (false);
+	// TODO!!!!!!!!!!
+	//while (cons.contains(cid));
+	return cid;
 }
