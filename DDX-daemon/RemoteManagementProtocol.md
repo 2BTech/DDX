@@ -84,14 +84,13 @@ Type|Description|Format
 ---|---|---
 `UtcTime`|The ISO 8601 format for UTC|`YYYY-MM-DDTHH:mm:ssZ`
 
-
-### `ClientType` Enumeration
+### `ClientRoles` Flags
 Name|Value|Description
 ---|---|---
-`Daemon`|0|A DDX daemon capable of executing paths
-`Manager`|1|Usually a GUI instance
-`Vertex`|2|A data responder or producer which does not run paths
-`Listener`|3|A destination for loglines and alerts
+`Daemon`|0x1|Can execute paths
+`Manager`|0x2|An interface for a device which executes paths
+`Vertex`|0x4|A data responder or producer which does not execute paths
+`Listener`|0x8|A destination for loglines and alerts
 
 ### `PathState`	Enumeration
 Name|Value|Description
@@ -108,11 +107,13 @@ All errors explicitly specified by the JSON-RPC 2.0 specification can be used by
 the DDX.  Some of these errors, such as parse error and invalid params, may include
 more information in the `data` field.  The following server errors are also defined:
 
-Code|Message|Meaning|Macro
+Code|Message|Macro
 ---|---|---|---
--32000|Access denied|The client's ClientType is not sufficient for the request|E_ACCESS_DENIED
--32001|Parameters not an object|The param element is not a JSON object|E_PARAMETER_OBJECT
--32002|Not supported|The requested functionality is not supported by the server (e.g., path management on a GUI)|E_NOT_SUPPORTED
+-32000|Access denied: Client's roles are not sufficient for the request|E_ACCESS_DENIED
+-32001|Parameters not a JSON object|E_PARAMETER_OBJECT
+-32002|Not supported|E_NOT_SUPPORTED
+-32003|An error occurred|E_RPC_GENERAL
+-32004|Params contain invalid type|E_TYPE_MISMATCH
 
 ## Registration & Disconnection
 
@@ -126,7 +127,7 @@ Name|Info|Type
 `DDX_version`|The client's DDX version in the format "n.n"|string
 `DDX_author`|The client's DDX author|string
 `CID`|The client-given, server-taken connection ID; see "Connection IDs"|string
-`ClientType`|The client's type|`ClientType`
+`ClientRoles`|The roles which this client fills|`ClientRoles`
 `Name`|The client's (usually) self-designated name|string
 `Timezone`|The client's timezone as TZdb string|string
 `DaylightSavingsEnabled`|Whether the client's timezone enables DST. _Note_: devices should ignore DST by default|bool
@@ -158,9 +159,9 @@ Code|Message|Macro
 ---|---|---
 500|Server does not implement network communication (for future use)|E_NETWORK_DISABLED
 501|Server is not compatible with the client version|E_VERSION_FORBIDDEN
-502|Server does not allow external management|E_NO_OUTSIDE_MANAGEMENT
+502|Server does not allow external connections|E_NO_EXTERNAL_CONNECTIONS
 503|Address forbidden|E_ADDRESS_FORBIDDEN
-504|Specified client type is explicitly forbidden|E_CLIENT_TYPE_FORBIDDEN
+504|A specified client role is explicitly forbidden|E_CLIENT_TYPE_FORBIDDEN
 505|Version unreadable|E_VERSION_UNREADABLE
 
 
@@ -184,7 +185,10 @@ Name|Value|Description
 `Restarting`|2|The disconnecting member is restarting and will be back shortly
 `FatalError`|3|The disconnecting member experienced a fatal error and is shutting down
 `ConnectionTerminated`|4|The connection was explicitly terminated
-
+`RegistrationTimeout`|5|The connection was alive too long without registering
+`BufferOverflow`|6|The connection sent an object too long to be handled
+`NoExternal`|E_NO_EXTERNAL_CONNECTIONS|External connections are disallowed
+`AddressForbidden`|E_ADDRESS_FORBIDDEN|The address is explicitly forbidden
 
 ## Path Management
 
@@ -355,3 +359,14 @@ for specific notifications and requests.  Each of these has a bit of overhead bu
 onto it to help direct incoming objects.
 
 ### DataBeacon Module
+
+## Appendix
+
+### Non-RPC Errors
+These are errors which are not part of the DDX-RPC protocol but are included here
+for auto-generation convenience and because they may at some point be a part of the RPC.
+
+Code|Message|Macro
+---|---|---
+10|DDX settings are for higher version or corrupted|E_SETTINGS_VERSION
+20|A TCP server could not be established|E_TCP_SERVER_FAILED

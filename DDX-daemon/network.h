@@ -24,7 +24,10 @@
 #include <QTcpSocket>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QJsonValue>
 #include <QtAlgorithms>
+#include <QTimer>
+#include <QNetworkAccessManager>
 #include "constants.h"
 #include "daemon.h"
 
@@ -36,26 +39,43 @@ class Network : public QObject
 	Q_OBJECT
 public:
 	
+	enum ClientRoles {
+		DaemonRole = 0x1,
+		ManagerRole = 0x2,
+		VertexRole = 0x4,
+		ListenerRole = 0x8
+	};
 	enum DisconnectionReason {
 		UnknownReason,  //!< Unknown disconnection
 		ShuttingDown,  //!< The disconnecting member is shutting down by request
 		Restarting,  //!< The disconnecting member is restarting and will be back shortly
 		FatalError,  //!< The disconnecting member experienced a fatal error and is shutting down
-		ConnectionTerminated  //!< The connection was explicitly terminated
+		ConnectionTerminated,  //!< The connection was explicitly terminated
+		RegistrationTimeout,  //!< The connection was alive too long without registering
+		BufferOverflow,  //!< The connection sent an object too long to be handled
+		NoExternal = E_NO_EXTERNAL_CONNECTIONS, //!< External connections are disallowed
+		AddressForbidden = E_ADDRESS_FORBIDDEN //!< The address is explicitly forbidden
 	};
 	
 	struct Connection {
-		Connection(QTcpSocket *socket, bool inbound) {
+		Connection(QTcpSocket *socket, bool inbound, bool v6) {
+			connectTime = QDateTime::currentMSecsSinceEpoch();
 			s = socket;
 			this->inbound = inbound;
+			this->v6 = v6;
 		}
+		bool valid() {return !cid.isNull();}
+		// TODO:  See if this even works
 		~Connection() {
 			delete s;
 		}
 		QTcpSocket *s;
 		QByteArray cid;
+		QByteArray client_cid;
 		QByteArray locale;
+		qint64 connectTime;
 		bool inbound;
+		bool v6;
 		//QTimeZone tz;
 		// If necessary:
 		//int8_t p[sizeof(Network::PrivConnInfo)];
@@ -109,6 +129,18 @@ private:
 	void log(const QString msg) const;
 	
 	QByteArray generateCid(const QByteArray &base) const;
+	
+	QNetworkAccessManager nam;
+	
+	const QJsonObject rpc_seed{{"jsonrpc","2.0"}};
+	
+	QJsonObject rpc_newNotification(const QString &method, const QJsonObject *params = 0) const;
+	
+	QJsonObject rpc_newRequest(int id, const QString &method, const QJsonObject *params = 0) const;
+	
+	QJsonObject rpc_newError(int id, int code, const QString &msg, const QJsonValue *data = 0) const;
+	
+	void registerTimeout();
 	
 };
 

@@ -42,6 +42,10 @@
 #endif
 #define KEEP_UNITMANAGER
 
+// NETWORK
+#define REGISTRATION_TIMEOUT 30000  //!< Time until an unregistered connection is terminated in msecs
+#define REGISTRATION_TIMEOUT_TIMER (REGISTRATION_TIMEOUT+5000)
+
 // LOGGING
 // Comment to disable timestamping on stdout
 #define LOG_STREAM_TIMESTAMP "yyyy-MM-dd HH:mm:ss.zzz"
@@ -67,16 +71,28 @@
 #define MAX_SOCKET_BUFFER_SIZE		104857600  // 104857600 = 100mb
 
 // ERROR CODES
-#define E_SETTINGS_VERSION		10
-#define E_TCP_SERVER_FAILED		20
+/* Note:  Error codes are automatically generated from RemoteManagementProtocol.md
+ * with "(-?[0-9]+)\|([^|\r\n]+)\|(E_[A-Z0-9_\-]+)" -> "#define $3 $1 //!< $2" */
+#define E_ACCESS_DENIED -32000 //!< Access denied: Client's roles are not sufficient for the request
+#define E_PARAMETER_OBJECT -32001 //!< Parameters not a JSON object
+#define E_NOT_SUPPORTED -32002 //!< Not supported
+#define E_RPC_GENERAL -32003 //!< An error occurred
+#define E_TYPE_MISMATCH -32004 //!< Params contain invalid type
+#define E_NETWORK_DISABLED 500 //!< Server does not implement network communication (for future use)
+#define E_VERSION_FORBIDDEN 501 //!< Server is not compatible with the client version
+#define E_NO_EXTERNAL_CONNECTIONS 502 //!< Server does not allow external connections
+#define E_ADDRESS_FORBIDDEN 503 //!< Address forbidden
+#define E_CLIENT_TYPE_FORBIDDEN 504 //!< A specified client role is explicitly forbidden
+#define E_VERSION_UNREADABLE 505 //!< Version unreadable
+#define E_PATH_NONEXISTENT 200 //!< Path does not exist
+#define E_SETTING_NONEXISTENT 120 //!< Setting does not exist
+#define E_SETTING_CONVERT 121 //!< Setting could not be converted to target type
+#define E_SETTING_DECODE 122 //!< Setting could not be base-64 or JSON decoded
+#define E_SETTING_DENIED 123 //!< Setting outside of requesting module
+#define E_SETTING_SAVEREQUIRED 124 //!< Setting reset requests must be saved
+#define E_SETTINGS_VERSION 10 //!< DDX settings are for higher version or corrupted
+#define E_TCP_SERVER_FAILED 20 //!< A TCP server could not be established
 
-#define E_ACCESS_DENIED			100
-
-#define E_NETWORK_DISABLED		500
-#define E_VERSION_FORBIDDEN		501
-#define E_NO_OUTSIDE_MANAGEMENT	502// Overrides ADDRESS_FORBIDDEN
-#define E_ADDRESS_FORBIDDEN		503
-#define E_CLIENT_TYPE_FORBIDDEN	504
 
 
 #endif // CONSTANTS_H

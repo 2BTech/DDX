@@ -104,7 +104,7 @@ private:
 			o.insert("IsAlert", isAlert);
 			return o;
 		}
-		QString msg;  //!< The UTF-8 encoded message
+		QString msg;  //!< The message
 		bool isAlert;  //!< Whether this is destined for the user
 		QDateTime time;  //!< The time this log event was recorded (in UTC)
 	};

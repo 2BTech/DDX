@@ -58,34 +58,36 @@ void Daemon::init() {
 	// Do locale stuff here?  At least before timezone stuff
 	
 	// Determine timezone for DDX time
-	QTimeZone utc = QTimeZone(0);
-	if (settings->v("ForceUTC", SG_TIME).toBool()) tz = utc;
-	else {
-		QByteArray requestedTzId = settings->v("Timezone", SG_TIME).toByteArray();
-		if (requestedTzId != QTimeZone::systemTimeZoneId())
-			logger->log(tr("System timezone '%1' does not match requested timezone '%2'; "
-						   "using requested")
-						.arg(QString(QTimeZone::systemTimeZoneId()), QString(requestedTzId)));
-		
-		QTimeZone requestedTz = QTimeZone(requestedTzId);
-		if (settings->v("IgnoreDST", SG_TIME).toBool()) {
-			int tzOffset = requestedTz.standardTimeOffset(QDateTime::currentDateTime());
-			tz = QTimeZone(tzOffset);
-		}
+	{
+		QTimeZone utc = QTimeZone(0);
+		if (settings->v("ForceUTC", SG_TIME).toBool()) tz = utc;
 		else {
-			if (requestedTz.hasDaylightTime()) logger->log
-				(tr("Note: the DDX is not ignoring DST. Time changes will not be reported "
-					"and may cause undefined behavior."));
-			tz = requestedTz;
+			QByteArray requestedTzId = settings->v("Timezone", SG_TIME).toByteArray();
+			if (requestedTzId != QTimeZone::systemTimeZoneId())
+				logger->log(tr("System timezone '%1' does not match requested timezone '%2'; "
+							   "using requested")
+							.arg(QString(QTimeZone::systemTimeZoneId()), QString(requestedTzId)));
+			
+			QTimeZone requestedTz = QTimeZone(requestedTzId);
+			if (settings->v("IgnoreDST", SG_TIME).toBool()) {
+				int tzOffset = requestedTz.standardTimeOffset(QDateTime::currentDateTime());
+				tz = QTimeZone(tzOffset);
+			}
+			else {
+				if (requestedTz.hasDaylightTime()) logger->log
+					(tr("Note: the DDX is not ignoring DST. Time changes will not be reported "
+						"and may cause undefined behavior."));
+				tz = requestedTz;
+			}
+			if ( ! (requestedTz.isValid() && tz.isValid())) {
+				logger->log(tr("The timezone could not be established"));
+				tz = utc;
+			}
 		}
-		if ( ! (requestedTz.isValid() && tz.isValid())) {
-			logger->log(tr("The timezone could not be established"));
-			tz = utc;
-		}
+		logger->log(tr("Using timezone %1").arg(
+			tz.displayName(QTimeZone::GenericTime, QTimeZone::DefaultName)));
+		logger->log(tr("Current DDX time %1").arg(getTime().toString(Qt::ISODate)));
 	}
-	logger->log(tr("Using timezone %1").arg(
-		tz.displayName(QTimeZone::GenericTime, QTimeZone::DefaultName)));
-	logger->log(tr("Current DDX time %1").arg(getTime().toString(Qt::ISODate)));
 	
 	/*! ### Loading Settings
 	 * Settings are set to their default values at startup when one of these

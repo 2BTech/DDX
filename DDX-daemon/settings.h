@@ -101,7 +101,7 @@ private:
 			list.append(se);
 		}
 		void enterGroup(QByteArray group) {
-			if (group.isNull()) currentGroup.clear();
+			if (group.isEmpty()) currentGroup.clear();
 			else currentGroup = group.append("/");
 		}
 		QByteArray currentGroup;

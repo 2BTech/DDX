@@ -79,7 +79,7 @@ void ExampleInlet::cleanup() {
 }
 
 void ExampleInlet::trigger() {
-	int n = abs(rg()) % 100;
+	int n = abs((int) rg()) % 100;
 	if (n <= chance) {
 		if (outputColumns.size() == 3) {
 			inColumn = insertColumn("Inserted",2);

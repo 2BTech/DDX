@@ -92,7 +92,7 @@ QByteArray* Module::insertColumn(const QString name, int index) {
 }
 
 void Module::removeColumn(const Column *c) {
-	// TODO:  Test whether removeAll even works with pointers
+	// TODO:  Should this be removeOne?
 	outputColumns.removeAll((Column*) c);
 	if (c->p == this) {
 		newColumns->removeAll((Column*) c);
@@ -106,7 +106,6 @@ void Module::terminate(const QString msg) {
 }
 
 inline void Module::emptyNewColumns() {
-	for (int i = 0; i < newColumns->size(); ++i)
-		delete newColumns->at(i);
+	qDeleteAll(*newColumns);
 	newColumns->clear();
 }

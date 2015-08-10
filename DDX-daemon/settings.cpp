@@ -57,14 +57,14 @@ Settings::Settings(Daemon *parent) : QObject(parent) {
 	for (QHash<QByteArray,Setting>::iterator it = s.begin(); it != s.end(); ++it) {
 		if (systemSettings->contains(it.key())) {
 			QVariant value = systemSettings->value(it.key());
-			if ( ! value.canConvert(it->t)) {
+			if ( ! value.convert(it->t)) {
 				logger->log(tr("Saved setting '%1' is %2, not %3; keeping default")
 					.arg(it.key(), QMetaType::typeName(value.type()), QMetaType::typeName(it->t)));
 				continue;
 			}
 			it->v = value;
 		}
-		// Todo:  Live-load command-line arguments ("-s'key':'value'")
+		// Todo:  Live-load command-line arguments ('-s"key":"value"')
 	}
 }
 
@@ -174,7 +174,7 @@ QList<Settings::SetEnt> Settings::registerSettings() const {
 		  4388, QMetaType::Int);
 	b.add("UseIPv6Localhost", tr("Whether to use IPv6 localhost rather than IPv4"),
 		  false, QMetaType::Bool);
-	b.add("AllowExternalManagement", tr("Whether to allow non-local GUI to manage the daemon"),
+	b.add("AllowExternal", tr("Whether to allow foreign devices to connect"),
 		  false, QMetaType::Bool);
 	
 	return b.list;
