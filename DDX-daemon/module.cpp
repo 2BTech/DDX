@@ -46,10 +46,6 @@ void Module::handleReconfigure() {
 	alert("DDX bug: handleReconfigure() not reimplemented!");
 }
 
-void Module::process() {
-	alert("DDX bug: process() not reimplemented!");
-}
-
 void Module::cleanup() {
 }
 

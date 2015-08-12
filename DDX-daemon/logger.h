@@ -113,7 +113,7 @@ private:
 	static QMutex constructionLock;
 	
 	//! Daemon handle (set by Daemon::Daemon)
-	QPointer<Daemon> daemon;
+	QPointer<Daemon> d;
 	
 	//! stdout wrapper used for logging
 	QTextStream *sout;

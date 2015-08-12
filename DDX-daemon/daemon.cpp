@@ -26,12 +26,12 @@
 
 Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	logReady = false;
-	logger = Logger::get();
-	logger->daemon = this;
+	lg = Logger::get();
+	lg->d = this;
 	// Load command line arguments
 	args = parent->arguments();
 	// Initialize other variables
-	settings = new Settings(this);
+	sg = new Settings(this);
 	umRefCount = 0;
 	unitManager = 0;
 	nextRequestId = 1;
@@ -49,7 +49,7 @@ Daemon::~Daemon() {
 
 void Daemon::init() {
 	
-	if (QString::compare(qVersion(), QT_VERSION_STR) != 0) logger->log
+	if (QString::compare(qVersion(), QT_VERSION_STR) != 0) lg->log
 		(tr("The daemon was compiled to use Qt %1, but it is running on a system "
 			"with Qt %2. It will continue to run, but there may be unexpected "
 			"side effects. If problems occur, install the correct version of "
@@ -60,33 +60,33 @@ void Daemon::init() {
 	// Determine timezone for DDX time
 	{
 		QTimeZone utc = QTimeZone(0);
-		if (settings->v("ForceUTC", SG_TIME).toBool()) tz = utc;
+		if (sg->v("ForceUTC", SG_TIME).toBool()) tz = utc;
 		else {
-			QByteArray requestedTzId = settings->v("Timezone", SG_TIME).toByteArray();
+			QByteArray requestedTzId = sg->v("Timezone", SG_TIME).toByteArray();
 			if (requestedTzId != QTimeZone::systemTimeZoneId())
-				logger->log(tr("System timezone '%1' does not match requested timezone '%2'; "
+				lg->log(tr("System timezone '%1' does not match requested timezone '%2'; "
 							   "using requested")
 							.arg(QString(QTimeZone::systemTimeZoneId()), QString(requestedTzId)));
 			
 			QTimeZone requestedTz = QTimeZone(requestedTzId);
-			if (settings->v("IgnoreDST", SG_TIME).toBool()) {
+			if (sg->v("IgnoreDST", SG_TIME).toBool()) {
 				int tzOffset = requestedTz.standardTimeOffset(QDateTime::currentDateTime());
 				tz = QTimeZone(tzOffset);
 			}
 			else {
-				if (requestedTz.hasDaylightTime()) logger->log
+				if (requestedTz.hasDaylightTime()) lg->log
 					(tr("Note: the DDX is not ignoring DST. Time changes will not be reported "
 						"and may cause undefined behavior."));
 				tz = requestedTz;
 			}
 			if ( ! (requestedTz.isValid() && tz.isValid())) {
-				logger->log(tr("The timezone could not be established"));
+				lg->log(tr("The timezone could not be established"));
 				tz = utc;
 			}
 		}
-		logger->log(tr("Using timezone %1").arg(
+		lg->log(tr("Using timezone %1").arg(
 			tz.displayName(QTimeZone::GenericTime, QTimeZone::DefaultName)));
-		logger->log(tr("Current DDX time %1").arg(getTime().toString(Qt::ISODate)));
+		lg->log(tr("Current DDX time %1").arg(getTime().toString(Qt::ISODate)));
 	}
 	
 	/*! ### Loading Settings
@@ -104,10 +104,10 @@ void Daemon::init() {
 	
 
 	//! ### Network Manager Initialization
-	logger->log("STARTING");
+	lg->log("STARTING");
 	n = new Network(this);
-	logger->log("finished");
-	logger->log(QString("Queue length: %1").arg(logger->q.size()));
+	lg->log("finished");
+	lg->log(QString("Queue length: %1").arg(lg->q.size()));
 	
 	// Determine whether log should be saved to file
 	//if (args.contains("-l") || settings->value("logging/AlwaysLogToFile").toBool()) {
@@ -136,7 +136,7 @@ void Daemon::testPath(const QByteArray &scheme, int log) {
 }
 
 void Daemon::addPath(const QByteArray &name, int log) {
-	this->logger->log("fail");
+	this->lg->log("fail");
 	UnitManager *um = getUnitManager();
 	QByteArray scheme = um->getPathScheme(name);
 	// TODO add error checking for scheme not found
@@ -159,7 +159,7 @@ void Daemon::request(QJsonObject params, QString dest, bool response) {
 		 * call is queued, so Daemon data elements should be safe to access. */
 		int id = nextRequestId++;
 		if (nextRequestId == INT_MAX) {
-			logger->log("RPC ID value maxed; resetting.  May cause undefined behavior.");
+			lg->log("RPC ID value maxed; resetting.  May cause undefined behavior.");
 			nextRequestId = 100;  // Some random relatively low value
 			/* TODO:  In future versions, it may be better to trigger and daemon
 			 * restart when this happens. */
@@ -176,8 +176,8 @@ void Daemon::quit(int returnCode) {
 	quitting = true;
 	// TODO: make this call finishing stuff
 	n->shutdown();  // May take a while
-	if (returnCode) logger->log(tr("Terminating (%1)").arg(returnCode));
-	else logger->log(tr("Quitting"));
+	if (returnCode) lg->log(tr("Terminating (%1)").arg(returnCode));
+	else lg->log(tr("Quitting"));
 	qApp->exit(returnCode);
 }
 
@@ -230,7 +230,7 @@ int Daemon::versionCompare(QString testVersion) {
 }
 
 void Daemon::loadDefaultSettings() {
-	logger->log("Loading default settings");
+	lg->log("Loading default settings");
 	/*settings->clear();
 	settings->setValue("SettingsResetOn",
 					   QDateTime::currentDateTime().toString("yyyy/MM/dd HH:mm:ss"));

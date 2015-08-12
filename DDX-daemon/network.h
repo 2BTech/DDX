@@ -59,22 +59,13 @@ public:
 	
 	struct Connection {
 		Connection(QTcpSocket *socket, bool inbound, bool v6) {
-			connectTime = QDateTime::currentMSecsSinceEpoch();
+			
 			s = socket;
 			this->inbound = inbound;
 			this->v6 = v6;
 		}
-		bool valid() {return !cid.isNull();}
-		// TODO:  See if this even works
-		~Connection() {
-			delete s;
-		}
+		
 		QTcpSocket *s;
-		QByteArray cid;
-		QByteArray client_cid;
-		QByteArray locale;
-		qint64 connectTime;
-		bool inbound;
 		bool v6;
 		//QTimeZone tz;
 		// If necessary:
@@ -116,9 +107,9 @@ private slots:
 	
 private:
 	
-	Logger *logger;
+	Logger *lg;
 	
-	Settings *settings;
+	Settings *sg;
 	
 	QHash<QTcpSocket*, Connection> cons;
 	
@@ -131,16 +122,6 @@ private:
 	QByteArray generateCid(const QByteArray &base) const;
 	
 	QNetworkAccessManager nam;
-	
-	const QJsonObject rpc_seed{{"jsonrpc","2.0"}};
-	
-	QJsonObject rpc_newNotification(const QString &method, const QJsonObject *params = 0) const;
-	
-	QJsonObject rpc_newRequest(int id, const QString &method, const QJsonObject *params = 0) const;
-	
-	QJsonObject rpc_newError(int id, int code, const QString &msg, const QJsonValue *data = 0) const;
-	
-	void registerTimeout();
 	
 };
 

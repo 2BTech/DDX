@@ -134,7 +134,7 @@ public:
 	 * overloading Beacons during a data stream.  Errors should be reported with
 	 * alert().
 	 */
-	virtual void process();
+	virtual void process() = 0;
 	
 	/*!
 	 * \brief Return a JSON tree of settings for this Module

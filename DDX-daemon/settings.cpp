@@ -22,7 +22,7 @@
 
 Settings::Settings(Daemon *parent) : QObject(parent) {
 	// Initialize
-	logger = Logger::get();
+	lg = Logger::get();
 	systemSettings = new QSettings(APP_AUTHOR_FULL, APP_NAME_SHORT, this);
 	QList<SetEnt> loaded = registerSettings();
 	foreach (const SetEnt &set, loaded) {
@@ -40,16 +40,16 @@ Settings::Settings(Daemon *parent) : QObject(parent) {
 	}
 	int vc = Daemon::versionCompare(systemSettings->value("Version").toString());
 	if (vc > 0) {
-		logger->log(tr("Settings are for higher version or corrupted. "
+		lg->log(tr("Settings are for higher version or corrupted. "
 					   "Run latest version or launch daemon with '-reconfigure' "
 					   "option to reset all settings."), true);
 		// TODO:  Quit here
 		parent->quit(E_SETTINGS_VERSION);
 		return;
 	}
-	logger->log(tr("Reloading settings last reset on %1")
+	lg->log(tr("Reloading settings last reset on %1")
 		.arg(s.value("SettingsResetOn").v.toDateTime().toString("yyyy/MM/dd HH:mm:ss")));
-	if (vc < 0) logger->log
+	if (vc < 0) lg->log
 		(tr("Settings are for a previous version of the DDX; some expected "
 			"functionality may not work. Defaults for the current version will "
 			"be used where applicable. Reconfigure from the GUI menu or by "
@@ -58,7 +58,7 @@ Settings::Settings(Daemon *parent) : QObject(parent) {
 		if (systemSettings->contains(it.key())) {
 			QVariant value = systemSettings->value(it.key());
 			if ( ! value.convert(it->t)) {
-				logger->log(tr("Saved setting '%1' is %2, not %3; keeping default")
+				lg->log(tr("Saved setting '%1' is %2, not %3; keeping default")
 					.arg(it.key(), QMetaType::typeName(value.type()), QMetaType::typeName(it->t)));
 				continue;
 			}
@@ -111,7 +111,7 @@ void Settings::reset(const QByteArray &key, const QByteArray &group) {
 }
 
 void Settings::resetAll() {
-	logger->log(tr("Resetting all settings"), true);
+	lg->log(tr("Resetting all settings"), true);
 	QWriteLocker l(&lock);
 	systemSettings->clear();
 	QHash<QByteArray, Setting>::iterator it;

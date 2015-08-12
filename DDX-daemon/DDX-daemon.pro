@@ -52,7 +52,8 @@ SOURCES += main.cpp \
     network.cpp \
     settings.cpp \
     logger.cpp \
-    modules/exampleinlet.cpp
+    modules/exampleinlet.cpp \
+    remdev.cpp
 
 HEADERS += \
     constants.h \
@@ -68,7 +69,8 @@ HEADERS += \
     network.h \
     settings.h \
     logger.h \
-    modules/exampleinlet.h
+    modules/exampleinlet.h \
+    remdev.h
 
 DISTFILES += \
     DaemonCommandLineArguments.txt \

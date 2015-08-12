@@ -79,7 +79,7 @@ public:
 	
 	const QTimeZone *getTimezone() const {return &tz;}
 	
-	Settings *getSettings() const {return settings;}
+	Settings *getSettings() const {return sg;}
 	
 	/*!
 	 * \brief Compare a version string with this application's version
@@ -91,8 +91,6 @@ public:
 	static int versionCompare(QString testVersion);
 	
 	QStringList args;
-	
-	Settings *settings;
 
 signals:
 
@@ -129,7 +127,9 @@ private slots:
 	
 private:
 	
-	Logger *logger;
+	Logger *lg;
+	
+	Settings *sg;
 	
 	bool logReady;
 	

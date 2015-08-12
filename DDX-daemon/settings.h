@@ -109,7 +109,7 @@ private:
 	};
 	
 	//! Logger handle
-	Logger *logger;
+	Logger *lg;
 	
 	//! Maintains persistent storage of settings
 	QSettings *systemSettings;

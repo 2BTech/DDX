@@ -24,8 +24,8 @@ Network::Network(Daemon *daemon) : QObject(0)
 {
 	// Initialization
 	d = daemon;
-	logger = Logger::get();
-	settings = daemon->getSettings();
+	lg = Logger::get();
+	sg = daemon->getSettings();
 	// Connections
 	// Threading
 	QThread *t = new QThread(daemon);
@@ -56,13 +56,13 @@ void Network::init() {
 	// Connections
 	connect(server, &QTcpServer::acceptError, this, &Network::handleNetworkError);
 	connect(server, &QTcpServer::newConnection, this, &Network::handleConnection);
-	int port = settings->v("GUIPort", SG_NETWORK).toInt();
+	int port = sg->v("GUIPort", SG_NETWORK).toInt();
 	// Filter listening addresses
 	QHostAddress a;
-	if (settings->v("AllowExternal", SG_NETWORK).toBool())
+	if (sg->v("AllowExternal", SG_NETWORK).toBool())
 		a = QHostAddress::Any;
 	else {
-		if (settings->v("UseIPv6Localhost", SG_NETWORK).toBool())
+		if (sg->v("UseIPv6Localhost", SG_NETWORK).toBool())
 			a = QHostAddress::LocalHostIPv6;
 		else a = QHostAddress::LocalHost;
 	}
@@ -125,7 +125,7 @@ void Network::handleConnection() {
 		QHostAddress localhost = usingIPv6 ? QHostAddress::LocalHostIPv6 : QHostAddress::LocalHost;
 		bool isLocal = s->peerAddress() == localhost;
 		
-		QTimer::singleShot(REGISTRATION_TIMEOUT_TIMER, Qt::VeryCoarseTimer, this, &Network::registerTimeout);
+		//QTimer::singleShot(REGISTRATION_TIMEOUT_TIMER, Qt::VeryCoarseTimer, this, &RemDev::registerTimeout);
 		
 		// QTcpServer::error is overloaded, so we need to use this nasty thing
 		connect(s, static_cast<void(QTcpSocket::*)(QAbstractSocket::SocketError)>(&QTcpSocket::error),
@@ -176,7 +176,7 @@ void Network::handleNetworkError(QAbstractSocket::SocketError error) {
 void Network::log(const QString msg) const {
 	QString out("network: ");
 	out.append(msg);
-	logger->log(msg);
+	lg->log(msg);
 }
 
 QByteArray Network::generateCid(const QByteArray &base) const {
@@ -191,42 +191,4 @@ QByteArray Network::generateCid(const QByteArray &base) const {
 	// TODO!!!!!!!!!!
 	//while (cons.contains(cid));
 	return cid;
-}
-
-QJsonObject Network::rpc_newNotification(const QString &method, const QJsonObject *params) const {
-	QJsonObject o(rpc_seed);
-	o.insert("method", method);
-	if (params) o.insert("params", *params);
-	return o;
-}
-
-QJsonObject Network::rpc_newRequest(int id, const QString &method, const QJsonObject *params) const {
-	QJsonObject o = rpc_newNotification(method, params);
-	if (id) o.insert("id", id);
-	else o.insert("id", QJsonValue());
-	return o;
-}
-
-QJsonObject Network::rpc_newError(int id, int code, const QString &msg, const QJsonValue *data) const {
-	QJsonObject e;
-	e.insert("code", code);
-	e.insert("message", msg);
-	if (data) e.insert("data", *data);
-	QJsonObject o(rpc_seed);
-	o.insert("error", e);
-	if (id) o.insert("id", id);
-	else o.insert("id", QJsonValue());
-	return o;
-}
-
-void Network::registerTimeout() {
-	// TODO: put this in a loop
-	log("This function is horribly, horribly incomplete and about to crash");
-	Connection *c;
-	if ( ! c->valid()) {
-		if ((c->connectTime+REGISTRATION_TIMEOUT) < QDateTime::currentMSecsSinceEpoch()) {
-			// Disconnect because of registration timeout
-			// TODO
-		}
-	}
 }
