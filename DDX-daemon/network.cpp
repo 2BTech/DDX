@@ -41,9 +41,9 @@ Network::~Network() {
 	// shutdown() if possible)
 	server->close();
 	// These send disconnect signals - this needs to be handled.
-	QHash<QTcpSocket*, Connection>::const_iterator it;
+	QHash<QTcpSocket*, NetDev*>::const_iterator it;
 	for (it = cons.constBegin(); it != cons.constEnd(); ++it) {
-		if (it->s->canReadLine()) {
+		if ((*it)->socket()->canReadLine()) {
 			log("Can read data");
 		}
 	}
@@ -84,16 +84,12 @@ void Network::shutdown() {
 	server->close();
 }
 
-void Network::responseError(const Connection *c, int code, const QString &msg) {
-	
-}
-
 void Network::handleData() {
 	// TODO:  Add buffer size checks; if they exceed value (setting),
 	// clear the buffer and send an error
-	QHash<QTcpSocket*, Connection>::const_iterator it;
+	QHash<QTcpSocket*, NetDev*>::const_iterator it;
 	for (it = cons.constBegin(); it != cons.constEnd(); ++it) {
-		if (it->s->canReadLine()) {
+		if ((*it)->socket()->canReadLine()) {
 			log("Can read data");
 		}
 	}
@@ -132,7 +128,8 @@ void Network::handleConnection() {
 				this, &Network::handleNetworkError);
 		connect(s, &QTcpSocket::disconnected, this, &Network::handleDisconnection);
 		connect(s, &QTcpSocket::readyRead, this, &Network::handleData);
-		cons.insert(s, Connection(s, true, usingIPv6));
+		NetDev *dev = new NetDev(d);
+		cons.insert(s, dev);
 		s->setParent(this);
 		s->setSocketOption(QAbstractSocket::LowDelayOption, 1);  // Disable Nagel's algorithm
 		if ( ! isLocal) s->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
@@ -140,11 +137,11 @@ void Network::handleConnection() {
 }
 
 void Network::handleDisconnection() {
-	QHash<QTcpSocket*, Connection>::iterator it = cons.begin();
+	QHash<QTcpSocket*, NetDev*>::iterator it = cons.begin();
 	QTcpSocket *s;
 	while (it != cons.end()) {
-		if (it->s->state() == QAbstractSocket::UnconnectedState) {
-			s = it->s;
+		if ((*it)->socket()->state() == QAbstractSocket::UnconnectedState) {
+			s = (*it)->socket();
 			it = cons.erase(it);
 			s->deleteLater();
 		}

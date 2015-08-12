@@ -26,6 +26,7 @@
 #include <QDateTime>
 #include <QTimer>
 #include <QTimeZone>
+#include <QFlags>
 
 class Daemon;
 class Logger;
@@ -36,18 +37,19 @@ class RemDev : public QObject
 	Q_OBJECT
 public:
 	
-	// Bool is for whether it was successful; the value is the contents of the error object if it failed
+	// Bool is for whether it was successful; the second value is the contents of the error object if it failed
 	// Note that errors will already be logged but not alerted
 	typedef void (*ResponseHandler)(QJsonValue, QJsonValue, bool);
 	typedef QHash<QByteArray, RemDev*> DeviceHash;
 	typedef QList<RemDev*> DeviceList;
-	enum ClientRoles {
+	enum ClientRole {
 		DaemonRole = 0x1,
 		ManagerRole = 0x2,
 		VertexRole = 0x4,
 		ListenerRole = 0x8
 	};
-	enum DisconnectionReason {
+	Q_DECLARE_FLAGS(ClientRoles, ClientRole)
+	enum DisconnectReason {
 		UnknownReason,  //!< Unknown disconnection
 		ShuttingDown,  //!< The disconnecting member is shutting down by request
 		Restarting,  //!< The disconnecting member is restarting and will be back shortly
@@ -58,13 +60,19 @@ public:
 		StreamClosed  //!< The stream was closed by its low-level handler
 	};
 	
-	explicit RemDev(Daemon *parent = 0);
+	explicit RemDev(Daemon *parent);
 	
 	~RemDev();
 	
-	void sendRequest();
+	void sendRequest(qint64 timeout);
+	
+	void sendResponse();
+	
+	void sendError();
 	
 	void sendNotification();
+	
+	void close(DisconnectReason reason = StreamClosed);
 	
 	bool valid() {return !cid.isNull();}
 	
@@ -92,14 +100,19 @@ protected:
 	
 	bool inbound;
 	
-	QJsonObject rpc_newNotification(const QString &method, const QJsonObject &params = QJsonObject()) const;
+	QJsonObject newRequest(int id, const QString &method, const QJsonObject &params = QJsonObject()) const;
 	
-	QJsonObject rpc_newRequest(int id, const QString &method, const QJsonObject &params = QJsonObject()) const;
+	QJsonObject newResponse();
 	
-	QJsonObject rpc_newError(int id, int code, const QString &msg, const QJsonValue &data = QJsonValue::Undefined) const;
+	QJsonObject newError(int id, int code, const QString &msg, const QJsonValue &data = QJsonValue::Undefined) const;
 	
+	QJsonObject newNotification(const QString &method, const QJsonObject &params = QJsonObject()) const;
 	
-	virtual void terminate() =0;
+	virtual void terminate(DisconnectReason reason = StreamClosed) =0;
+	
+	virtual void writeLine() =0;
+	
+	void handleLine();
 	
 private:
 	
@@ -110,8 +123,10 @@ private:
 	
 	void registerTimeout();
 	
-};
+	void requestTimeout();
 	
-	const QJsonObject RemDev::rpc_seed{{"jsonrpc","2.0"}};
+};
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(RemDev::ClientRoles)
 
 #endif // REMDEV_H

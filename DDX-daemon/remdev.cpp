@@ -68,13 +68,14 @@ QJsonObject RemDev::rpc_newError(int id, int code, const QString &msg, const QJs
 
 void RemDev::registerTimeout() {
 	// TODO: put this in a loop
-	Logger::get()->log("This function is horribly, horribly incomplete and about to crash");
+	Logger::get()->log("This function is horribly, horribly incomplete and about to crash", true);
 	//Connection *c;
-	if ( ! c->valid()) {
+	/*if ( ! c->valid()) {
 		if ((c->connectTime+REGISTRATION_TIMEOUT) < QDateTime::currentMSecsSinceEpoch()) {
 			// Disconnect because of registration timeout
 			// TODO
 		}
-	}
-	rpc_newError(2,2,"test", true);
+	}*/
 }
+
+const QJsonObject RemDev::rpc_seed{{"jsonrpc","2.0"}};

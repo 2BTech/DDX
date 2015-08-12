@@ -46,8 +46,6 @@ public:
 	
 	void shutdown();
 	
-	void responseError(const Connection *c, int code, const QString &msg = QString());
-	
 signals:
 	
 public slots:
@@ -76,7 +74,7 @@ private:
 	
 	Settings *sg;
 	
-	RemDev::DeviceHash cons;
+	QHash<QTcpSocket*, NetDev*> cons;
 	
 	Daemon *d;
 	

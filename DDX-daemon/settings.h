@@ -35,6 +35,18 @@
 class Daemon;
 class Logger;
 
+/*!
+ * \brief Manages storage and typing of application settings
+ * 
+ * Settings are set to their default values at startup when one of these
+ * conditions is met:
+ * - No settings have been set (determined by searching for the setting
+ *   "SettingsResetOn")
+ * - The daemon is launched with the "-reconfigure" argument
+ * 
+ * Note that the "Default Settings" GUI button simply removes
+ * "SettingsResetOn" and then forces a full application restart.
+ */
 class Settings : public QObject
 {
 	Q_OBJECT
@@ -46,7 +58,7 @@ public:
 	QVariant v(const QByteArray &key, const QByteArray &group = "") const;
 	
 	bool set(const QByteArray &key, const QVariant &val,
-			 const QByteArray &group ="", bool save = true);
+			 const QByteArray &group = "", bool save = true);
 	
 	void reset(const QByteArray &key, const QByteArray &group = "");
 	
@@ -91,7 +103,7 @@ private:
 		QMetaType::Type type;
 	};
 	
-	//! Simplifies the registration of settings in enumerateSettings
+	//! Simplifies the registration of settings in registerSettings()
 	struct SettingsFactory {
 		SettingsFactory(){}
 		void add(QByteArray key, QString desc,
@@ -108,6 +120,9 @@ private:
 		QList<SetEnt> list;
 	};
 	
+	//! The type of the master settings map
+	typedef QHash<QByteArray, Setting> SettingsHash;
+	
 	//! Logger handle
 	Logger *lg;
 	
@@ -115,7 +130,7 @@ private:
 	QSettings *systemSettings;
 	
 	//! The master settings map
-	QHash<QByteArray, Setting> s;
+	SettingsHash s;
 	
 	//! Locks the master settings map
 	mutable QReadWriteLock lock;

@@ -54,7 +54,7 @@ Settings::Settings(Daemon *parent) : QObject(parent) {
 			"functionality may not work. Defaults for the current version will "
 			"be used where applicable. Reconfigure from the GUI menu or by "
 			"running the daemon with the '-reconfigure' option to update settings."));
-	for (QHash<QByteArray,Setting>::iterator it = s.begin(); it != s.end(); ++it) {
+	for (SettingsHash::iterator it = s.begin(); it != s.end(); ++it) {
 		if (systemSettings->contains(it.key())) {
 			QVariant value = systemSettings->value(it.key());
 			if ( ! value.convert(it->t)) {
@@ -92,7 +92,7 @@ bool Settings::set(const QByteArray &key, const QVariant &val,
 	QByteArray k = getKey(key, group);
 	QWriteLocker l(&lock);
 	Q_ASSERT(s.contains(k));
-	QHash<QByteArray, Setting>::iterator it = s.find(k);
+	SettingsHash::iterator it = s.find(k);
 	if ( ! val.canConvert(it->t)) return false;
 	it->v = val;
 	it->v.convert(it->t);
@@ -105,7 +105,7 @@ void Settings::reset(const QByteArray &key, const QByteArray &group) {
 	QByteArray k = getKey(key, group);
 	QWriteLocker l(&lock);
 	Q_ASSERT(s.contains(k));
-	QHash<QByteArray, Setting>::iterator it = s.find(k);
+	SettingsHash::iterator it = s.find(k);
 	it->v = it->d;
 	systemSettings->setValue(k, it->v);
 }
@@ -114,7 +114,7 @@ void Settings::resetAll() {
 	lg->log(tr("Resetting all settings"), true);
 	QWriteLocker l(&lock);
 	systemSettings->clear();
-	QHash<QByteArray, Setting>::iterator it;
+	SettingsHash::iterator it;
 	for (it = s.begin(); it != s.end(); ++it) {
 		it->v = it->d;
 		systemSettings->setValue(it.key(), it->d);
@@ -125,7 +125,7 @@ void Settings::resetAll() {
 
 void Settings::saveAll() {
 	QWriteLocker l(&lock);
-	QHash<QByteArray, Setting>::iterator it;
+	SettingsHash::iterator it;
 	for (it = s.begin(); it != s.end(); ++it) {
 		systemSettings->setValue(it.key(), it->v);
 	}

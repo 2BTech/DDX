@@ -88,20 +88,6 @@ void Daemon::init() {
 			tz.displayName(QTimeZone::GenericTime, QTimeZone::DefaultName)));
 		lg->log(tr("Current DDX time %1").arg(getTime().toString(Qt::ISODate)));
 	}
-	
-	/*! ### Loading Settings
-	 * Settings are set to their default values at startup when one of these
-	 * conditions is met:
-	 * - No settings have been set (determined by searching for the setting
-	 *   "SettingsResetOn")
-	 * - The daemon is launched with the "-reconfigure" argument
-	 * 
-	 * Note that the "Default Settings" GUI button simply removes
-	 * "SettingsResetOn" and then forces a full application restart.
-	 * \sa Daemon::loadDefaultSettings
-	 */
-	
-	
 
 	//! ### Network Manager Initialization
 	lg->log("STARTING");
@@ -120,9 +106,16 @@ void Daemon::init() {
 	// Load and unload the instrument specification file to test it
 	
 	
-	QByteArray testScheme = "{\"n\":\"Test path\",\"d\":\"This is a test path\",\"DDX_author\":\"2B Technologies\",\"DDX_version\":\"0\",\"modules\":[{\"n\":\"Test inlet\",\"t\":\"ExampleInlet\",\"s\":{\"SampleSetting\":\"42\"}},{\"n\":\"Test module 1\",\"t\":\"ExampleModule\"},{\"n\":\"Test module 2\",\"t\":\"ExampleModule\",\"s\":{\"Flow_Rate\":\"12\",\"Analog_Inputs\":{\"items\":[{\"n\":\"Temperature Sensor\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"3.3\",\"Min_Voltage\":\"0\"},{\"n\":\"Power Meter\",\"t\":\"Current_AI\",\"Max_Current\":\"20\",\"Min_Current\":\"0\"},{\"n\":\"Barometer\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"2\",\"Min_Voltage\":\"1\"}]}}}]}";
+	QByteArray testScheme =
+			"{\"n\":\"Test path\",\"d\":\"This is a test path\",\"DDX_author\":\"2B Technologies\","
+			"\"DDX_version\":\"0\",\"modules\":[{\"n\":\"Test inlet\",\"t\":\"ExampleInlet\",\"s\":"
+			"{\"SampleSetting\":\"42\"}},{\"n\":\"Test module 1\",\"t\":\"ExampleModule\"},{\"n\":"
+			"\"Test module 2\",\"t\":\"ExampleModule\",\"s\":{\"Flow_Rate\":\"12\",\"Analog_Inputs\":"
+			"{\"items\":[{\"n\":\"Temperature Sensor\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"3.3\","
+			"\"Min_Voltage\":\"0\"},{\"n\":\"Power Meter\",\"t\":\"Current_AI\",\"Max_Current\":\"20\","
+			"\"Min_Current\":\"0\"},{\"n\":\"Barometer\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"2\","
+			"\"Min_Voltage\":\"1\"}]}}}]}";
 	testScheme.size();
-	
 	
 	// Set up as system service (platform-dependent)
 	//setupService();

@@ -84,7 +84,7 @@ Type|Description|Format
 ---|---|---
 `UtcTime`|The ISO 8601 format for UTC|`YYYY-MM-DDTHH:mm:ssZ`
 
-### `ClientRoles` Flags
+### `ClientRole` Flags
 Name|Value|Description
 ---|---|---
 `Daemon`|0x1|Can execute paths
@@ -114,6 +114,13 @@ Code|Message|Macro
 -32002|Not supported|E_NOT_SUPPORTED
 -32003|An error occurred|E_RPC_GENERAL
 -32004|Params contain invalid type|E_TYPE_MISMATCH
+-32005|Request timed out|E_REQUEST_TIMEOUT
+
+Note that the "Request timed out" error is reserved for sending by the RPC
+implementation on the device from which the request was sent.  When a request is
+sent, the RPC implementation marks down the time.  If no corresponding response is
+received within a given time, the RPC implementation should send a simulated
+response error with the code -32005.
 
 ## Registration & Disconnection
 
@@ -127,7 +134,7 @@ Name|Info|Type
 `DDX_version`|The client's DDX version in the format "n.n"|string
 `DDX_author`|The client's DDX author|string
 `CID`|The client-given, server-taken connection ID; see "Connection IDs"|string
-`ClientRoles`|The roles which this client fills|`ClientRoles`
+`ClientRoles`|The roles which this client fills|`ClientRole`
 `Name`|The client's (usually) self-designated name|string
 `Timezone`|The client's timezone as TZdb string|string
 `DaylightSavingsEnabled`|Whether the client's timezone enables DST. _Note_: devices should ignore DST by default|bool
@@ -163,6 +170,7 @@ Code|Message|Macro
 503|Address forbidden|E_ADDRESS_FORBIDDEN
 504|A specified client role is explicitly forbidden|E_CLIENT_TYPE_FORBIDDEN
 505|Version unreadable|E_VERSION_UNREADABLE
+506|Encryption required|E_ENCRYPTION_REQUIRED
 
 
 ### Global notification: `disconnect`

@@ -18,7 +18,7 @@
 
 #include "netdev.h"
 
-NetDev::NetDev()
+NetDev::NetDev(Daemon *parent) : RemDev(parent)
 {
 	
 }
@@ -28,3 +28,6 @@ NetDev::~NetDev()
 	
 }
 
+void NetDev::terminate(DisconnectReason reason) {
+	// TODO
+}

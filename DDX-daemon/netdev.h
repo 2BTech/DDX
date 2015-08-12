@@ -20,14 +20,26 @@
 #define NETDEV_H
 
 #include <QObject>
+#include <QTcpSocket>
 #include "remdev.h"
 
 class NetDev : public RemDev
 {
 	Q_OBJECT
 public:
-	NetDev();
+	NetDev(Daemon *parent);
+	
 	~NetDev();
+	
+	void terminate(DisconnectReason reason = StreamClosed) override;
+	
+	QTcpSocket *socket() const {return s;}
+	
+private:
+	
+	QTcpSocket *s;
+	
+	bool usingV6;
 };
 
 #endif // NETDEV_H
