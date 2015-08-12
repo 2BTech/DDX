@@ -187,8 +187,7 @@ Name|Value|Description
 `ConnectionTerminated`|4|The connection was explicitly terminated
 `RegistrationTimeout`|5|The connection was alive too long without registering
 `BufferOverflow`|6|The connection sent an object too long to be handled
-`NoExternal`|E_NO_EXTERNAL_CONNECTIONS|External connections are disallowed
-`AddressForbidden`|E_ADDRESS_FORBIDDEN|The address is explicitly forbidden
+`StreamClosed`|7|The stream was closed by its low-level handler
 
 ## Path Management
 

@@ -53,7 +53,8 @@ SOURCES += main.cpp \
     settings.cpp \
     logger.cpp \
     modules/exampleinlet.cpp \
-    remdev.cpp
+    remdev.cpp \
+    netdev.cpp
 
 HEADERS += \
     constants.h \
@@ -70,7 +71,8 @@ HEADERS += \
     settings.h \
     logger.h \
     modules/exampleinlet.h \
-    remdev.h
+    remdev.h \
+    netdev.h
 
 DISTFILES += \
     DaemonCommandLineArguments.txt \

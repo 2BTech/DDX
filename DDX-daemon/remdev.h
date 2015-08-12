@@ -36,9 +36,33 @@ class RemDev : public QObject
 	Q_OBJECT
 public:
 	
+	typedef void (*ResponseHandler)(QJsonValue, QJsonValue);
+	typedef QHash<QByteArray, RemDev*> DeviceHash;
+	typedef QList<RemDev*> DeviceList;
+	enum ClientRoles {
+		DaemonRole = 0x1,
+		ManagerRole = 0x2,
+		VertexRole = 0x4,
+		ListenerRole = 0x8
+	};
+	enum DisconnectionReason {
+		UnknownReason,  //!< Unknown disconnection
+		ShuttingDown,  //!< The disconnecting member is shutting down by request
+		Restarting,  //!< The disconnecting member is restarting and will be back shortly
+		FatalError,  //!< The disconnecting member experienced a fatal error and is shutting down
+		ConnectionTerminated,  //!< The connection was explicitly terminated
+		RegistrationTimeout,  //!< The connection was alive too long without registering
+		BufferOverflow,  //!< The connection sent an object too long to be handled
+		StreamClosed  //!< The stream was closed by its low-level handler
+	};
+	
 	explicit RemDev(Daemon *parent = 0);
 	
 	~RemDev();
+	
+	void sendRequest();
+	
+	void sendNotification();
 	
 	bool valid() {return !cid.isNull();}
 	
@@ -72,8 +96,17 @@ protected:
 	
 	QJsonObject rpc_newError(int id, int code, const QString &msg, const QJsonValue &data = QJsonValue::Undefined) const;
 	
-	void registerTimeout();
 	
+	virtual void terminate() =0;
+	
+private:
+	
+	struct RequestRef {
+		ResponseHandler handler;
+		QJsonValue id;
+	};
+	
+	void registerTimeout();
 	
 };
 	
