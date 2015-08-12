@@ -36,7 +36,9 @@ class RemDev : public QObject
 	Q_OBJECT
 public:
 	
-	typedef void (*ResponseHandler)(QJsonValue, QJsonValue);
+	// Bool is for whether it was successful; the value is the contents of the error object if it failed
+	// Note that errors will already be logged but not alerted
+	typedef void (*ResponseHandler)(QJsonValue, QJsonValue, bool);
 	typedef QHash<QByteArray, RemDev*> DeviceHash;
 	typedef QList<RemDev*> DeviceList;
 	enum ClientRoles {
