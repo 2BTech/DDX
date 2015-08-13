@@ -40,6 +40,8 @@ private:
 	QTcpSocket *s;
 	
 	bool usingV6;
+	
+	void write(const QByteArray &data) override;
 };
 
 #endif // NETDEV_H

@@ -31,3 +31,7 @@ NetDev::~NetDev()
 void NetDev::terminate(DisconnectReason reason) {
 	// TODO
 }
+
+void NetDev::write(const QByteArray &data) {
+	
+}

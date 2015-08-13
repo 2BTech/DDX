@@ -40,21 +40,21 @@ RemDev::~RemDev()
 	
 }
 
-QJsonObject RemDev::rpc_newNotification(const QString &method, const QJsonObject &params) const {
+QJsonObject RemDev::newNotification(const QString &method, const QJsonObject &params) const {
 	QJsonObject o(rpc_seed);
 	o.insert("method", method);
 	if ( ! params.size()) o.insert("params", params);
 	return o;
 }
 
-QJsonObject RemDev::rpc_newRequest(int id, const QString &method, const QJsonObject &params) const {
-	QJsonObject o = rpc_newNotification(method, params);
+QJsonObject RemDev::newRequest(int id, const QString &method, const QJsonObject &params) const {
+	QJsonObject o = newNotification(method, params);
 	if (id) o.insert("id", id);
 	else o.insert("id", QJsonValue());
 	return o;
 }
 
-QJsonObject RemDev::rpc_newError(int id, int code, const QString &msg, const QJsonValue &data) const {
+QJsonObject RemDev::newError(int id, int code, const QString &msg, const QJsonValue &data) const {
 	QJsonObject e;
 	e.insert("code", code);
 	e.insert("message", msg);

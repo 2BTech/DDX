@@ -80,6 +80,8 @@ public:
 	
 signals:
 	
+	void streamDisconnected(DisconnectReason reason) const;
+	
 public slots:
 	
 protected:
@@ -110,7 +112,7 @@ protected:
 	
 	virtual void terminate(DisconnectReason reason = StreamClosed) =0;
 	
-	virtual void writeLine() =0;
+	virtual void write(const QByteArray &data) =0;
 	
 	void handleLine();
 	
@@ -119,6 +121,7 @@ private:
 	struct RequestRef {
 		ResponseHandler handler;
 		QJsonValue id;
+		qint64 time;
 	};
 	
 	void registerTimeout();
