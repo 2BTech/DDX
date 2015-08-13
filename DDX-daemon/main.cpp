@@ -17,8 +17,6 @@
  ******************************************************************************/
 
 #include <QCoreApplication>
-#include <QTextStream>  // Temporary debug console output
-#include <QTimer>  // For calling init() after exec()
 #include "constants.h"
 #include "daemon.h"
 #include "logger.h"
@@ -32,10 +30,10 @@
  * \param argc argument count
  * \param argv argument vector
  * \return exit code
- * \sa Daemon::init()
+ * \sa Daemon::Daemon()
+ * 
  * The main function instantiates QCoreApplication and then the Daemon class,
- * which manages all functions of the daemon.  It then schedules Daemon::init()
- * function and begins the event loop.
+ * which manages all functions of the daemon.  It then begins the event loop.
  */
 int main(int argc, char *argv[])
 {
