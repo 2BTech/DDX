@@ -18,13 +18,11 @@
 
 #include "netdev.h"
 
-NetDev::NetDev(Daemon *parent) : RemDev(parent)
-{
+NetDev::NetDev(Daemon *parent) : RemDev("Network", parent) {
 	
 }
 
-NetDev::~NetDev()
-{
+NetDev::~NetDev() {
 	
 }
 

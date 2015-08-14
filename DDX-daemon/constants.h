@@ -42,9 +42,14 @@
 #endif
 #define KEEP_UNITMANAGER
 
-// NETWORK
+// RPC
 #define REGISTRATION_TIMEOUT 30000  //!< Time until an unregistered connection is terminated in msecs
 #define REGISTRATION_TIMEOUT_TIMER (REGISTRATION_TIMEOUT+5000)
+#define DEFAULT_REQUEST_TIMEOUT 30000  //!< Time until a request times out in msecs (can be overridden)
+#define TIMEOUT_POLL_INTERVAL 5000 //!< Timeout polling frequency (in msecs)
+
+// NETWORK
+#define ENABLE_SSL
 
 // LOGGING
 // Comment to disable timestamping on stdout
@@ -70,6 +75,9 @@
 // BUFFERING
 #define MAX_SOCKET_BUFFER_SIZE		104857600  // 104857600 = 100mb
 
+// MISCELLANEOUS
+#define VERSION_COMPARE_FAILED 10
+
 // ERROR CODES
 /* Note:  Error codes are automatically generated from RemoteManagementProtocol.md
  * with "(-?[0-9]+)\|([^|\r\n]+)\|(E_[A-Z0-9_]+)" -> "#define $3 $1 //!< $2" */
@@ -79,13 +87,13 @@
 #define E_RPC_GENERAL -32003 //!< An error occurred
 #define E_TYPE_MISMATCH -32004 //!< Params contain invalid type
 #define E_REQUEST_TIMEOUT -32005 //!< Request timed out
+#define E_ENCRYPTION_REQUIRED -32006 //!< Encryption required
 #define E_NETWORK_DISABLED 500 //!< Server does not implement network communication (for future use)
 #define E_VERSION_FORBIDDEN 501 //!< Server is not compatible with the client version
 #define E_NO_EXTERNAL_CONNECTIONS 502 //!< Server does not allow external connections
 #define E_ADDRESS_FORBIDDEN 503 //!< Address forbidden
 #define E_CLIENT_TYPE_FORBIDDEN 504 //!< A specified client role is explicitly forbidden
 #define E_VERSION_UNREADABLE 505 //!< Version unreadable
-#define E_ENCRYPTION_REQUIRED 506 //!< Encryption required
 #define E_PATH_NONEXISTENT 200 //!< Path does not exist
 #define E_SETTING_NONEXISTENT 120 //!< Setting does not exist
 #define E_SETTING_CONVERT 121 //!< Setting could not be converted to target type

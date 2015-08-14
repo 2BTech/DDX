@@ -21,11 +21,12 @@
 #include "daemon.h"
 #include "settings.h"
 
-RemDev::RemDev(Daemon *parent) : QObject(parent)
-{
+RemDev::RemDev(const QString &name, Daemon *parent) : QObject(parent) {
+	this->name = name;
 	d = parent;
 	lg = Logger::get();
 	sg = d->getSettings();
+	lastId = 0;
 	connectTime = QDateTime::currentMSecsSinceEpoch();
 	/*Connection(QTcpSocket *socket, bool inbound, bool v6) {
 		connectTime = QDateTime::currentMSecsSinceEpoch();
@@ -33,10 +34,70 @@ RemDev::RemDev(Daemon *parent) : QObject(parent)
 		this->inbound = inbound;
 		this->v6 = v6;
 	}*/
+	timeoutPoller = new QTimer(this);
+	timeoutPoller->setTimerType(Qt::VeryCoarseTimer);
+	timeoutPoller->setInterval(TIMEOUT_POLL_INTERVAL);
+	connect(timeoutPoller, &QTimer::timeout, this, &RemDev::timeoutPoll);
 }
 
-RemDev::~RemDev()
-{
+RemDev::~RemDev() {
+	
+}
+
+qint64 RemDev::sendRequest(ResponseHandler handler, const QString &method,
+						   const QJsonObject &params, qint64 timeout) {
+	if ( ! valid()) return 0;
+	// Obtain a server-unique id
+	LocalId id = getId();
+	
+	
+	
+	// Start timeout timer if required
+	if (timeout && ! timeoutPoller->isActive())
+		timeoutPoller->start();
+	// Insert into request list
+	rLock.lock();
+	reqs.insert(id, RequestRef(handler, timeout));
+	rLock.unlock();
+}
+
+bool RemDev::sendResponse(LocalId id, const QJsonValue &result) {
+	if ( ! valid()) return false;
+	
+}
+
+bool RemDev::sendError(LocalId id, int code, const QString &msg, const QJsonValue &data) {
+	if ( ! valid()) return false;
+	
+}
+
+bool RemDev::sendNotification(const QString &method, const QJsonObject &params) {
+	if ( ! valid()) return false;
+	
+}
+
+void RemDev::timeoutPoll() {
+	qint64 time = QDateTime::currentMSecsSinceEpoch();
+	QMutexLocker l(&rLock);
+	RequestHash::iterator it = reqs.begin();
+	while (it != reqs.end()) {
+		if (it->timeout_time <= time) {
+			// TODO:  Generate error object here
+			(*it->handler)(QJsonValue(), QJsonValue(), false);
+			it = reqs.erase(it);
+		}
+		else ++it;
+	}
+}
+
+QJsonObject RemDev::newRequest(LocalId id, const QString &method, const QJsonObject &params) const {
+	QJsonObject o = newNotification(method, params);
+	if (id) o.insert("id", id);
+	else o.insert("id", QJsonValue());
+	return o;
+}
+
+QJsonObject RemDev::newResponse(QJsonValue id, const QJsonValue &result) {
 	
 }
 
@@ -44,13 +105,6 @@ QJsonObject RemDev::newNotification(const QString &method, const QJsonObject &pa
 	QJsonObject o(rpc_seed);
 	o.insert("method", method);
 	if ( ! params.size()) o.insert("params", params);
-	return o;
-}
-
-QJsonObject RemDev::newRequest(int id, const QString &method, const QJsonObject &params) const {
-	QJsonObject o = newNotification(method, params);
-	if (id) o.insert("id", id);
-	else o.insert("id", QJsonValue());
 	return o;
 }
 
@@ -66,16 +120,35 @@ QJsonObject RemDev::newError(int id, int code, const QString &msg, const QJsonVa
 	return o;
 }
 
-void RemDev::registerTimeout() {
-	// TODO: put this in a loop
-	Logger::get()->log("This function is horribly, horribly incomplete and about to crash", true);
-	//Connection *c;
-	/*if ( ! c->valid()) {
-		if ((c->connectTime+REGISTRATION_TIMEOUT) < QDateTime::currentMSecsSinceEpoch()) {
-			// Disconnect because of registration timeout
-			// TODO
-		}
-	}*/
+void RemDev::log(const QString &msg, bool isAlert) const {
+	QString out(name);
+	out.append(": ");
+	out.append(msg);
+	lg->log(msg, isAlert);
+}
+
+/*void RemDev::simulateError(LocalId id, const RequestRef *ref, int code) {
+	
+}*/
+
+void RemDev::sendObject(const QJsonObject &object) {
+	QByteArray json = QJsonDocument(object).toJson();
+	json.append("\n");
+	write(json);
+}
+
+RemDev::LocalId RemDev::getId() {
+	// I believe I can get rid of this mutex with some volatile
+	// stuff, but I'm too lazy to learn it right now and this works fine
+	LocalId id;
+	idLock.lock();
+	id = ++lastId;
+	if (id == std::numeric_limits<qint64>::max()) {
+		log("ID counter overflow; resetting to 1");
+		lastId = 0;
+	}
+	idLock.unlock();
+	return id;
 }
 
 const QJsonObject RemDev::rpc_seed{{"jsonrpc","2.0"}};

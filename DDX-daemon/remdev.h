@@ -27,6 +27,9 @@
 #include <QTimer>
 #include <QTimeZone>
 #include <QFlags>
+#include <QMutex>
+#include <QMutexLocker>
+#include "constants.h"
 
 class Daemon;
 class Logger;
@@ -42,6 +45,7 @@ public:
 	typedef void (*ResponseHandler)(QJsonValue, QJsonValue, bool);
 	typedef QHash<QByteArray, RemDev*> DeviceHash;
 	typedef QList<RemDev*> DeviceList;
+	typedef qint64 LocalId;
 	enum ClientRole {
 		DaemonRole = 0x1,
 		ManagerRole = 0x2,
@@ -60,17 +64,18 @@ public:
 		StreamClosed  //!< The stream was closed by its low-level handler
 	};
 	
-	explicit RemDev(Daemon *parent);
+	explicit RemDev(const QString &name, Daemon *parent);
 	
 	~RemDev();
 	
-	void sendRequest(qint64 timeout);
+	LocalId sendRequest(ResponseHandler handler, const QString &method,
+						const QJsonObject &params = QJsonObject(), qint64 timeout = DEFAULT_REQUEST_TIMEOUT);
 	
-	void sendResponse();
+	bool sendResponse(LocalId id, const QJsonValue &result);
 	
-	void sendError();
+	bool sendError(LocalId id, int code, const QString &msg, const QJsonValue &data = QJsonValue::Undefined);
 	
-	void sendNotification();
+	bool sendNotification(const QString &method, const QJsonObject &params = QJsonObject());
 	
 	void close(DisconnectReason reason = StreamClosed);
 	
@@ -80,11 +85,17 @@ public:
 	
 signals:
 	
+	void registered() const;
+	
 	void streamDisconnected(DisconnectReason reason) const;
 	
 public slots:
 	
+	void timeoutPoll();
+	
 protected:
+	
+	QString name;
 	
 	Daemon *d;
 	
@@ -102,31 +113,55 @@ protected:
 	
 	bool inbound;
 	
-	QJsonObject newRequest(int id, const QString &method, const QJsonObject &params = QJsonObject()) const;
+	QJsonObject newRequest(LocalId id, const QString &method, const QJsonObject &params = QJsonObject()) const;
 	
-	QJsonObject newResponse();
+	QJsonObject newResponse(QJsonValue id, const QJsonValue &result = true);
 	
 	QJsonObject newError(int id, int code, const QString &msg, const QJsonValue &data = QJsonValue::Undefined) const;
 	
 	QJsonObject newNotification(const QString &method, const QJsonObject &params = QJsonObject()) const;
 	
+	void handleLine(const QByteArray &data);
+	
+	void log(const QString &msg, bool isAlert = false) const;
+	
+	//void simulateError(LocalId id, const RequestRef *ref, int code);
+	
 	virtual void terminate(DisconnectReason reason = StreamClosed) =0;
 	
 	virtual void write(const QByteArray &data) =0;
 	
-	void handleLine();
-	
 private:
 	
 	struct RequestRef {
+		RequestRef(ResponseHandler handler, qint64 timeout) {
+			time = QDateTime::currentMSecsSinceEpoch();
+			if (timeout) timeout_time = time + timeout;
+			else timeout_time = 0;
+			this->handler = handler;
+		}
+		// Note: No id is necessary because it is the key in RequestHash
 		ResponseHandler handler;
-		QJsonValue id;
 		qint64 time;
+		qint64 timeout_time;
 	};
 	
-	void registerTimeout();
+	//! A hash for maintaing lists of outgoing requests
+	typedef QHash<LocalId, RequestRef> RequestHash;
 	
-	void requestTimeout();
+	RequestHash reqs;
+	
+	QMutex rLock;
+	
+	QTimer *timeoutPoller;
+	
+	LocalId lastId;
+	
+	QMutex idLock;
+	
+	void sendObject(const QJsonObject &obj);
+	
+	LocalId getId();
 	
 };
 

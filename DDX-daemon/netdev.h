@@ -21,6 +21,10 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include "constants.h"
+#ifdef ENABLE_SSL
+#include <QSsl>
+#endif
 #include "remdev.h"
 
 class NetDev : public RemDev

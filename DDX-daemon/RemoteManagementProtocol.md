@@ -18,13 +18,13 @@
 ################################################################################
 -->
 
-# DDX Remote Management Protocol
-The DDX uses strictly-compliant [JSON-RPC 2.0](http://www.jsonrpc.org/specification). 
+# DDX Remote Management Protocol (DDX-RPC)
+DDX-RPC uses strictly-compliant [JSON-RPC 2.0](http://www.jsonrpc.org/specification). 
 At the low level, each DDX daemon opens a TCP server, by default on port 4388, to 
 which GUIs, other DDX daemons, and other data sources or sinks can connect.  Every 
 RPC object transmitted must be separated by exactly one line feed (ASCII 10).  All 
 text must be encoded in UTF-8.  SSL support is planned but not currently in development. 
-All RPC objects from a particular client will be ignored until a corresponding 
+All DDX-RPC objects from a particular client will be ignored until a corresponding 
 `register` request is accepted by the daemon.
 
 <!--[TOC]-->
@@ -39,8 +39,8 @@ sent to a server and will have the method name `register`.  A request or notific
 that is marked "global" can be received by any device.  Object descriptions usually 
 include parameter tables which list the information included in the object as a param 
 or result.  Parameter tables must be represented as JSON objects.  Some objects will 
-document a different type of param/result, although developers of additional DDX 
-RPC commands should use this only where they are sure future versions are unlikely 
+document a different type of param/result, although developers of additional DDX-RPC
+commands should use this only where they are sure future versions are unlikely 
 to take additional parameters.  Requests have two parameter sets, one titled 
 "Params" and one titled "Result".  These correspond to the "params" element of a 
 request object and the "result" element of that request's response object.  All
@@ -115,17 +115,34 @@ Code|Message|Macro
 -32003|An error occurred|E_RPC_GENERAL
 -32004|Params contain invalid type|E_TYPE_MISMATCH
 -32005|Request timed out|E_REQUEST_TIMEOUT
+-32006|Encryption required|E_ENCRYPTION_REQUIRED
 
-Note that the "Request timed out" error is reserved for sending by the RPC
+Note that the "Request timed out" error is reserved for sending by the DDX-RPC
 implementation on the device from which the request was sent.  When a request is
-sent, the RPC implementation marks down the time.  If no corresponding response is
-received within a given time, the RPC implementation should send a simulated
+sent, the DDX-RPC implementation marks down the time.  If no corresponding response is
+received within a given time, the DDX-RPC implementation should send a simulated
 response error with the code -32005.
 
 ## Registration & Disconnection
+Registration is a required handshake that allows connecting devices to understand
+each other's environment, capabilities, and identity.  Sending the registration
+command and initiating any encryption handshakes is always the responsibility of
+the connecting device (client).
+
+### Network Devices & SSL
+It is highly recommended that network implementations of the DDX-RPC utilize SSL to encrypt
+their connection.  By default, encryption is required on external connections but
+optional on connections through localhost.  Clients connecting to non-local servers
+should begin by attempting an SSL handshake.  If it fails and is not required, the client
+should assume that SSL is not implemented (SSL can be completely removed from the DDX
+daemon to deal with US export regulations).  If a client tries to send anything over an
+unencrypted connection when the server requires encryption, the server will respond with
+an "Encryption required" error.  Certificate verification is currently not implemented in
+the DDX daemon, but may be in the future.
 
 ### Server request: `register`
-Every connection must be registered before its requests will be honored.
+Every connection must be registered before its requests will be honored.  Any requests or
+notifications sent prior to successful registration will be ignored without error.
 
 Params:
 
@@ -170,8 +187,6 @@ Code|Message|Macro
 503|Address forbidden|E_ADDRESS_FORBIDDEN
 504|A specified client role is explicitly forbidden|E_CLIENT_TYPE_FORBIDDEN
 505|Version unreadable|E_VERSION_UNREADABLE
-506|Encryption required|E_ENCRYPTION_REQUIRED
-
 
 ### Global notification: `disconnect`
 This notification is usually sent immediately before a device terminates a connection.

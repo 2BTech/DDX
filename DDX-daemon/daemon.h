@@ -84,9 +84,9 @@ public:
 	/*!
 	 * \brief Compare a version string with this application's version
 	 * \param testVersion The test version string (must be in the format "4.2")
-	 * \return 0 if equivalent, -1 if testVersion is less, 1 if testVersion is more
+	 * \return 0 if equivalent, -1 if testVersion is lesser, 1 if testVersion is greater
 	 * 
-	 * Returns 10 on error.
+	 * Returns VERSION_COMPARE_FAILED on error.
 	 */
 	static int versionCompare(QString testVersion);
 	

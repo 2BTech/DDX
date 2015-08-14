@@ -176,6 +176,10 @@ QList<Settings::SetEnt> Settings::registerSettings() const {
 		  false, QMetaType::Bool);
 	b.add("AllowExternal", tr("Whether to allow foreign devices to connect"),
 		  false, QMetaType::Bool);
+	b.add("RequireSslExternal", tr("Whether to require SSL encryption on external connections"),
+		  true, QMetaType::Bool);
+	b.add("RequireSslLocal", tr("Whether to require SSL encryption on local connections"),
+		  false, QMetaType::Bool);
 	
 	return b.list;
 }

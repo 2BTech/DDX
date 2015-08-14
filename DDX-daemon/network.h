@@ -29,6 +29,9 @@
 #include <QTimer>
 #include <QNetworkAccessManager>
 #include "constants.h"
+#ifdef ENABLE_SSL
+#include <QSsl>
+#endif
 #include "daemon.h"
 #include "netdev.h"
 
