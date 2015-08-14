@@ -49,16 +49,16 @@ qint64 RemDev::sendRequest(ResponseHandler handler, const QString &method,
 	if ( ! valid()) return 0;
 	// Obtain a server-unique id
 	LocalId id = getId();
+	// Insert into request list
+	rLock.lock();
+	reqs.insert(id, RequestRef(handler, timeout));
+	rLock.unlock();
 	// Build & send request
 	QJsonObject request = newRequest(id, method, params);
 	sendObject(request);
 	// Start timeout timer if required
 	if (timeout && ! timeoutPoller->isActive())
 		timeoutPoller->start();
-	// Insert into request list
-	rLock.lock();
-	reqs.insert(id, RequestRef(handler, timeout));
-	rLock.unlock();
 	return id;
 }
 
@@ -93,7 +93,7 @@ void RemDev::timeoutPoll() {
 	QMutexLocker l(&rLock);
 	RequestHash::iterator it = reqs.begin();
 	while (it != reqs.end()) {
-		if (it->timeout_time <= time) {
+		if (it->timeout_time && it->timeout_time <= time) {
 			// TODO:  Generate error object here
 			(*it->handler)(QJsonValue(), QJsonValue(), false);
 			it = reqs.erase(it);

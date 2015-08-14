@@ -45,7 +45,7 @@
 // RPC
 #define REGISTRATION_TIMEOUT 30000  //!< Time until an unregistered connection is terminated in msecs
 #define REGISTRATION_TIMEOUT_TIMER (REGISTRATION_TIMEOUT+5000)
-#define DEFAULT_REQUEST_TIMEOUT 30000  //!< Time until a request times out in msecs (can be overridden)
+#define DEFAULT_REQUEST_TIMEOUT 45000  //!< Time until a request times out in msecs (can be overridden)
 #define TIMEOUT_POLL_INTERVAL 5000 //!< Timeout polling frequency (in msecs)
 #define MAX_TRANSACTION_SIZE 536870000 //!< Maximum transaction size in bytes
 
