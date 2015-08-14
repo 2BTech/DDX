@@ -44,7 +44,7 @@ RemDev::~RemDev() {
 	
 }
 
-qint64 RemDev::sendRequest(ResponseHandler handler, const QString &method,
+int RemDev::sendRequest(ResponseHandler handler, const QString &method,
 						   const QJsonObject &params, qint64 timeout) {
 	if ( ! valid()) return 0;
 	// Obtain a server-unique id
@@ -150,7 +150,7 @@ QJsonObject RemDev::newError(LocalId id, int code, const QString &msg, const QJs
 	QJsonObject o(rpc_seed);
 	o.insert("error", e);
 	if (id) o.insert("id", id);
-	else o.insert("id", QJsonValue());
+	else o.insert("id", QJsonValue::Null);
 	return o;
 }
 
@@ -170,8 +170,8 @@ RemDev::LocalId RemDev::getId() {
 	LocalId id;
 	idLock.lock();
 	id = ++lastId;
-	if (id == std::numeric_limits<qint64>::max()) {
-		log("ID counter overflow; resetting to 1");
+	if (id == std::numeric_limits<LocalId>::max()) {
+		log("ID counter overflow; resetting");
 		lastId = 0;
 	}
 	idLock.unlock();

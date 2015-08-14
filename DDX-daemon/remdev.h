@@ -45,7 +45,7 @@ public:
 	typedef void (*ResponseHandler)(QJsonValue, QJsonValue, bool);
 	typedef QHash<QByteArray, RemDev*> DeviceHash;
 	typedef QList<RemDev*> DeviceList;
-	typedef qint64 LocalId;
+	typedef int LocalId;
 	enum ClientRole {
 		DaemonRole = 0x1,
 		ManagerRole = 0x2,
@@ -68,7 +68,7 @@ public:
 	
 	~RemDev();
 	
-	LocalId sendRequest(ResponseHandler handler, const QString &method,
+	int sendRequest(ResponseHandler handler, const QString &method,
 						const QJsonObject &params = QJsonObject(), qint64 timeout = DEFAULT_REQUEST_TIMEOUT);
 	
 	/*!
