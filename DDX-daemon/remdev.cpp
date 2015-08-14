@@ -159,7 +159,7 @@ QJsonObject RemDev::newError(LocalId id, int code, const QString &msg, const QJs
 }*/
 
 void RemDev::sendObject(const QJsonObject &object) {
-	QByteArray json = QJsonDocument(object).toJson();
+	QByteArray json = QJsonDocument(object).toJson(QJsonDocument::Compact);
 	json.append("\n");
 	write(json);
 }
