@@ -49,9 +49,9 @@ qint64 RemDev::sendRequest(ResponseHandler handler, const QString &method,
 	if ( ! valid()) return 0;
 	// Obtain a server-unique id
 	LocalId id = getId();
-	
-	
-	
+	// Build & send request
+	QJsonObject request = newRequest(id, method, params);
+	sendObject(request);
 	// Start timeout timer if required
 	if (timeout && ! timeoutPoller->isActive())
 		timeoutPoller->start();
@@ -59,21 +59,33 @@ qint64 RemDev::sendRequest(ResponseHandler handler, const QString &method,
 	rLock.lock();
 	reqs.insert(id, RequestRef(handler, timeout));
 	rLock.unlock();
+	return id;
 }
 
 bool RemDev::sendResponse(LocalId id, const QJsonValue &result) {
 	if ( ! valid()) return false;
-	
+	if (result.type() == QJsonValue::Undefined) {
+		lg->log(tr("DDX bug: an RPC method returned a response with no result"));
+		sendError(id, E_METHOD_RESPONSE_INVALID, tr("Method gave invalid response"));
+		return false;
+	}
+	QJsonObject response = newResponse(id, result);
+	sendObject(response);
+	return true;
 }
 
 bool RemDev::sendError(LocalId id, int code, const QString &msg, const QJsonValue &data) {
 	if ( ! valid()) return false;
-	
+	QJsonObject error = newError(id, code, msg, data);
+	sendObject(error);
+	return true;
 }
 
 bool RemDev::sendNotification(const QString &method, const QJsonObject &params) {
 	if ( ! valid()) return false;
-	
+	QJsonObject notification = newNotification(method, params);
+	sendObject(notification);
+	return true;
 }
 
 void RemDev::timeoutPoll() {
@@ -90,25 +102,47 @@ void RemDev::timeoutPoll() {
 	}
 }
 
+void RemDev::handleLine(const QByteArray &data) {
+	if (data.size() > MAX_TRANSACTION_SIZE) {
+		// TODO
+		return;
+	}
+	QJsonParseError error;
+	QJsonDocument doc = QJsonDocument::fromJson(data, &error);
+	if (error.error != QJsonParseError::NoError) {
+		// TODO
+	}
+	// TODO
+}
+
+void RemDev::log(const QString &msg, bool isAlert) const {
+	QString out(name);
+	out.append(": ").append(msg);
+	lg->log(msg, isAlert);
+}
+
 QJsonObject RemDev::newRequest(LocalId id, const QString &method, const QJsonObject &params) const {
 	QJsonObject o = newNotification(method, params);
 	if (id) o.insert("id", id);
-	else o.insert("id", QJsonValue());
+	else o.insert("id", QJsonValue::Null);
 	return o;
 }
 
 QJsonObject RemDev::newResponse(QJsonValue id, const QJsonValue &result) {
-	
+	QJsonObject o(rpc_seed);
+	o.insert("id", id);
+	o.insert("result", result);
+	return o;
 }
 
 QJsonObject RemDev::newNotification(const QString &method, const QJsonObject &params) const {
 	QJsonObject o(rpc_seed);
 	o.insert("method", method);
-	if ( ! params.size()) o.insert("params", params);
+	if (params.size()) o.insert("params", params);
 	return o;
 }
 
-QJsonObject RemDev::newError(int id, int code, const QString &msg, const QJsonValue &data) const {
+QJsonObject RemDev::newError(LocalId id, int code, const QString &msg, const QJsonValue &data) const {
 	QJsonObject e;
 	e.insert("code", code);
 	e.insert("message", msg);
@@ -118,13 +152,6 @@ QJsonObject RemDev::newError(int id, int code, const QString &msg, const QJsonVa
 	if (id) o.insert("id", id);
 	else o.insert("id", QJsonValue());
 	return o;
-}
-
-void RemDev::log(const QString &msg, bool isAlert) const {
-	QString out(name);
-	out.append(": ");
-	out.append(msg);
-	lg->log(msg, isAlert);
 }
 
 /*void RemDev::simulateError(LocalId id, const RequestRef *ref, int code) {

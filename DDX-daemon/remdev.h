@@ -71,7 +71,17 @@ public:
 	LocalId sendRequest(ResponseHandler handler, const QString &method,
 						const QJsonObject &params = QJsonObject(), qint64 timeout = DEFAULT_REQUEST_TIMEOUT);
 	
-	bool sendResponse(LocalId id, const QJsonValue &result);
+	/*!
+	 * \brief sendResponse
+	 * \param id
+	 * \param result
+	 * \return 
+	 * 
+	 * _Warning:_ If the result parameter is of type `QJsonValue::Undefined`,
+	 * an error will be sent to the client.  Developers should always ensure that
+	 * the result parameter is a valid JSON type.
+	 */
+	bool sendResponse(LocalId id, const QJsonValue &result = true);
 	
 	bool sendError(LocalId id, int code, const QString &msg, const QJsonValue &data = QJsonValue::Undefined);
 	
@@ -113,22 +123,28 @@ protected:
 	
 	bool inbound;
 	
-	QJsonObject newRequest(LocalId id, const QString &method, const QJsonObject &params = QJsonObject()) const;
-	
-	QJsonObject newResponse(QJsonValue id, const QJsonValue &result = true);
-	
-	QJsonObject newError(int id, int code, const QString &msg, const QJsonValue &data = QJsonValue::Undefined) const;
-	
-	QJsonObject newNotification(const QString &method, const QJsonObject &params = QJsonObject()) const;
-	
 	void handleLine(const QByteArray &data);
 	
 	void log(const QString &msg, bool isAlert = false) const;
+	
+	QJsonObject newRequest(LocalId id, const QString &method, const QJsonObject &params) const;
+	
+	QJsonObject newResponse(QJsonValue id, const QJsonValue &result);
+	
+	QJsonObject newError(LocalId id, int code, const QString &msg, const QJsonValue &data) const;
+	
+	QJsonObject newNotification(const QString &method, const QJsonObject &params) const;
 	
 	//void simulateError(LocalId id, const RequestRef *ref, int code);
 	
 	virtual void terminate(DisconnectReason reason = StreamClosed) =0;
 	
+	/*!
+	 * \brief write
+	 * \param data
+	 * 
+	 * _Warning:_ This function **must** be made thread-safe!
+	 */
 	virtual void write(const QByteArray &data) =0;
 	
 private:

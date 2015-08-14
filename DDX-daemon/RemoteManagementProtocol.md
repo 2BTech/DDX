@@ -116,6 +116,7 @@ Code|Message|Macro
 -32004|Params contain invalid type|E_TYPE_MISMATCH
 -32005|Request timed out|E_REQUEST_TIMEOUT
 -32006|Encryption required|E_ENCRYPTION_REQUIRED
+-32007|Method gave invalid response|E_METHOD_RESPONSE_INVALID
 
 Note that the "Request timed out" error is reserved for sending by the DDX-RPC
 implementation on the device from which the request was sent.  When a request is

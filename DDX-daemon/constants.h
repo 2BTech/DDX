@@ -47,6 +47,7 @@
 #define REGISTRATION_TIMEOUT_TIMER (REGISTRATION_TIMEOUT+5000)
 #define DEFAULT_REQUEST_TIMEOUT 30000  //!< Time until a request times out in msecs (can be overridden)
 #define TIMEOUT_POLL_INTERVAL 5000 //!< Timeout polling frequency (in msecs)
+#define MAX_TRANSACTION_SIZE 536870000 //!< Maximum transaction size in bytes
 
 // NETWORK
 #define ENABLE_SSL
@@ -88,6 +89,7 @@
 #define E_TYPE_MISMATCH -32004 //!< Params contain invalid type
 #define E_REQUEST_TIMEOUT -32005 //!< Request timed out
 #define E_ENCRYPTION_REQUIRED -32006 //!< Encryption required
+#define E_METHOD_RESPONSE_INVALID -32007 //!< Method gave invalid response
 #define E_NETWORK_DISABLED 500 //!< Server does not implement network communication (for future use)
 #define E_VERSION_FORBIDDEN 501 //!< Server is not compatible with the client version
 #define E_NO_EXTERNAL_CONNECTIONS 502 //!< Server does not allow external connections
