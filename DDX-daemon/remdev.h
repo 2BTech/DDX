@@ -42,10 +42,10 @@ public:
 	
 	// Bool is for whether it was successful; the second value is the contents of the error object if it failed
 	// Note that errors will already be logged but not alerted
-	typedef void (*ResponseHandler)(QJsonValue, QJsonValue, bool);
+	typedef int LocalId;
+	typedef void (*ResponseHandler)(LocalId, QJsonValue, bool);
 	typedef QHash<QByteArray, RemDev*> DeviceHash;
 	typedef QList<RemDev*> DeviceList;
-	typedef int LocalId;
 	enum ClientRole {
 		DaemonRole = 0x1,
 		ManagerRole = 0x2,
@@ -176,6 +176,12 @@ private:
 	QMutex idLock;
 	
 	void sendObject(const QJsonObject &obj);
+	
+	void handleObject(const QJsonObject &obj);
+	
+	void handleNotification() const;
+	
+	void handleRequest() const;
 	
 	LocalId getId();
 	

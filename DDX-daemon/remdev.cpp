@@ -95,7 +95,7 @@ void RemDev::timeoutPoll() {
 	while (it != reqs.end()) {
 		if (it->timeout_time && it->timeout_time <= time) {
 			// TODO:  Generate error object here
-			(*it->handler)(QJsonValue(), QJsonValue(), false);
+			(*it->handler)(0, QJsonValue(), false);
 			it = reqs.erase(it);
 		}
 		else ++it;
@@ -103,16 +103,25 @@ void RemDev::timeoutPoll() {
 }
 
 void RemDev::handleLine(const QByteArray &data) {
-	if (data.size() > MAX_TRANSACTION_SIZE) {
+	/*if (data.size() > MAX_TRANSACTION_SIZE) {
 		// TODO
 		return;
+	}*/
+	QJsonObject obj;
+	{
+		QJsonParseError error;
+		QJsonDocument doc = QJsonDocument::fromJson(data, &error);
+		if (error.error != QJsonParseError::NoError) {
+			
+			return;
+		}
+		if ( ! doc.isObject()) {
+			// TODO
+			return;
+		}
+		QJsonObject obj = doc.object();
 	}
-	QJsonParseError error;
-	QJsonDocument doc = QJsonDocument::fromJson(data, &error);
-	if (error.error != QJsonParseError::NoError) {
-		// TODO
-	}
-	// TODO
+	
 }
 
 void RemDev::log(const QString &msg, bool isAlert) const {
@@ -162,6 +171,18 @@ void RemDev::sendObject(const QJsonObject &object) {
 	QByteArray json = QJsonDocument(object).toJson(QJsonDocument::Compact);
 	json.append("\n");
 	write(json);
+}
+
+void RemDev::handleObject(const QJsonObject &obj) {
+	if (obj.contains("method")) {
+		// handle request/notification
+		return;
+	}
+	if (obj.contains("id")) {
+		// handle response/error, including null-id error
+		return;
+	}
+	// The request was invalid
 }
 
 RemDev::LocalId RemDev::getId() {
