@@ -142,6 +142,10 @@ QList<Settings::SetEnt> Settings::registerSettings() const {
 	b.add("LastShutdownSafe", tr("Whether the previous shutdown was completed normally"),
 		  false, QMetaType::Bool);
 	
+	b.enterGroup(SG_RPC);
+	b.add("RegistrationPeriod", tr("Registration timeout period in seconds"),
+		  10, QMetaType::Int);
+	
 	b.enterGroup(SG_PATHS);
 	// TODO
 	/*b.add(D_INSTALL, tr("Where the DDX executables and libraries are"),

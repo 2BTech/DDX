@@ -28,16 +28,14 @@ RemDev::RemDev(const QString &name, Daemon *parent) : QObject(parent) {
 	sg = d->getSettings();
 	lastId = 0;
 	connectTime = QDateTime::currentMSecsSinceEpoch();
-	/*Connection(QTcpSocket *socket, bool inbound, bool v6) {
-		connectTime = QDateTime::currentMSecsSinceEpoch();
-		s = socket;
-		this->inbound = inbound;
-		this->v6 = v6;
-	}*/
+	int registrationPeriod = sg->v("RegistrationPeriod", SG_RPC).toInt();
+	registrationTimeoutTime = connectTime + (registrationPeriod * 1000);
+	// Set up timeout polling
 	timeoutPoller = new QTimer(this);
-	timeoutPoller->setTimerType(Qt::VeryCoarseTimer);
+	timeoutPoller->setTimerType(Qt::CoarseTimer);
 	timeoutPoller->setInterval(TIMEOUT_POLL_INTERVAL);
 	connect(timeoutPoller, &QTimer::timeout, this, &RemDev::timeoutPoll);
+	timeoutPoller->start();  // Start immediately for registration timeout
 }
 
 RemDev::~RemDev() {
@@ -45,20 +43,27 @@ RemDev::~RemDev() {
 }
 
 int RemDev::sendRequest(ResponseHandler handler, const QString &method,
-						   const QJsonObject &params, qint64 timeout) {
+						const QJsonObject &params, qint64 timeout) {
 	if ( ! valid()) return 0;
-	// Obtain a server-unique id
-	LocalId id = getId();
+	// Obtain a server-unique ID
+	LocalId id;
+	RequestRef ref(handler, timeout);
+	req_id_lock.lock();
+	do {
+		id = ++lastId;
+		if (id == std::numeric_limits<LocalId>::max()) {
+			log("ID generator overflow; resetting");
+			lastId = 0;
+		}
+	} while (reqs.contains(id));
 	// Insert into request list
-	rLock.lock();
-	reqs.insert(id, RequestRef(handler, timeout));
-	rLock.unlock();
-	// Build & send request
-	QJsonObject request = newRequest(id, method, params);
-	sendObject(request);
+	reqs.insert(id, ref);
+	req_id_lock.unlock();
 	// Start timeout timer if required
 	if (timeout && ! timeoutPoller->isActive())
 		timeoutPoller->start();
+	// Build & send request
+	sendObject(newRequest(id, method, params));
 	return id;
 }
 
@@ -90,7 +95,7 @@ bool RemDev::sendNotification(const QString &method, const QJsonObject &params) 
 
 void RemDev::timeoutPoll() {
 	qint64 time = QDateTime::currentMSecsSinceEpoch();
-	QMutexLocker l(&rLock);
+	QMutexLocker l(&req_id_lock);
 	RequestHash::iterator it = reqs.begin();
 	while (it != reqs.end()) {
 		if (it->timeout_time && it->timeout_time <= time) {
@@ -99,6 +104,12 @@ void RemDev::timeoutPoll() {
 			it = reqs.erase(it);
 		}
 		else ++it;
+	}
+	l.unlock();
+	// Tiered ifs to guarantee that the possibly expensive call to the time function
+	// is avoided after registration
+	if ( ! valid()) if (registrationTimeoutTime < QDateTime::currentMSecsSinceEpoch()) {
+		// TODO: Disconnect for registration timeout
 	}
 }
 
@@ -183,20 +194,6 @@ void RemDev::handleObject(const QJsonObject &obj) {
 		return;
 	}
 	// The request was invalid
-}
-
-RemDev::LocalId RemDev::getId() {
-	// I believe I can get rid of this mutex with some volatile
-	// stuff, but I'm too lazy to learn it right now and this works fine
-	LocalId id;
-	idLock.lock();
-	id = ++lastId;
-	if (id == std::numeric_limits<LocalId>::max()) {
-		log("ID counter overflow; resetting");
-		lastId = 0;
-	}
-	idLock.unlock();
-	return id;
 }
 
 const QJsonObject RemDev::rpc_seed{{"jsonrpc","2.0"}};

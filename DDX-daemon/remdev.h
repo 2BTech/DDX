@@ -44,6 +44,7 @@ public:
 	// Note that errors will already be logged but not alerted
 	typedef int LocalId;
 	typedef void (*ResponseHandler)(LocalId, QJsonValue, bool);
+	typedef void (*RequestHandler)(QJsonValue, QJsonValue, bool);
 	typedef QHash<QByteArray, RemDev*> DeviceHash;
 	typedef QList<RemDev*> DeviceList;
 	enum ClientRole {
@@ -69,7 +70,7 @@ public:
 	~RemDev();
 	
 	int sendRequest(ResponseHandler handler, const QString &method,
-						const QJsonObject &params = QJsonObject(), qint64 timeout = DEFAULT_REQUEST_TIMEOUT);
+					const QJsonObject &params = QJsonObject(), qint64 timeout = DEFAULT_REQUEST_TIMEOUT);
 	
 	/*!
 	 * \brief sendResponse
@@ -167,13 +168,20 @@ private:
 	
 	RequestHash reqs;
 	
-	QMutex rLock;
+	//! Locks the request hash and lastId variable
+	QMutex req_id_lock;
+	
+	typedef QHash<QString, RequestHandler> HandlerHash;
+	
+	HandlerHash reqHandlers;
+	
+	HandlerHash notifHandlers;
 	
 	QTimer *timeoutPoller;
 	
 	LocalId lastId;
 	
-	QMutex idLock;
+	qint64 registrationTimeoutTime;
 	
 	void sendObject(const QJsonObject &obj);
 	
@@ -182,9 +190,6 @@ private:
 	void handleNotification() const;
 	
 	void handleRequest() const;
-	
-	LocalId getId();
-	
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(RemDev::ClientRoles)

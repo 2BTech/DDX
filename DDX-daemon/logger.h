@@ -109,9 +109,6 @@ private:
 		QDateTime time;  //!< The time this log event was recorded (in UTC)
 	};
 	
-	//! Locks Logger::Logger to prevent racing the singleton
-	static QMutex constructionLock;
-	
 	//! Daemon handle (set by Daemon::Daemon)
 	QPointer<Daemon> d;
 	

@@ -27,10 +27,12 @@ void globalHandleMessage(QtMsgType t, const QMessageLogContext &c, const QString
 QMutex loggerConstructionLock;
 
 Logger* Logger::get() {
-	// TODO:  Check if this is safe
-	QMutexLocker l(&loggerConstructionLock);
-	static Logger instance;
-	return &instance;
+	// TODO:  Check if this is safe (particularly, does instance need to be guarded?)
+	static Logger *instance = 0;
+	loggerConstructionLock.lock();
+	if ( ! instance) instance = new Logger;
+	loggerConstructionLock.unlock();
+	return instance;
 }
 
 Logger::Logger() : QObject(qApp)
