@@ -21,8 +21,9 @@
 #include "daemon.h"
 #include "settings.h"
 
-RemDev::RemDev(const QString &name, Daemon *parent) : QObject(parent) {
-	this->name = name;
+RemDev::RemDev(const QString &type, Daemon *parent) : QObject(parent) {
+	// TODO:  Move this into the listing code so that we can take advantage of the lock it will use
+	this->name = QString("Unregistered%1%2").arg(type, QString::number(d->countRemoteDevices()+1));
 	d = parent;
 	lg = Logger::get();
 	sg = d->getSettings();
@@ -98,7 +99,7 @@ void RemDev::timeoutPoll() {
 	QMutexLocker l(&req_id_lock);
 	RequestHash::iterator it = reqs.begin();
 	while (it != reqs.end()) {
-		if (it->timeout_time && it->timeout_time <= time) {
+		if (it->timeout_time && it->timeout_time < time) {
 			// TODO:  Generate error object here
 			(*it->handler)(0, QJsonValue(), false);
 			it = reqs.erase(it);
@@ -106,9 +107,7 @@ void RemDev::timeoutPoll() {
 		else ++it;
 	}
 	l.unlock();
-	// Tiered ifs to guarantee that the possibly expensive call to the time function
-	// is avoided after registration
-	if ( ! valid()) if (registrationTimeoutTime < QDateTime::currentMSecsSinceEpoch()) {
+	if ( ! valid() && registrationTimeoutTime < time) {
 		// TODO: Disconnect for registration timeout
 	}
 }

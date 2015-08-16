@@ -65,7 +65,7 @@ public:
 		StreamClosed  //!< The stream was closed by its low-level handler
 	};
 	
-	explicit RemDev(const QString &name, Daemon *parent);
+	explicit RemDev(const QString &type, Daemon *parent);
 	
 	~RemDev();
 	

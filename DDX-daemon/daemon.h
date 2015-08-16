@@ -40,6 +40,7 @@ class UnitManager;
 class Network;
 class Settings;
 class Logger;
+class RemDev;
 
 /*!
  * \brief The main manager of the DDX
@@ -80,6 +81,8 @@ public:
 	const QTimeZone *getTimezone() const {return &tz;}
 	
 	Settings *getSettings() const {return sg;}
+	
+	int countRemoteDevices() const {return devices.size();}
 	
 	/*!
 	 * \brief Compare a version string with this application's version
@@ -145,6 +148,8 @@ private:
 	
 	//! The list of active Paths, including Paths in testing
 	QList<Path*> paths;
+	
+	QList<RemDev*> devices;
 	
 	UnitManager *unitManager;
 	
