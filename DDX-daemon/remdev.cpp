@@ -117,21 +117,22 @@ void RemDev::handleLine(const QByteArray &data) {
 		// TODO
 		return;
 	}*/
-	QJsonObject obj;
-	{
-		QJsonParseError error;
-		QJsonDocument doc = QJsonDocument::fromJson(data, &error);
-		if (error.error != QJsonParseError::NoError) {
-			
-			return;
-		}
-		if ( ! doc.isObject()) {
-			// TODO
-			return;
-		}
-		QJsonObject obj = doc.object();
+	QJsonParseError error;
+	QJsonDocument doc = QJsonDocument::fromJson(data, &error);
+	if (error.error != QJsonParseError::NoError) {
+		
+		return;
 	}
-	
+	if (doc.isArray()) {
+		// TODO
+		return;
+	}
+	if (doc.isObject()) {
+		obj = doc.object();
+		handleObject(obj);
+		return;
+	}
+	// TODO:  Failed
 }
 
 void RemDev::log(const QString &msg, bool isAlert) const {
@@ -141,7 +142,7 @@ void RemDev::log(const QString &msg, bool isAlert) const {
 }
 
 QJsonObject RemDev::newRequest(LocalId id, const QString &method, const QJsonObject &params) const {
-	QJsonObject o = newNotification(method, params);
+	QJsonObject o(newNotification(method, params));
 	if (id) o.insert("id", id);
 	else o.insert("id", QJsonValue::Null);
 	return o;
@@ -185,7 +186,7 @@ void RemDev::sendObject(const QJsonObject &object) {
 
 void RemDev::handleObject(const QJsonObject &obj) {
 	if (obj.contains("method")) {
-		// handle request/notification
+		
 		return;
 	}
 	if (obj.contains("id")) {
@@ -193,6 +194,10 @@ void RemDev::handleObject(const QJsonObject &obj) {
 		return;
 	}
 	// The request was invalid
+}
+
+void RemDev::handleRequest(const QJsonObject obj) {
+	
 }
 
 const QJsonObject RemDev::rpc_seed{{"jsonrpc","2.0"}};

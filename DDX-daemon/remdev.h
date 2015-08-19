@@ -43,7 +43,7 @@ public:
 	// Bool is for whether it was successful; the second value is the contents of the error object if it failed
 	// Note that errors will already be logged but not alerted
 	typedef int LocalId;
-	typedef void (*ResponseHandler)(LocalId, QJsonValue, bool);
+	typedef void (*ResponseHandler)(int, QJsonValue, bool);
 	typedef void (*RequestHandler)(QJsonValue, QJsonValue, bool);
 	typedef QHash<QByteArray, RemDev*> DeviceHash;
 	typedef QList<RemDev*> DeviceList;
@@ -187,9 +187,9 @@ private:
 	
 	void handleObject(const QJsonObject &obj);
 	
-	void handleNotification() const;
+	void handleRequest(const QJsonObject &obj);
 	
-	void handleRequest() const;
+	void handleNotification(const QJsonObject &obj);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(RemDev::ClientRoles)

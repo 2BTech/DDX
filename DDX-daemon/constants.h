@@ -43,7 +43,7 @@
 #define KEEP_UNITMANAGER
 
 // RPC
-#define DEFAULT_REQUEST_TIMEOUT 45000  //!< Time until a request times out in msecs (can be overridden)
+#define DEFAULT_REQUEST_TIMEOUT 60000  //!< Time until a request times out in msecs (can be overridden)
 #define TIMEOUT_POLL_INTERVAL 5000 //!< Timeout polling frequency (in msecs)
 #define MAX_TRANSACTION_SIZE 536870000 //!< Maximum transaction size in bytes
 
