@@ -101,13 +101,14 @@ bool Settings::set(const QByteArray &key, const QVariant &val,
 	return true;
 }
 
-void Settings::reset(const QByteArray &key, const QByteArray &group) {
+QVariant Settings::reset(const QByteArray &key, const QByteArray &group) {
 	QByteArray k = getKey(key, group);
 	QWriteLocker l(&lock);
 	Q_ASSERT(s.contains(k));
 	SettingsHash::iterator it = s.find(k);
 	it->v = it->d;
 	systemSettings->setValue(k, it->v);
+	return it->d;
 }
 
 void Settings::resetAll() {
@@ -145,6 +146,16 @@ QList<Settings::SetEnt> Settings::registerSettings() const {
 	b.enterGroup(SG_RPC);
 	b.add("RegistrationPeriod", tr("Registration timeout period in seconds"),
 		  10, QMetaType::Int);
+	b.add("GlobalPassword", tr("A password which must be known to all devices"),
+		  QByteArray(""), QMetaType::QByteArray);
+	b.add("DaemonPassword", tr("A password which must be known to all managers"),
+		  QByteArray(""), QMetaType::QByteArray);
+	b.add("ManagerPassword", tr("A password which must be known to all managers"),
+		  QByteArray(""), QMetaType::QByteArray);
+	b.add("VertexPassword", tr("A password which must be known to all managers"),
+		  QByteArray(""), QMetaType::QByteArray);
+	b.add("ListenerPassword", tr("A password which must be known to all managers"),
+		  QByteArray(""), QMetaType::QByteArray);
 	
 	b.enterGroup(SG_PATHS);
 	// TODO

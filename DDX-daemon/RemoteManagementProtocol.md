@@ -91,6 +91,7 @@ Name|Value|Description
 `Manager`|0x2|An interface for a device which executes paths
 `Vertex`|0x4|A data responder or producer which does not execute paths
 `Listener`|0x8|A destination for loglines and alerts
+`Global`|0x80|A pseudo-role which indicates role-less information
 
 ### `PathState`	Enumeration
 Name|Value|Description
@@ -141,9 +142,16 @@ unencrypted connection when the server requires encryption, the server will resp
 an "Encryption required" error.  Certificate verification is currently not implemented in
 the DDX daemon, but may be in the future.
 
+### Passwords
+DDX-RPC implementations can require a distinct password for each individual role in addition
+to a global password.  Every required password must be listed in the `register` request
+for it to succeed.  If a connecting client requires passwords of its server, the client
+should disconnect with `PasswordInvalid` if the response passwords were invalid.
+
 ### Server request: `register`
 Every connection must be registered before its requests will be honored.  Any requests or
-notifications sent prior to successful registration will be ignored without error.
+notifications sent prior to successful registration will be ignored without error.  _Note:_
+`register` requests can **NOT** be a part of a JSON-RPC bulk request.
 
 Params:
 
@@ -152,7 +160,8 @@ Name|Info|Type
 `DDX_version`|The client's DDX version in the format "n.n"|string
 `DDX_author`|The client's DDX author|string
 `CID`|The client-given, server-taken connection ID; see "Connection IDs"|string
-`ClientRoles`|The roles which this client fills|`ClientRole`
+`Roles`|The roles which this client fills|`ClientRole`
+`Passwords`|An array of strings containing any passwords that are required|array<string>
 `Name`|The client's (usually) self-designated name|string
 `Timezone`|The client's timezone as TZdb string|string
 `DaylightSavingsEnabled`|Whether the client's timezone enables DST. _Note_: devices should ignore DST by default|bool
@@ -165,6 +174,8 @@ Name|Info|Type
 `DDX_version`|The server's DDX version in the format "n.n"|string
 `DDX_author`|The server's DDX author|string
 `CID`|The server-given, client-taken connection ID; see "Connection IDs"|string
+`Roles`|The roles which this server fills|`ClientRole`
+`Passwords`|An array of strings containing any passwords that are required|array<string>
 `Name`|The server's (usually) self-designated name|string
 `Timezone`|The server's timezone as TZdb string|string
 `DaylightSavingsEnabled`|Whether the server's timezone enables DST. _Note_: devices should ignore DST by default|bool
@@ -188,6 +199,10 @@ Code|Message|Macro
 503|Address forbidden|E_ADDRESS_FORBIDDEN
 504|A specified client role is explicitly forbidden|E_CLIENT_TYPE_FORBIDDEN
 505|Version unreadable|E_VERSION_UNREADABLE
+506|Password invalid|E_PASSWORD_INVALID
+
+Error E_PASSWORD_INVALID should contain a `ClientRole` flag integer which specifies any
+roles which were denied because of invalid passwords.
 
 ### Global notification: `disconnect`
 This notification is usually sent immediately before a device terminates a connection.
@@ -212,6 +227,7 @@ Name|Value|Description
 `RegistrationTimeout`|5|The connection was alive too long without registering
 `BufferOverflow`|6|The connection sent an object too long to be handled
 `StreamClosed`|7|The stream was closed by its low-level handler
+`PasswordInvalid`|8|The passwords sent in response to registration were invalid
 
 ## Path Management
 

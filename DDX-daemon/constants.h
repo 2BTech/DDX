@@ -95,6 +95,7 @@
 #define E_ADDRESS_FORBIDDEN 503 //!< Address forbidden
 #define E_CLIENT_TYPE_FORBIDDEN 504 //!< A specified client role is explicitly forbidden
 #define E_VERSION_UNREADABLE 505 //!< Version unreadable
+#define E_PASSWORD_INVALID 506 //!< Password invalid
 #define E_PATH_NONEXISTENT 200 //!< Path does not exist
 #define E_SETTING_NONEXISTENT 120 //!< Setting does not exist
 #define E_SETTING_CONVERT 121 //!< Setting could not be converted to target type

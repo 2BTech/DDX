@@ -84,10 +84,10 @@ void Daemon::init() {
 				tz = utc;
 			}
 		}
-		lg->log(tr("Using timezone %1").arg(
-			tz.displayName(QTimeZone::GenericTime, QTimeZone::DefaultName)));
-		lg->log(tr("Current DDX time %1").arg(getTime().toString(Qt::ISODate)));
 	}
+	lg->log(tr("Using timezone %1").arg(
+		tz.displayName(QTimeZone::GenericTime, QTimeZone::DefaultName)));
+	lg->log(tr("Current DDX time %1").arg(getTime().toString(Qt::ISODate)));
 
 	//! ### Network Manager Initialization
 	lg->log("STARTING");

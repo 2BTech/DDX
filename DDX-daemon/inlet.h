@@ -58,14 +58,14 @@ public:
 	/*!
 	 * \brief Flag Inlet for starting
 	 * 
-	 * This function should return before the first call to process().  This
+	 * This function must return before the first call to process().  This
 	 * function is called with plenty of stack overhead, so it's best to start
 	 * any data collection systems and then use signals and slots to handle
 	 * individual data lines once control is yielded back to the event loop.
 	 */
-	virtual void start();
+	virtual void start() =0;
 	
-	virtual void stop();
+	virtual void stop() =0;
 	
 	explicit Inlet(Path *parent, const QByteArray &name);
 	

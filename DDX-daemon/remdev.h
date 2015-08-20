@@ -51,7 +51,8 @@ public:
 		DaemonRole = 0x1,
 		ManagerRole = 0x2,
 		VertexRole = 0x4,
-		ListenerRole = 0x8
+		ListenerRole = 0x8,
+		GlobalRole = 0x80
 	};
 	Q_DECLARE_FLAGS(ClientRoles, ClientRole)
 	enum DisconnectReason {
@@ -62,10 +63,11 @@ public:
 		ConnectionTerminated,  //!< The connection was explicitly terminated
 		RegistrationTimeout,  //!< The connection was alive too long without registering
 		BufferOverflow,  //!< The connection sent an object too long to be handled
-		StreamClosed  //!< The stream was closed by its low-level handler
+		StreamClosed,  //!< The stream was closed by its low-level handler
+		PasswordInvalid  //!< The passwords sent in response to registration were invalid
 	};
 	
-	explicit RemDev(const QString &type, Daemon *parent);
+	explicit RemDev(const QString &type, Daemon *daemon);
 	
 	~RemDev();
 	
@@ -82,9 +84,9 @@ public:
 	 * an error will be sent to the client.  Developers should always ensure that
 	 * the result parameter is a valid JSON type.
 	 */
-	bool sendResponse(LocalId id, const QJsonValue &result = true);
+	bool sendResponse(QJsonValue id, const QJsonValue &result = true);
 	
-	bool sendError(LocalId id, int code, const QString &msg, const QJsonValue &data = QJsonValue::Undefined);
+	bool sendError(QJsonValue id, int code, const QString &msg, const QJsonValue &data = QJsonValue::Undefined);
 	
 	bool sendNotification(const QString &method, const QJsonObject &params = QJsonObject());
 	
@@ -100,9 +102,32 @@ signals:
 	
 	void streamDisconnected(DisconnectReason reason) const;
 	
-public slots:
+private slots:
 	
+	/*!
+	 * \brief Poll for operations that have timed out
+	 * 
+	 * Two types of timeouts are possible with DDX-RPC connections, both of which
+	 * are checked by this function.
+	 * 
+	 * The first is individual request timeouts.
+	 * These are mainly meant to protect against attacks in which a connecting client
+	 * triggers repeated requests without responding to any, causing the #reqs member
+	 * to grow indefinitely.  If a request does not receive a response within its
+	 * requester-specified timeout time, an error will be sent to its handler and the
+	 * corresponding RequestRef entry will be removed.
+	 * 
+	 * Registration timeouts will occur when a connection is not successfully
+	 * registered within a user-set time interval.  Registration timeouts cannot
+	 * be disabled and are meant to inhibit non-DDX connections from sitting
+	 * unregistered forever.  Registration timeouts cause disconnection.
+	 * 
+	 * This function is called regularly by the #timeoutPoller QTimer.  This timer
+	 * is automatically started and stopped as needed.
+	 */
 	void timeoutPoll();
+	
+	void init();
 	
 protected:
 	
@@ -132,11 +157,13 @@ protected:
 	
 	QJsonObject newResponse(QJsonValue id, const QJsonValue &result);
 	
-	QJsonObject newError(LocalId id, int code, const QString &msg, const QJsonValue &data) const;
+	QJsonObject newError(QJsonValue id, int code, const QString &msg, const QJsonValue &data) const;
 	
 	QJsonObject newNotification(const QString &method, const QJsonObject &params) const;
 	
 	//void simulateError(LocalId id, const RequestRef *ref, int code);
+	
+	virtual void sub_init() {}
 	
 	virtual void terminate(DisconnectReason reason = StreamClosed) =0;
 	
@@ -190,6 +217,8 @@ private:
 	void handleRequest(const QJsonObject &obj);
 	
 	void handleNotification(const QJsonObject &obj);
+	
+	void handleRegistration(const QJsonObject &obj);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(RemDev::ClientRoles)

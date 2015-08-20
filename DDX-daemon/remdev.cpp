@@ -21,22 +21,22 @@
 #include "daemon.h"
 #include "settings.h"
 
-RemDev::RemDev(const QString &type, Daemon *parent) : QObject(parent) {
-	// TODO:  Move this into the listing code so that we can take advantage of the lock it will use
-	this->name = QString("Unregistered%1%2").arg(type, QString::number(d->countRemoteDevices()+1));
-	d = parent;
+RemDev::RemDev(const QString &type, Daemon *daemon) :
+		QObject(0), req_id_lock(QMutex::Recursive) {
+	connectTime = QDateTime::currentMSecsSinceEpoch();
+	d = daemon;
 	lg = Logger::get();
 	sg = d->getSettings();
 	lastId = 0;
-	connectTime = QDateTime::currentMSecsSinceEpoch();
-	int registrationPeriod = sg->v("RegistrationPeriod", SG_RPC).toInt();
-	registrationTimeoutTime = connectTime + (registrationPeriod * 1000);
-	// Set up timeout polling
-	timeoutPoller = new QTimer(this);
-	timeoutPoller->setTimerType(Qt::CoarseTimer);
-	timeoutPoller->setInterval(TIMEOUT_POLL_INTERVAL);
-	connect(timeoutPoller, &QTimer::timeout, this, &RemDev::timeoutPoll);
-	timeoutPoller->start();  // Start immediately for registration timeout
+	// TODO:  Move this into the listing code so that we can take advantage of the lock it will use
+	this->name = tr("Unregistered%1%2").arg(type, QString::number(d->countRemoteDevices()+1));
+	// Threading
+	QThread *t = new QThread(daemon);
+	moveToThread(t);
+	connect(t, &QThread::started, this, &RemDev::init);
+	connect(this, &RemDev::destroyed, t, &QThread::quit);
+	connect(t, &QThread::finished, t, &QThread::deleteLater);
+	t->start();
 }
 
 RemDev::~RemDev() {
@@ -68,7 +68,7 @@ int RemDev::sendRequest(ResponseHandler handler, const QString &method,
 	return id;
 }
 
-bool RemDev::sendResponse(LocalId id, const QJsonValue &result) {
+bool RemDev::sendResponse(QJsonValue id, const QJsonValue &result) {
 	if ( ! valid()) return false;
 	if (result.type() == QJsonValue::Undefined) {
 		lg->log(tr("DDX bug: an RPC method returned a response with no result"));
@@ -80,8 +80,9 @@ bool RemDev::sendResponse(LocalId id, const QJsonValue &result) {
 	return true;
 }
 
-bool RemDev::sendError(LocalId id, int code, const QString &msg, const QJsonValue &data) {
+bool RemDev::sendError(QJsonValue id, int code, const QString &msg, const QJsonValue &data) {
 	if ( ! valid()) return false;
+	if (id.type() == QJsonValue::Undefined) id = QJsonValue::Null;
 	QJsonObject error = newError(id, code, msg, data);
 	sendObject(error);
 	return true;
@@ -96,12 +97,13 @@ bool RemDev::sendNotification(const QString &method, const QJsonObject &params) 
 
 void RemDev::timeoutPoll() {
 	qint64 time = QDateTime::currentMSecsSinceEpoch();
+	QJsonObject error({{"code", E_REQUEST_TIMEOUT},
+					   {"message", tr("Request timed out")}});
 	QMutexLocker l(&req_id_lock);
 	RequestHash::iterator it = reqs.begin();
 	while (it != reqs.end()) {
 		if (it->timeout_time && it->timeout_time < time) {
-			// TODO:  Generate error object here
-			(*it->handler)(0, QJsonValue(), false);
+			(*it->handler)(it.key(), error, false);
 			it = reqs.erase(it);
 		}
 		else ++it;
@@ -110,6 +112,23 @@ void RemDev::timeoutPoll() {
 	if ( ! valid() && registrationTimeoutTime < time) {
 		// TODO: Disconnect for registration timeout
 	}
+}
+
+void RemDev::init() {
+	int registrationPeriod = sg->v("RegistrationPeriod", SG_RPC).toInt();
+	if (registrationPeriod < 1) {
+		lg->log(tr("User attempted to set a registration period less than 1 second; defaulting"));
+		registrationPeriod = sg->reset("RegistrationPeriod", SG_RPC).toInt();
+	}
+	registrationTimeoutTime = connectTime + (registrationPeriod * 1000);
+	// Set up timeout polling
+	timeoutPoller = new QTimer(this);
+	timeoutPoller->setTimerType(Qt::CoarseTimer);
+	timeoutPoller->setInterval(TIMEOUT_POLL_INTERVAL);
+	connect(timeoutPoller, &QTimer::timeout, this, &RemDev::timeoutPoll);
+	// Call the subclass init function
+	sub_init();
+	timeoutPoller->start();  // Start immediately for registration timeout
 }
 
 void RemDev::handleLine(const QByteArray &data) {
@@ -123,12 +142,16 @@ void RemDev::handleLine(const QByteArray &data) {
 		
 		return;
 	}
+	if ( ! valid()) {
+		handleRegistration(doc.object());
+		return;
+	}
 	if (doc.isArray()) {
 		// TODO
 		return;
 	}
 	if (doc.isObject()) {
-		obj = doc.object();
+		QJsonObject obj = doc.object();
 		handleObject(obj);
 		return;
 	}
@@ -162,15 +185,14 @@ QJsonObject RemDev::newNotification(const QString &method, const QJsonObject &pa
 	return o;
 }
 
-QJsonObject RemDev::newError(LocalId id, int code, const QString &msg, const QJsonValue &data) const {
+QJsonObject RemDev::newError(QJsonValue id, int code, const QString &msg, const QJsonValue &data) const {
 	QJsonObject e;
 	e.insert("code", code);
 	e.insert("message", msg);
 	if (data.type() != QJsonValue::Undefined) e.insert("data", data);
 	QJsonObject o(rpc_seed);
 	o.insert("error", e);
-	if (id) o.insert("id", id);
-	else o.insert("id", QJsonValue::Null);
+	o.insert("id", id);
 	return o;
 }
 
@@ -185,6 +207,10 @@ void RemDev::sendObject(const QJsonObject &object) {
 }
 
 void RemDev::handleObject(const QJsonObject &obj) {
+	if ( ! valid()) {
+		handleRegistration(obj);
+		return;
+	}
 	if (obj.contains("method")) {
 		
 		return;
@@ -196,8 +222,14 @@ void RemDev::handleObject(const QJsonObject &obj) {
 	// The request was invalid
 }
 
-void RemDev::handleRequest(const QJsonObject obj) {
+void RemDev::handleRequest(const QJsonObject &obj) {
 	
+}
+
+void RemDev::handleRegistration(const QJsonObject &obj) {
+	// If this is not a register request, return without error
+	if (QString::compare(obj.value("register").toString(), "register"))
+		return;
 }
 
 const QJsonObject RemDev::rpc_seed{{"jsonrpc","2.0"}};

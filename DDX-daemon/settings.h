@@ -60,7 +60,13 @@ public:
 	bool set(const QByteArray &key, const QVariant &val,
 			 const QByteArray &group = "", bool save = true);
 	
-	void reset(const QByteArray &key, const QByteArray &group = "");
+	/*!
+	 * \brief Reset a setting to its default value
+	 * \param key The setting's key
+	 * \param group The setting's group
+	 * \return The setting's default value
+	 */
+	QVariant reset(const QByteArray &key, const QByteArray &group = "");
 	
 	QVariant getDefault(const QByteArray &key, const QByteArray &group = "") const;
 	

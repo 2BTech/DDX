@@ -43,14 +43,6 @@ bool Inlet::isFinite() const {
 	return false;
 }
 
-void Inlet::start() {
-	alert("DDX bug: start() not reimplemented");
-}
-
-void Inlet::stop() {
-	alert("DDX bug: stop() not reimplemented");
-}
-
 void Inlet::handleReconfigure() {
 #ifdef CAUTIOUS_ALERTS
 		alert("DDX bug: handleReconfigure() called on an inlet");
