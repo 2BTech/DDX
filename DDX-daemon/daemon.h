@@ -24,11 +24,6 @@
 #include <QDateTime>
 #include <QTimeZone>
 #include <QSettings>
-#ifdef ICON
-	#include <QSystemTrayIcon>
-	#include <QIcon>
-	#include <QMenu>
-#endif
 #include <QThread>
 #include <QList>
 #include <QJsonObject>
@@ -36,7 +31,7 @@
 #include "constants.h"
 
 class Path;
-class UnitManager;
+class PathManager;
 class Network;
 class Settings;
 class Logger;
@@ -64,7 +59,9 @@ public:
 	
 	void addPath(const QByteArray &name, int log = 0);
 	
-	UnitManager *getUnitManager();
+	QString addDevice(RemDev *dev);
+	
+	PathManager *getUnitManager();
 	
 	void releaseUnitManager();
 	
@@ -138,20 +135,18 @@ private:
 	
 	Network *n;
 	
-	//! Used to direct RPC responses to their requestor
-	QHash<int, QString> responseDirector;
-	
-#ifdef ICON
-	QSystemTrayIcon *trayIcon;
-	QMenu *trayMenu;
-#endif
-	
 	//! The list of active Paths, including Paths in testing
 	QList<Path*> paths;
 	
+	/*! A list of all connected devices; used mainly for garbage collection
+	 * 
+	 * Note that devices in this list are not guaranteed to have unique cids!
+	 */
 	QList<RemDev*> devices;
 	
-	UnitManager *unitManager;
+	QMutex dLock;
+	
+	PathManager *unitManager;
 	
 	QTimeZone tz;
 	

@@ -38,7 +38,7 @@
 	//! Whether to check for rigorously check for JSON parsing errors in schemes which should come from the DDX itself
 	#define PATH_PARSING_CHECKS
 	#define CAUTIOUS_CHECKS
-	// #define LIST_SETTINGS_STARTUP
+	#define LIST_SETTINGS_STARTUP
 #endif
 #define KEEP_UNITMANAGER
 

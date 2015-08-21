@@ -97,7 +97,7 @@ private:
 			this->msg = msg;
 			this->isAlert = isAlert;
 		}
-		QJsonObject toNetwork() {
+		QJsonObject toRpc() {
 			QJsonObject o;
 			o.insert("Message", msg);
 			o.insert("Time", time.toString(Qt::ISODate));

@@ -67,7 +67,7 @@ public:
 		PasswordInvalid  //!< The passwords sent in response to registration were invalid
 	};
 	
-	explicit RemDev(const QString &type, Daemon *daemon);
+	explicit RemDev(Daemon *daemon);
 	
 	~RemDev();
 	
@@ -80,9 +80,8 @@ public:
 	 * \param result
 	 * \return 
 	 * 
-	 * _Warning:_ If the result parameter is of type `QJsonValue::Undefined`,
-	 * an error will be sent to the client.  Developers should always ensure that
-	 * the result parameter is a valid JSON type.
+	 * _Warning:_ Developers should ensure that the result parameter is always a
+	 * valid JSON type.
 	 */
 	bool sendResponse(QJsonValue id, const QJsonValue &result = true);
 	
@@ -92,13 +91,13 @@ public:
 	
 	void close(DisconnectReason reason = StreamClosed);
 	
-	bool valid() {return !cid.isNull();}
+	bool valid() {return registered;}
 	
 	static const QJsonObject rpc_seed;
 	
 signals:
 	
-	void registered() const;
+	void nowRegistered() const;
 	
 	void streamDisconnected(DisconnectReason reason) const;
 	
@@ -131,17 +130,17 @@ private slots:
 	
 protected:
 	
-	QString name;
-	
 	Daemon *d;
 	
 	Logger *lg;
 	
 	Settings *sg;
 	
-	QByteArray cid;
+	bool registered;
 	
-	QByteArray client_cid;
+	QString cid;
+	
+	QString client_cid;
 	
 	QByteArray locale;
 	

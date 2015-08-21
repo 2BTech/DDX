@@ -45,7 +45,6 @@ SOURCES += main.cpp \
     inlet.cpp \
     path.cpp \
     module.cpp \
-    unitmanager.cpp \
     modules/genmod.cpp \
     modules/examplemodule.cpp \
     modules/module_register.cpp \
@@ -54,7 +53,8 @@ SOURCES += main.cpp \
     logger.cpp \
     modules/exampleinlet.cpp \
     remdev.cpp \
-    netdev.cpp
+    netdev.cpp \
+    pathmanager.cpp
 
 HEADERS += \
     constants.h \
@@ -64,7 +64,6 @@ HEADERS += \
     path.h \
     module.h \
     data.h \
-    unitmanager.h \
     modules/genmod.h \
     modules/examplemodule.h \
     network.h \
@@ -72,7 +71,8 @@ HEADERS += \
     logger.h \
     modules/exampleinlet.h \
     remdev.h \
-    netdev.h
+    netdev.h \
+    pathmanager.h
 
 DISTFILES += \
     DaemonCommandLineArguments.txt \

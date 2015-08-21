@@ -21,15 +21,15 @@
 #include "daemon.h"
 #include "settings.h"
 
-RemDev::RemDev(const QString &type, Daemon *daemon) :
+RemDev::RemDev(Daemon *daemon) :
 		QObject(0), req_id_lock(QMutex::Recursive) {
 	connectTime = QDateTime::currentMSecsSinceEpoch();
 	d = daemon;
 	lg = Logger::get();
 	sg = d->getSettings();
 	lastId = 0;
-	// TODO:  Move this into the listing code so that we can take advantage of the lock it will use
-	this->name = tr("Unregistered%1%2").arg(type, QString::number(d->countRemoteDevices()+1));
+	registered = false;
+	this->cid = d->addDevice(this);
 	// Threading
 	QThread *t = new QThread(daemon);
 	moveToThread(t);
@@ -70,28 +70,19 @@ int RemDev::sendRequest(ResponseHandler handler, const QString &method,
 
 bool RemDev::sendResponse(QJsonValue id, const QJsonValue &result) {
 	if ( ! valid()) return false;
-	if (result.type() == QJsonValue::Undefined) {
-		lg->log(tr("DDX bug: an RPC method returned a response with no result"));
-		sendError(id, E_METHOD_RESPONSE_INVALID, tr("Method gave invalid response"));
-		return false;
-	}
-	QJsonObject response = newResponse(id, result);
-	sendObject(response);
+	sendObject(newResponse(id, result));
 	return true;
 }
 
 bool RemDev::sendError(QJsonValue id, int code, const QString &msg, const QJsonValue &data) {
 	if ( ! valid()) return false;
-	if (id.type() == QJsonValue::Undefined) id = QJsonValue::Null;
-	QJsonObject error = newError(id, code, msg, data);
-	sendObject(error);
+	sendObject(newError(id, code, msg, data));
 	return true;
 }
 
 bool RemDev::sendNotification(const QString &method, const QJsonObject &params) {
 	if ( ! valid()) return false;
-	QJsonObject notification = newNotification(method, params);
-	sendObject(notification);
+	sendObject(newNotification(method, params));
 	return true;
 }
 
@@ -138,12 +129,16 @@ void RemDev::handleLine(const QByteArray &data) {
 	}*/
 	QJsonParseError error;
 	QJsonDocument doc = QJsonDocument::fromJson(data, &error);
-	if (error.error != QJsonParseError::NoError) {
-		
+	// Check for registration before handling parsing errors because it will just
+	// return if any errors occurred (we don't want to send anything to prevent
+	// overload attacks if we're unregistered)
+	if ( ! valid()) {
+		if ( ! doc.isObject()) return;
+		handleRegistration(doc.object());
 		return;
 	}
-	if ( ! valid()) {
-		handleRegistration(doc.object());
+	if (error.error != QJsonParseError::NoError) {
+		
 		return;
 	}
 	if (doc.isArray()) {
@@ -159,15 +154,14 @@ void RemDev::handleLine(const QByteArray &data) {
 }
 
 void RemDev::log(const QString &msg, bool isAlert) const {
-	QString out(name);
+	QString out(cid);
 	out.append(": ").append(msg);
 	lg->log(msg, isAlert);
 }
 
 QJsonObject RemDev::newRequest(LocalId id, const QString &method, const QJsonObject &params) const {
 	QJsonObject o(newNotification(method, params));
-	if (id) o.insert("id", id);
-	else o.insert("id", QJsonValue::Null);
+	o.insert("id", id);
 	return o;
 }
 
@@ -192,6 +186,7 @@ QJsonObject RemDev::newError(QJsonValue id, int code, const QString &msg, const 
 	if (data.type() != QJsonValue::Undefined) e.insert("data", data);
 	QJsonObject o(rpc_seed);
 	o.insert("error", e);
+	if (id.type() == QJsonValue::Undefined) id = QJsonValue::Null;
 	o.insert("id", id);
 	return o;
 }
@@ -230,6 +225,9 @@ void RemDev::handleRegistration(const QJsonObject &obj) {
 	// If this is not a register request, return without error
 	if (QString::compare(obj.value("register").toString(), "register"))
 		return;
+	
+	registered = true;
+	emit nowRegistered();
 }
 
 const QJsonObject RemDev::rpc_seed{{"jsonrpc","2.0"}};

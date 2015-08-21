@@ -17,7 +17,7 @@
  ******************************************************************************/
 
 #include "daemon.h"
-#include "unitmanager.h"
+#include "pathmanager.h"
 #include "path.h"
 #include "network.h"
 #include "modules/genmod.h"
@@ -130,7 +130,7 @@ void Daemon::testPath(const QByteArray &scheme, int log) {
 
 void Daemon::addPath(const QByteArray &name, int log) {
 	this->lg->log("fail");
-	UnitManager *um = getUnitManager();
+	PathManager *um = getUnitManager();
 	QByteArray scheme = um->getPathScheme(name);
 	// TODO add error checking for scheme not found
 	QThread *t = new QThread(this);
@@ -143,6 +143,14 @@ void Daemon::addPath(const QByteArray &name, int log) {
 	t->start();
 	log +=2;
 	// TODO
+}
+
+QString Daemon::addDevice(RemDev *dev) {
+	dLock.lock();
+	devices.append(dev);
+	int ct = devices.size();
+	dLock.unlock();
+	return tr("Unregistered%1").arg(ct);
 }
 
 void Daemon::request(QJsonObject params, QString dest, bool response) {
@@ -174,8 +182,8 @@ void Daemon::quit(int returnCode) {
 	qApp->exit(returnCode);
 }
 
-UnitManager* Daemon::getUnitManager() {
-	if ( ! unitManager) unitManager = new UnitManager(this);
+PathManager* Daemon::getUnitManager() {
+	if ( ! unitManager) unitManager = new PathManager(this);
 #ifndef KEEP_UNITMANAGER
 	logger->log("Unit manager requested");
 	umRefCount++;

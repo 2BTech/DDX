@@ -16,7 +16,7 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#include "unitmanager.h"
+#include "pathmanager.h"
 #include "module.h"
 #include "daemon.h"
 #include "path.h"
@@ -25,7 +25,7 @@
 // TODO: Remove
 #include "modules/genmod.h"
 
-UnitManager::UnitManager(Daemon *parent) : QObject(parent)
+PathManager::PathManager(Daemon *parent) : QObject(parent)
 {
 	registerModules();
 	schemeFileNeedsRewriting = false;
@@ -34,18 +34,18 @@ UnitManager::UnitManager(Daemon *parent) : QObject(parent)
 	// TODO: load paths
 }
 
-UnitManager::~UnitManager()
+PathManager::~PathManager()
 {
 	// TODO: iterate through modules
 }
 
-QByteArray UnitManager::getPathScheme(QString name) const {
+QByteArray PathManager::getPathScheme(QString name) const {
 	// TODO
 	name.size();
 	return QByteArray();
 }
 
-QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
+QString PathManager::verifyPathScheme(const QByteArray scheme) const {
 	// Check basic scheme parsing requirements
 	if (scheme.isEmpty())
 		return tr("Scheme is empty");
@@ -123,7 +123,7 @@ QString UnitManager::verifyPathScheme(const QByteArray scheme) const {
 	// TODO:  This function is largely untested!
 }
 
-QString UnitManager::addPath(const QByteArray scheme, bool save) {
+QString PathManager::addPath(const QByteArray scheme, bool save) {
 	QString error = verifyPathScheme(scheme);
 	if ( ! error.isEmpty()) return error;
 	// TODO
@@ -131,13 +131,17 @@ QString UnitManager::addPath(const QByteArray scheme, bool save) {
 	return QString();
 }
 
-bool UnitManager::moduleExists(const QString type) const {
+bool PathManager::moduleExists(const QString type) const {
 	return modules.contains(type);
 }
 
-Module* UnitManager::constructModule(const QString type, Path *parent, const QString name) const {
+Module* PathManager::constructModule(const QString type, Path *parent, const QString name) const {
 	return (Module*) modules.value(type).newInstance(Q_ARG(Path*, parent),
 													 Q_ARG(QString, name));
+}
+
+void PathManager::handleRpcRequest(const QJsonValue &id, const QString &method, const QJsonValue &params) {
+	
 }
 
 #include "modules/module_register.cpp"

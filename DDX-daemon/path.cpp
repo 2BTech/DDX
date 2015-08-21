@@ -20,7 +20,7 @@
 #include "daemon.h"
 #include "module.h"
 #include "inlet.h"
-#include "unitmanager.h"
+#include "pathmanager.h"
 #include "logger.h"
 
 Path::Path(Daemon *daemon, const QByteArray &name, const QByteArray &scheme) : QObject(0)
@@ -115,7 +115,7 @@ void Path::test(QString methodName) {
 }
 
 void Path::init() {
-	UnitManager *um = d->getUnitManager();
+	PathManager *um = d->getUnitManager();
 	// Parse scheme
 #ifdef PATH_PARSING_CHECKS
 	QString parseError = um->verifyPathScheme(scheme);

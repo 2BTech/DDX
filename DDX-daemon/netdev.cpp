@@ -18,7 +18,7 @@
 
 #include "netdev.h"
 
-NetDev::NetDev(Daemon *parent) : RemDev("Network", parent) {
+NetDev::NetDev(Daemon *daemon) : RemDev(daemon) {
 	
 }
 

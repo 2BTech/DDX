@@ -29,7 +29,7 @@
 class Module;
 class Inlet;
 class Daemon;
-class UnitManager;
+class PathManager;
 class Logger;
 
 /*!

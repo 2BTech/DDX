@@ -19,13 +19,26 @@
 -->
 
 # DDX Remote Management Protocol (DDX-RPC)
-DDX-RPC uses strictly-compliant [JSON-RPC 2.0](http://www.jsonrpc.org/specification). 
-At the low level, each DDX daemon opens a TCP server, by default on port 4388, to 
-which GUIs, other DDX daemons, and other data sources or sinks can connect.  Every 
-RPC object transmitted must be separated by exactly one line feed (ASCII 10).  All 
-text must be encoded in UTF-8.  SSL support is planned but not currently in development. 
-All DDX-RPC objects from a particular client will be ignored until a corresponding 
-`register` request is accepted by the daemon.
+DDX-RPC uses strictly-compliant [JSON-RPC 2.0](http://www.jsonrpc.org/specification).
+All text must be encoded in UTF-8.  All DDX-RPC objects from a particular client will
+be ignored until a corresponding `register` request is accepted by the server.  The
+only exceptions to the JSON-RPC protocol are as follows:
+
+- Bulk requests are not currently supported
+- JSON _must_ be sent in compacted form because line feed characters (ASCII 10) are
+prohibited within RPC items
+
+## Link Agnosticism
+For the most part, DDX-RPC can be implemented on any persistent bidirectional data
+transmission system.  So far, the DDX daemon only implements a network link.
+
+### Network Link
+At the low level, each DDX daemon opens a TCP server, by default on port 4388, to
+which GUIs, other DDX daemons, and other data sources or sinks can connect.  SSL
+support is planned but not currently in development.  Every RPC object transmitted
+must be separated by exactly one line feed (ASCII 10); line feeds are not allowed
+in the objects themselves (JSON data must be compacted).
+
 
 <!--[TOC]-->
 
@@ -231,8 +244,8 @@ Name|Value|Description
 
 ## Path Management
 
-### Daemon request: `listPaths`
-### Daemon request: `openPath`
+### Daemon request: `path.list`
+### Daemon request: `path.open`
 Initialize a given path.  It will be automatically watched.  Params:
 
 Name|Info|Type
@@ -250,7 +263,7 @@ Code|Message|Macro
 ---|---|---
 200|Path does not exist|E_PATH_NONEXISTENT
 
-### Daemon request: `startPath`
+### Daemon request: `path.start`
 Start data processing on a given path.  The path will be initialized and then started
 if it is not already open.  It will be automatically watched.  Params:
 
@@ -266,7 +279,7 @@ Code|Message|Macro
 ---|---|---
 200|Path does not exist|E_PATH_NONEXISTENT
 
-### Daemon request: `stopPath`
+### Daemon request: `path.stop`
 Stop data processing on a given path.  Params:
 
 Name|Info|Type
@@ -281,10 +294,10 @@ Code|Message|Macro
 ---|---|---
 200|Path does not exist|E_PATH_NONEXISTENT
 
-### Daemon request: `testPath`
-### Daemon request: `addPath`
-### Daemon request: `modifyPath`
-### Daemon request: `watchPath`
+### Daemon request: `path.test`
+### Daemon request: `path.add`
+### Daemon request: `path.modify`
+### Daemon request: `path.watch`
 Start watching a path.  Watching a path means a client will receive its
 `pathStateChanged` notifications and echoed lines.  To ignore a path,
 send this with "false" for both Listen parameters.
@@ -304,7 +317,7 @@ Code|Message|Macro
 ---|---|---
 200|Path does not exist|E_PATH_NONEXISTENT
 
-### Daemon notification: `pathEcho`
+### Daemon notification: `path.echo`
 When a path contains the Echo module, every data line it receives will be echoed
 out to any watchers of the containing path.  The params of this notification will
 contain the following:
@@ -314,7 +327,7 @@ Name|Info|Type
 `Path`|The name of the path this is coming from|string
 `Data`|The echoed data line|`DataLine`
 
-### Daemon notification: `pathStateChanged`
+### Daemon notification: `path.stateChanged`
 Sent whenever a watched path changes state.  Params:
 
 Name|Info|Type
@@ -324,7 +337,7 @@ Name|Info|Type
 
 ## Administration
 
-### Global notification: `log`
+### Listener notification: `log`
 Params:
 
 Name|Info|Type
@@ -333,7 +346,7 @@ Name|Info|Type
 `Time`|The time the message was sent|`UtcTime`
 `IsAlert`|Whether this is destined for the user or for logging only|bool
 
-### Global request: `setLogFilters`
+### Listener request: `log.setFilters`
 Params:
 
 Name|Info|Type
@@ -343,7 +356,7 @@ Name|Info|Type
 
 Result bool will be true on success.
 
-### Global request: `listSettings`
+### Global request: `settings.list`
 List all of the program's settings.  Takes no parameters.
 
 Result is an object with every setting listed inside.  If the setting's type cannot
@@ -363,7 +376,7 @@ Name|Info|Type
 `IsBase64`|Whether `Value` and `Default` are base-64 encoded; defaults to "false" if omitted|bool
 `IsJson`|Whether `Value` and `Default` are encoded in JSON; defaults to "false" if omitted|bool
 
-### Global request: `editSetting`
+### Global request: `settings.edit`
 Currently, only settings which can be converted to and from strings or serialized
 into binary are supported.  If both `IsJson` and `IsBase64` are true, value
 is base64-decoded prior to being JSON-decoded.

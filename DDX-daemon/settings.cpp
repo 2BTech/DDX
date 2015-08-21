@@ -27,7 +27,7 @@ Settings::Settings(Daemon *parent) : QObject(parent) {
 	QList<SetEnt> loaded = registerSettings();
 	foreach (const SetEnt &set, loaded) {
 #ifdef LIST_SETTINGS_STARTUP
-		logger->log(QString("Found setting: ").append(set.key));
+		lg->log(QString("Found setting: ").append(set.key));
 #endif
 		Q_ASSERT(((QMetaType::Type) set.defVal.type()) == set.type);
 		s.insert(set.key, Setting(set.defVal, set.type));
@@ -40,9 +40,9 @@ Settings::Settings(Daemon *parent) : QObject(parent) {
 	}
 	int vc = Daemon::versionCompare(systemSettings->value("Version").toString());
 	if (vc > 0) {
-		lg->log(tr("Settings are for higher version or corrupted. "
-					   "Run latest version or launch daemon with '-reconfigure' "
-					   "option to reset all settings."), true);
+		lg->log
+			(tr("Settings are for higher version or corrupted. Run latest version "
+				"or launch daemon with '-reconfigure' option to reset all settings."), true);
 		// TODO:  Quit here
 		parent->quit(E_SETTINGS_VERSION);
 		return;

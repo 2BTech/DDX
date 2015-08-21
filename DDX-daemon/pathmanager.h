@@ -16,8 +16,8 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#ifndef UNITMANAGER_H
-#define UNITMANAGER_H
+#ifndef PATHMANAGER_H
+#define PATHMANAGER_H
 
 #include <QObject>
 #include <QJsonObject>
@@ -49,14 +49,14 @@ class Path;
  * Failing to register your Modules and Beacons properly can cause them to not
  * be seen by the UnitManager or can crash the application.
  */
-class UnitManager : public QObject
+class PathManager : public QObject
 {
 	Q_OBJECT
 public:
 	
-	explicit UnitManager(Daemon *parent);
+	explicit PathManager(Daemon *parent);
 	
-	~UnitManager();
+	~PathManager();
 	
 	QByteArray getPathScheme(QString name) const;
 	
@@ -99,6 +99,8 @@ public:
 	 */
 	Module* constructModule(const QString type, Path *parent, const QString name) const;
 	
+	void handleRpcRequest(const QJsonValue &id, const QString &method, const QJsonValue &params);
+	
 	/*!
 	 * \brief Get a list of Modules
 	 * \return JSON list of Modules with descriptions and settings
@@ -136,4 +138,4 @@ private:
 	QMap<QString, QString> getModuleDescriptions() const;
 };
 
-#endif // UNITMANAGER_H
+#endif // PATHMANAGER_H
