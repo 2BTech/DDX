@@ -31,7 +31,7 @@ class NetDev : public RemDev
 {
 	Q_OBJECT
 public:
-	NetDev(Daemon *daemon);
+	NetDev(Daemon *daemon, bool inbound);
 	
 	~NetDev();
 	

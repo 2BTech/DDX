@@ -66,6 +66,10 @@ public:
 	 */
 	QString addDevice(RemDev *dev);
 	
+	void registerDevice(RemDev *dev);
+	
+	void removeDevice(RemDev *dev);
+	
 	PathManager *getUnitManager();
 	
 	void releaseUnitManager();

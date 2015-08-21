@@ -24,7 +24,7 @@ All text must be encoded in UTF-8.  All DDX-RPC objects from a particular client
 be ignored until a corresponding `register` request is accepted by the server.  The
 only exceptions to the JSON-RPC protocol are as follows:
 
-- Bulk requests are not currently supported
+- Batch requests are not currently supported
 - JSON _must_ be sent in compacted form because line feed characters (ASCII 10) are
 prohibited within RPC items
 
@@ -131,12 +131,16 @@ Code|Message|Macro
 -32005|Request timed out|E_REQUEST_TIMEOUT
 -32006|Encryption required|E_ENCRYPTION_REQUIRED
 -32007|Method gave invalid response|E_METHOD_RESPONSE_INVALID
+-32008|Device disconnected|E_DEVICE_DISCONNECTED
 
 Note that the "Request timed out" error is reserved for sending by the DDX-RPC
 implementation on the device from which the request was sent.  When a request is
 sent, the DDX-RPC implementation marks down the time.  If no corresponding response is
 received within a given time, the DDX-RPC implementation should send a simulated
 response error with the code -32005.
+
+The "Device disconnected" error will also be sent by the DDX-RPC implementation.  The
+data member of the error will contain the `DisconnectReason` value.
 
 ## Registration & Disconnection
 Registration is a required handshake that allows connecting devices to understand

@@ -21,17 +21,20 @@
 #include "daemon.h"
 #include "settings.h"
 
-RemDev::RemDev(Daemon *daemon) :
+RemDev::RemDev(Daemon *daemon, bool inbound) :
 		QObject(0), req_id_lock(QMutex::Recursive) {
+	// Initializations
 	connectTime = QDateTime::currentMSecsSinceEpoch();
 	d = daemon;
 	lg = Logger::get();
 	sg = d->getSettings();
 	lastId = 0;
 	registered = false;
-	this->cid = d->addDevice(this);
+	this->inbound = inbound;
+	// Add to master device list and get temporary cid
+	cid = d->addDevice(this);
 	// Threading
-#ifdef RPC_THREADS
+#ifdef REMDEV_THREADS
 	QThread *t = new QThread(daemon);
 	moveToThread(t);
 	connect(t, &QThread::started, this, &RemDev::init);
@@ -44,7 +47,7 @@ RemDev::RemDev(Daemon *daemon) :
 }
 
 RemDev::~RemDev() {
-	
+	delete timeoutPoller;
 }
 
 int RemDev::sendRequest(ResponseHandler handler, const QString &method,
@@ -91,9 +94,18 @@ bool RemDev::sendNotification(const QString &method, const QJsonObject &params) 
 }
 
 void RemDev::close(DisconnectReason reason, bool fromRemote) {
-	emit deviceDisconnected(reason, fromRemote);
 	registered = false;
 	terminate(reason, fromRemote);
+	emit deviceDisconnected(this, reason, fromRemote);
+	if (reqs.size()) {
+		req_id_lock.lock();
+		QJsonObject error({{"code", E_DEVICE_DISCONNECTED},
+						   {"message", tr("Device disconnected")},
+						   {"data", reason}});
+		RequestHash::const_iterator it;
+		for (it = reqs.constBegin(); it != reqs.constEnd(); ++it)
+			(*it->handler)(it.key(), error, false);
+	}
 	deleteLater();
 }
 
@@ -133,7 +145,7 @@ void RemDev::init() {
 	timeoutPoller->start();  // Start immediately for registration timeout
 }
 
-void RemDev::handleLine(const QByteArray &data) {
+void RemDev::handleItem(const QByteArray &data) {
 	/*if (data.size() > MAX_TRANSACTION_SIZE) {
 		// TODO
 		return;
@@ -234,11 +246,29 @@ void RemDev::handleRequest(const QJsonObject &obj) {
 
 void RemDev::handleRegistration(const QJsonObject &obj) {
 	// If this is not a register request, return without error
-	if (QString::compare(obj.value("register").toString(), "register"))
-		return;
+	if (QString::compare(obj.value("register").toString(), "register")) return;
+	// Start checking params
+	
+	
 	
 	registered = true;
-	emit nowRegistered();
+	d->registerDevice(this);
 }
 
 const QJsonObject RemDev::rpc_seed{{"jsonrpc","2.0"}};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

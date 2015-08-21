@@ -132,7 +132,7 @@ void Network::handleConnection() {
 				this, &Network::handleNetworkError);
 		connect(s, &QTcpSocket::disconnected, this, &Network::handleDisconnection);
 		connect(s, &QTcpSocket::readyRead, this, &Network::handleData);
-		NetDev *dev = new NetDev(d);
+		NetDev *dev = new NetDev(d, true);
 		cons.insert(s, dev);
 		s->setParent(this);
 		s->setSocketOption(QAbstractSocket::LowDelayOption, 1);  // Disable Nagel's algorithm

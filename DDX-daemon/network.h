@@ -72,14 +72,11 @@ private slots:
 	void handleNetworkError(QAbstractSocket::SocketError error);
 	
 private:
-	
-	Logger *lg;
-	
-	Settings *sg;
+	Daemon *d;  //!< Convenience pointer to Daemon instance
+	Logger *lg;  //!< Convenience pointer to Logger instance
+	Settings *sg;  //!< Convenience pointer to Settings instance
 	
 	QHash<QTcpSocket*, NetDev*> cons;
-	
-	Daemon *d;
 	
 	QTcpServer *server;
 	

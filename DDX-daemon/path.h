@@ -178,8 +178,8 @@ public slots:
 protected:
 	
 private:
-	
-	Logger *logger;
+	Daemon *d;  //!< Convenience pointer to Daemon instance
+	Logger *lg;  //!< Convenience pointer to Logger instance
 	
 	//! This Path's name (not editable after construction)
 	QString name;
@@ -192,9 +192,6 @@ private:
 	
 	//! Convenience pointer to Inlet
 	Inlet *inlet;
-	
-	//! Convenience pointer to parent daemon
-	Daemon *d;
 	
 	State state;
 	

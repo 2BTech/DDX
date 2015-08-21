@@ -67,28 +67,57 @@ public:
 		PasswordInvalid  //!< The passwords sent in response to registration were invalid
 	};
 	
-	explicit RemDev(Daemon *daemon);
+	explicit RemDev(Daemon *daemon, bool inbound);
 	
 	~RemDev();
 	
+	/*!
+	 * \brief Send a new request
+	 * \param handler
+	 * \param method
+	 * \param params Any parameters (will be omitted if empty)
+	 * \param timeout
+	 * \return 
+	 */
 	int sendRequest(ResponseHandler handler, const QString &method,
 					const QJsonObject &params = QJsonObject(), qint64 timeout = DEFAULT_REQUEST_TIMEOUT);
 	
 	/*!
-	 * \brief sendResponse
-	 * \param id
-	 * \param result
-	 * \return 
-	 * 
-	 * _Warning:_ Developers should ensure that the result parameter is always a
-	 * valid JSON type.
+	 * \brief Send a successful response
+	 * \param id The remote-generated transaction ID
+	 * \param result The result (must **not** be undefined)
+	 * \return True on success
 	 */
 	bool sendResponse(QJsonValue id, const QJsonValue &result = true);
 	
+	/*!
+	 * \brief Send an error response
+	 * \param id The remote-generated transaction ID
+	 * \param code The integer error code
+	 * \param msg The error message
+	 * \param data Data to be sent (undefined will be omitted, all other types will be included)
+	 * \return True on success
+	 */
 	bool sendError(QJsonValue id, int code, const QString &msg, const QJsonValue &data = QJsonValue::Undefined);
 	
+	/*!
+	 * \brief Send a notification
+	 * \param method The method name
+	 * \param params Any parameters (will be omitted if empty)
+	 * \return True on success
+	 */
 	bool sendNotification(const QString &method, const QJsonObject &params = QJsonObject());
 	
+	// TODO
+	bool sendRegistration(const QStringList &passwords);
+	
+	/*!
+	 * \brief Close this connection
+	 * \param reason The reason for disconnection
+	 * \param fromRemote Should be true if closing on behalf of the remote device
+	 * 
+	 * _Note:_ this will schedule the called object for deletion.
+	 */
 	void close(DisconnectReason reason = ConnectionTerminated, bool fromRemote = false);
 	
 	bool valid() const {return registered;}
@@ -97,9 +126,7 @@ public:
 	
 signals:
 	
-	void nowRegistered() const;
-	
-	void deviceDisconnected(DisconnectReason reason, bool fromRemote) const;
+	void deviceDisconnected(RemDev *dev, DisconnectReason reason, bool fromRemote) const;
 	
 private slots:
 	
@@ -129,12 +156,8 @@ private slots:
 	void init();
 	
 protected:
-	
-	Daemon *d;
-	
-	Logger *lg;
-	
-	Settings *sg;
+	Daemon *d;  //!< Convenience pointer to Daemon instance
+	Settings *sg;  //!< Convenience pointer to Settings instance
 	
 	QString cid;
 	
@@ -146,11 +169,7 @@ protected:
 	
 	bool inbound;
 	
-	/*!
-	 * \brief handleL
-	 * \param data
-	 */
-	void handleLine(const QByteArray &data);
+	void handleItem(const QByteArray &data);
 	
 	/*!
 	 * \brief Send a log line tagged with the cid
@@ -222,6 +241,8 @@ private:
 		qint64 time;
 		qint64 timeout_time;
 	};
+	
+	Logger *lg;  //!< Convenience pointer to Logger instance
 	
 	//! A hash for maintaing lists of outgoing requests
 	typedef QHash<LocalId, RequestRef> RequestHash;

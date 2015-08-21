@@ -18,7 +18,7 @@
 
 #include "netdev.h"
 
-NetDev::NetDev(Daemon *daemon) : RemDev(daemon) {
+NetDev::NetDev(Daemon *daemon, bool inbound) : RemDev(daemon, inbound) {
 	
 }
 

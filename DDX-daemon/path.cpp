@@ -29,7 +29,7 @@ Path::Path(Daemon *daemon, const QByteArray &name, const QByteArray &scheme) : Q
 	this->name = name;
 	this->scheme = scheme;
 	d = daemon;
-	logger = Logger::get();
+	lg = Logger::get();
 	lastInitIndex = 0;
 	processPosition = 1;
 	
@@ -225,7 +225,7 @@ void Path::alert(const QString msg, const Module *m) const {
 	if (m) out.append(":").append(m->getName());
 	// Append & send
 	out.append(": ").append(msg);
-	logger->log(out, true);
+	lg->log(out, true);
 }
 
 void Path::log(const QString msg, const Module *m) const {
@@ -235,5 +235,5 @@ void Path::log(const QString msg, const Module *m) const {
 	if (m) out.append(":").append(m->getName());
 	// Append & send
 	out.append(": ").append(msg);
-	logger->log(out);
+	lg->log(out);
 }

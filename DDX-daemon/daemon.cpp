@@ -116,6 +116,25 @@ void Daemon::init() {
 	testScheme.size();
 }
 
+QString Daemon::addDevice(RemDev *dev) {
+	dLock.lock();
+	devices.append(dev);
+	int ct = devices.size();
+	dLock.unlock();
+	return tr("UnregisteredDevice%1").arg(ct);
+}
+
+void Daemon::registerDevice(RemDev *dev) {
+	
+}
+
+void Daemon::removeDevice(RemDev *dev) {
+	dLock.lock();
+	devices.removeAll(dev);
+	dLock.unlock();
+	// TODO
+}
+
 void Daemon::testPath(const QByteArray &scheme, int log) {
 	// TODO
 	scheme.size();
@@ -137,14 +156,6 @@ void Daemon::addPath(const QByteArray &name, int log) {
 	t->start();
 	log +=2;
 	// TODO*/
-}
-
-QString Daemon::addDevice(RemDev *dev) {
-	dLock.lock();
-	devices.append(dev);
-	int ct = devices.size();
-	dLock.unlock();
-	return tr("Unregistered%1").arg(ct);
 }
 
 void Daemon::quit(int returnCode) {

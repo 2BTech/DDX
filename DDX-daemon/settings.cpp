@@ -23,6 +23,7 @@
 Settings::Settings(Daemon *parent) : QObject(parent) {
 	// Initialize
 	lg = Logger::get();
+	d = parent;
 	systemSettings = new QSettings(APP_AUTHOR_FULL, APP_NAME_SHORT, this);
 	QList<SetEnt> loaded = registerSettings();
 	foreach (const SetEnt &set, loaded) {
@@ -146,15 +147,21 @@ QList<Settings::SetEnt> Settings::registerSettings() const {
 	b.enterGroup(SG_RPC);
 	b.add("RegistrationPeriod", tr("Registration timeout period in seconds"),
 		  10, QMetaType::Int);
-	b.add("GlobalPassword", tr("A password which must be known to all devices"),
+	b.add("AllowedAuthors", tr("Comma-separated list of allowed authors; '" APP_AUTHOR "' always allowed; 'any' to disable check"),
 		  QByteArray(""), QMetaType::QByteArray);
-	b.add("DaemonPassword", tr("A password which must be known to all managers"),
+	b.add("MinVersion", tr("The minimum DDX version required ('n.n' format, 'any' to disable check)"),
+		  QString(VERSION_FULL_TEXT), QMetaType::QString);
+	b.add("MaxVersion", tr("The maximum DDX version required ('n.n' format, 'any' to disable check)"),
+		  QString(VERSION_FULL_TEXT), QMetaType::QString);
+	b.add("GlobalPassword", tr("A password which must be known to all devices  ('deny' to disable all RPC connections)"),
 		  QByteArray(""), QMetaType::QByteArray);
-	b.add("ManagerPassword", tr("A password which must be known to all managers"),
+	b.add("DaemonPassword", tr("A password which must be known to all managers ('deny' to disable this role)"),
 		  QByteArray(""), QMetaType::QByteArray);
-	b.add("VertexPassword", tr("A password which must be known to all managers"),
+	b.add("ManagerPassword", tr("A password which must be known to all managers ('deny' to disable this role)"),
 		  QByteArray(""), QMetaType::QByteArray);
-	b.add("ListenerPassword", tr("A password which must be known to all managers"),
+	b.add("VertexPassword", tr("A password which must be known to all managers ('deny' to disable this role)"),
+		  QByteArray(""), QMetaType::QByteArray);
+	b.add("ListenerPassword", tr("A password which must be known to all managers ('deny' to disable this role)"),
 		  QByteArray(""), QMetaType::QByteArray);
 	
 	b.enterGroup(SG_PATHS);

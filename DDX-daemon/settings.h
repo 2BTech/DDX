@@ -79,6 +79,8 @@ signals:
 public slots:
 	
 private:
+	Daemon *d;  //!< Convenience pointer to Daemon instance
+	Logger *lg;  //!< Convenience pointer to Logger instance
 	
 	//! A simplified, long-term setting descriptor
 	struct Setting {
@@ -128,9 +130,6 @@ private:
 	
 	//! The type of the master settings map
 	typedef QHash<QByteArray, Setting> SettingsHash;
-	
-	//! Logger handle
-	Logger *lg;
 	
 	//! Maintains persistent storage of settings
 	QSettings *systemSettings;

@@ -296,7 +296,7 @@ public:
 	inline QByteArray getName() const {return name;}
 	
 protected:
-	Path *path;
+	Path *path;  //!< Convenience pointer to Path instance
 	
 	DataDef outputColumns;  // Elements owned by newColumns and inputColumns
 	

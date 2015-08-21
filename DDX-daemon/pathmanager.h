@@ -25,6 +25,8 @@
 #include <QHash>
 
 class Daemon;
+class Logger;
+class Settings;
 class Module;
 class Inlet;
 class Path;
@@ -112,6 +114,10 @@ signals:
 public slots:
 	
 private:
+	Daemon *d;  //!< Convenience pointer to Daemon instance
+	Logger *lg;  //!< Convenience pointer to Logger instance
+	Settings *sg;  //!< Convenience pointer to Settings instance
+	
 	static QReadWriteLock configFileLock;
 	
 	bool schemeFileNeedsRewriting;
