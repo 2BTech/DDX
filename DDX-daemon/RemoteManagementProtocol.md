@@ -97,7 +97,7 @@ Type|Description|Format
 ---|---|---
 `UtcTime`|The ISO 8601 format for UTC|`YYYY-MM-DDTHH:mm:ssZ`
 
-### `ClientRole` Flags
+### `DeviceRole` Flags
 Name|Value|Description
 ---|---|---
 `Daemon`|0x1|Can execute paths
@@ -173,8 +173,8 @@ Name|Info|Type
 `DDX_version`|The client's DDX version in the format "n.n"|string
 `DDX_author`|The client's DDX author|string
 `CID`|The client-given, server-taken connection ID; see "Connection IDs"|string
-`Roles`|The roles which this client fills|`ClientRole`
-`Passwords`|An array of strings containing any passwords that are required|array<string>
+`Roles`|The roles which this client fills|`DeviceRole`
+`Passwords`|An array of strings containing any passwords that are required|array\<string>
 `Name`|The client's (usually) self-designated name|string
 `Timezone`|The client's timezone as TZdb string|string
 `DaylightSavingsEnabled`|Whether the client's timezone enables DST. _Note_: devices should ignore DST by default|bool
@@ -187,8 +187,8 @@ Name|Info|Type
 `DDX_version`|The server's DDX version in the format "n.n"|string
 `DDX_author`|The server's DDX author|string
 `CID`|The server-given, client-taken connection ID; see "Connection IDs"|string
-`Roles`|The roles which this server fills|`ClientRole`
-`Passwords`|An array of strings containing any passwords that are required|array<string>
+`Roles`|The roles which this server fills|`DeviceRole`
+`Passwords`|An array of strings containing any passwords that are required|array\<string>
 `Name`|The server's (usually) self-designated name|string
 `Timezone`|The server's timezone as TZdb string|string
 `DaylightSavingsEnabled`|Whether the server's timezone enables DST. _Note_: devices should ignore DST by default|bool
@@ -214,7 +214,7 @@ Code|Message|Macro
 505|Version unreadable|E_VERSION_UNREADABLE
 506|Password invalid|E_PASSWORD_INVALID
 
-Error E_PASSWORD_INVALID should contain a `ClientRole` flag integer which specifies any
+Error E_PASSWORD_INVALID should contain a `DeviceRole` flag integer which specifies any
 roles which were denied because of invalid passwords.
 
 ### Global notification: `disconnect`

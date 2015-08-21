@@ -32,9 +32,7 @@ Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	args = parent->arguments();
 	// Initialize other variables
 	sg = new Settings(this);
-	umRefCount = 0;
 	unitManager = 0;
-	nextRequestId = 1;
 	quitting = false;
 	// TODO: Make this work with new syntax
 	connect(parent, SIGNAL(aboutToQuit()), this, SLOT(quit()));
@@ -116,10 +114,6 @@ void Daemon::init() {
 			"\"Min_Current\":\"0\"},{\"n\":\"Barometer\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"2\","
 			"\"Min_Voltage\":\"1\"}]}}}]}";
 	testScheme.size();
-	
-	// Set up as system service (platform-dependent)
-	//setupService();
-	
 }
 
 void Daemon::testPath(const QByteArray &scheme, int log) {
@@ -129,7 +123,7 @@ void Daemon::testPath(const QByteArray &scheme, int log) {
 }
 
 void Daemon::addPath(const QByteArray &name, int log) {
-	this->lg->log("fail");
+	/*this->lg->log("fail");
 	PathManager *um = getUnitManager();
 	QByteArray scheme = um->getPathScheme(name);
 	// TODO add error checking for scheme not found
@@ -142,7 +136,7 @@ void Daemon::addPath(const QByteArray &name, int log) {
 	connect(t, &QThread::finished, t, &QThread::deleteLater);
 	t->start();
 	log +=2;
-	// TODO
+	// TODO*/
 }
 
 QString Daemon::addDevice(RemDev *dev) {
@@ -151,25 +145,6 @@ QString Daemon::addDevice(RemDev *dev) {
 	int ct = devices.size();
 	dLock.unlock();
 	return tr("Unregistered%1").arg(ct);
-}
-
-void Daemon::request(QJsonObject params, QString dest, bool response) {
-	if (response) {
-		/* Get request ID so that responses can be recorded
-		 * While this function is technically called from multiple threads, each
-		 * call is queued, so Daemon data elements should be safe to access. */
-		int id = nextRequestId++;
-		if (nextRequestId == INT_MAX) {
-			lg->log("RPC ID value maxed; resetting.  May cause undefined behavior.");
-			nextRequestId = 100;  // Some random relatively low value
-			/* TODO:  In future versions, it may be better to trigger and daemon
-			 * restart when this happens. */
-		}
-		id+=2;
-	}
-	else {}
-	params.size();
-	dest.size();
 }
 
 void Daemon::quit(int returnCode) {
@@ -228,54 +203,4 @@ int Daemon::versionCompare(QString testVersion) {
 	if (cMinor > tMinor) return -1;
 	if (cMinor < tMinor) return 1;
 	return 0;
-}
-
-void Daemon::loadDefaultSettings() {
-	lg->log("Loading default settings");
-	/*settings->clear();
-	settings->setValue("SettingsResetOn",
-					   QDateTime::currentDateTime().toString("yyyy/MM/dd HH:mm:ss"));
-	
-	// Paths
-	// Paths must be terminated by a '/'
-	// TODO
-	settings->setValue("paths/configPath", "/");
-	
-	// Logging
-	settings->setValue("logging/AlwaysLogToFile", false);
-	
-	settings->setValue("network/GUIPort", 4388);
-	settings->setValue("network/AllowExternalManagement", false);
-	
-	// Locale
-	// TODO: Remove these
-	settings->setValue("locale/DaemonStringsRequired", true);
-	settings->setValue("locale/Quit", "Quit");
-	settings->setValue("locale/StreamOkay", "OK");
-	settings->setValue("locale/StreamError", "Error!");
-	
-	// Unit Management
-	settings->setValue("units/unitFile", "units.json");
-	
-	// Crash checking
-	settings->setValue("crash/LastShutdownSafe", false);
-	
-	settings->sync();*/
-	// TODO: restart Daemon?????
-}
-
-void Daemon::setupService() {
-#ifdef ICON
-	log("In");
-	QIcon icon(":/icons/icon32");
-	log("Icon");
-	
-	trayMenu = new QMenu();
-	trayMenu->addAction(tr("Quit"), this, SLOT(quit()));
-	
-	trayIcon = new QSystemTrayIcon(icon, this);
-	trayIcon->setToolTip(APP_NAME_UNTRANSLATABLE);
-	trayIcon->setContextMenu(trayMenu);
-	trayIcon->show();
-#endif
 }

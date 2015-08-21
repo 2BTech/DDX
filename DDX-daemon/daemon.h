@@ -40,7 +40,7 @@ class RemDev;
 /*!
  * \brief The main manager of the DDX
  * 
- * Instantiating this class and calling init() will begin DDX operation.
+ * Instantiating this class will begin DDX operation.
  * 
  * ## Thread Structure
  * In addition to the Daemon's primary thread, every Path and Beacon gets a
@@ -59,6 +59,11 @@ public:
 	
 	void addPath(const QByteArray &name, int log = 0);
 	
+	/*!
+	 * \brief Add a remote device to the master device list
+	 * \param dev Pointer to the device
+	 * \return The device's initial, unregistered name
+	 */
 	QString addDevice(RemDev *dev);
 	
 	PathManager *getUnitManager();
@@ -119,46 +124,43 @@ public slots:
 	 */
 	void init();
 	
-	void request(QJsonObject params, QString dest, bool response = false);
-	
 	void quit(int returnCode=0);
 	
 private slots:
 	
 private:
 	
+	//! Convenience pointer to Logger instance
 	Logger *lg;
 	
+	//! Master pointer to Settings instance; must be manually freed
 	Settings *sg;
 	
 	bool logReady;
 	
+	//! Master pointer to Network instance; must be manually freed
 	Network *n;
 	
-	//! The list of active Paths, including Paths in testing
-	QList<Path*> paths;
+	// //! The list of active Paths
+	// QList<Path*> paths;
 	
-	/*! A list of all connected devices; used mainly for garbage collection
+	/*! A list of all connected #devices; used mainly for garbage collection
 	 * 
-	 * Note that devices in this list are not guaranteed to have unique cids!
+	 * Must be manually freed.  Note that devices in this list are not guaranteed
+	 * to have unique cids!
 	 */
 	QList<RemDev*> devices;
 	
+	//! #devices lock
 	QMutex dLock;
 	
+	//! Master pointer to PathManager instance; must be manually freed
 	PathManager *unitManager;
 	
+	//! DDX time timezone, used by #getTime
 	QTimeZone tz;
 	
-	int umRefCount;
-	
-	int nextRequestId;
-	
 	bool quitting;
-	
-	void loadDefaultSettings();
-	
-	void setupService();
 	
 	void publishLog(QString msg);
 	

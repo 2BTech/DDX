@@ -47,14 +47,14 @@ public:
 	typedef void (*RequestHandler)(QJsonValue, QJsonValue, bool);
 	typedef QHash<QByteArray, RemDev*> DeviceHash;
 	typedef QList<RemDev*> DeviceList;
-	enum ClientRole {
-		DaemonRole = 0x1,
-		ManagerRole = 0x2,
-		VertexRole = 0x4,
-		ListenerRole = 0x8,
-		GlobalRole = 0x80
+	enum DeviceRole {
+		DaemonRole = 0x1,  //!< Can execute paths
+		ManagerRole = 0x2,  //!< An interface for a device which executes paths
+		VertexRole = 0x4,  //!< A data responder or producer which does not execute paths
+		ListenerRole = 0x8,  //!< A destination for loglines and alerts
+		GlobalRole = 0x80  //!< A pseudo-role which indicates role-less information
 	};
-	Q_DECLARE_FLAGS(ClientRoles, ClientRole)
+	Q_DECLARE_FLAGS(DeviceRoles, DeviceRole)
 	enum DisconnectReason {
 		UnknownReason,  //!< Unknown disconnection
 		ShuttingDown,  //!< The disconnecting member is shutting down by request
@@ -89,9 +89,9 @@ public:
 	
 	bool sendNotification(const QString &method, const QJsonObject &params = QJsonObject());
 	
-	void close(DisconnectReason reason = StreamClosed);
+	void close(DisconnectReason reason = ConnectionTerminated, bool fromRemote = false);
 	
-	bool valid() {return registered;}
+	bool valid() const {return registered;}
 	
 	static const QJsonObject rpc_seed;
 	
@@ -99,7 +99,7 @@ signals:
 	
 	void nowRegistered() const;
 	
-	void streamDisconnected(DisconnectReason reason) const;
+	void deviceDisconnected(DisconnectReason reason, bool fromRemote) const;
 	
 private slots:
 	
@@ -136,8 +136,6 @@ protected:
 	
 	Settings *sg;
 	
-	bool registered;
-	
 	QString cid;
 	
 	QString client_cid;
@@ -148,23 +146,59 @@ protected:
 	
 	bool inbound;
 	
+	/*!
+	 * \brief handleL
+	 * \param data
+	 */
 	void handleLine(const QByteArray &data);
 	
+	/*!
+	 * \brief Send a log line tagged with the cid
+	 * \param msg The message
+	 * \param isAlert Whether it is destined for the user
+	 */
 	void log(const QString &msg, bool isAlert = false) const;
 	
+	/*!
+	 * \brief Build a request object
+	 * \param id The locally-generated integer ID (must **not** be 0)
+	 * \param method The method name 
+	 * \param params Any parameters (will be omitted if empty)
+	 * \return The request object
+	 */
 	QJsonObject newRequest(LocalId id, const QString &method, const QJsonObject &params) const;
 	
+	/*!
+	 * \brief Build a response object
+	 * \param id The remote-generated ID
+	 * \param result The params value (must **not** be null or undefined)
+	 * \return The response object
+	 */
 	QJsonObject newResponse(QJsonValue id, const QJsonValue &result);
 	
+	/*!
+	 * \brief Build an error object
+	 * \param id The remote-generated ID (undefined IDs will be converted to null)
+	 * \param code The integer error code
+	 * \param msg The error message
+	 * \param data Data to be sent (undefined will be omitted, all other types will be included)
+	 * \return The error object
+	 */
 	QJsonObject newError(QJsonValue id, int code, const QString &msg, const QJsonValue &data) const;
 	
+	/*!
+	 * \brief Build a notification object
+	 * \param method The method name
+	 * \param params Any parameters (will be omitted if empty)
+	 * \return The notification object
+	 */
 	QJsonObject newNotification(const QString &method, const QJsonObject &params) const;
 	
 	//void simulateError(LocalId id, const RequestRef *ref, int code);
 	
 	virtual void sub_init() {}
 	
-	virtual void terminate(DisconnectReason reason = StreamClosed) =0;
+	virtual void terminate(DisconnectReason reason, bool fromRemote) =0;
 	
 	/*!
 	 * \brief write
@@ -192,6 +226,7 @@ private:
 	//! A hash for maintaing lists of outgoing requests
 	typedef QHash<LocalId, RequestRef> RequestHash;
 	
+	//! Manages all open outgoing requests to direct responses appropriately
 	RequestHash reqs;
 	
 	//! Locks the request hash and lastId variable
@@ -203,11 +238,14 @@ private:
 	
 	HandlerHash notifHandlers;
 	
+	//! Polls for timeouts; see timeoutPoll()
 	QTimer *timeoutPoller;
 	
 	LocalId lastId;
 	
 	qint64 registrationTimeoutTime;
+	
+	bool registered;
 	
 	void sendObject(const QJsonObject &obj);
 	
@@ -220,6 +258,6 @@ private:
 	void handleRegistration(const QJsonObject &obj);
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(RemDev::ClientRoles)
+Q_DECLARE_OPERATORS_FOR_FLAGS(RemDev::DeviceRoles)
 
 #endif // REMDEV_H

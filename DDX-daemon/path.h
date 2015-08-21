@@ -121,7 +121,7 @@ public:
 	/*!
 	 * \brief Log a low-level event message
 	 * \param msg The message
-	 * \param m The Module from which it comes; ignore when writing Path alerts
+	 * \param m The Module from which it comes; ignore when writing Path logs
 	 * 
 	 * Log events are tagged with the name of the Path they come from.
 	 */

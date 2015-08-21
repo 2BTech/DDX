@@ -26,7 +26,7 @@ NetDev::~NetDev() {
 	
 }
 
-void NetDev::terminate(DisconnectReason reason) {
+void NetDev::terminate(DisconnectReason reason, bool fromRemote) {
 	// TODO
 }
 

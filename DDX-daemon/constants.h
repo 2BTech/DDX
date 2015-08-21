@@ -46,9 +46,11 @@
 #define DEFAULT_REQUEST_TIMEOUT 60000  //!< Time until a request times out in msecs (can be overridden)
 #define TIMEOUT_POLL_INTERVAL 5000 //!< Timeout polling frequency (in msecs)
 #define MAX_TRANSACTION_SIZE 536870000 //!< Maximum transaction size in bytes
+#define RPC_THREADS
 
 // NETWORK
 #define ENABLE_SSL
+//#define NETWORK_THREAD
 
 // LOGGING
 // Comment to disable timestamping on stdout

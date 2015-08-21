@@ -35,7 +35,7 @@ public:
 	
 	~NetDev();
 	
-	void terminate(DisconnectReason reason = StreamClosed) override;
+	void terminate(DisconnectReason reason, bool fromRemote) override;
 	
 	QTcpSocket *socket() const {return s;}
 	

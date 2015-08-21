@@ -28,12 +28,16 @@ Network::Network(Daemon *daemon) : QObject(0)
 	sg = daemon->getSettings();
 	// Connections
 	// Threading
+#ifdef NETWORK_THREAD
 	QThread *t = new QThread(daemon);
 	moveToThread(t);
 	connect(t, &QThread::started, this, &Network::init);
 	connect(this, &Network::destroyed, t, &QThread::quit);
 	connect(t, &QThread::finished, t, &QThread::deleteLater);
 	t->start();
+#else
+	init();
+#endif
 }
 
 Network::~Network() {

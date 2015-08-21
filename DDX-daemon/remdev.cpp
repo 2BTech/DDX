@@ -31,12 +31,16 @@ RemDev::RemDev(Daemon *daemon) :
 	registered = false;
 	this->cid = d->addDevice(this);
 	// Threading
+#ifdef RPC_THREADS
 	QThread *t = new QThread(daemon);
 	moveToThread(t);
 	connect(t, &QThread::started, this, &RemDev::init);
 	connect(this, &RemDev::destroyed, t, &QThread::quit);
 	connect(t, &QThread::finished, t, &QThread::deleteLater);
 	t->start();
+#else
+	init();
+#endif
 }
 
 RemDev::~RemDev() {
@@ -45,7 +49,7 @@ RemDev::~RemDev() {
 
 int RemDev::sendRequest(ResponseHandler handler, const QString &method,
 						const QJsonObject &params, qint64 timeout) {
-	if ( ! valid()) return 0;
+	if ( ! registered) return 0;
 	// Obtain a server-unique ID
 	LocalId id;
 	RequestRef ref(handler, timeout);
@@ -69,21 +73,28 @@ int RemDev::sendRequest(ResponseHandler handler, const QString &method,
 }
 
 bool RemDev::sendResponse(QJsonValue id, const QJsonValue &result) {
-	if ( ! valid()) return false;
+	if ( ! registered) return false;
 	sendObject(newResponse(id, result));
 	return true;
 }
 
 bool RemDev::sendError(QJsonValue id, int code, const QString &msg, const QJsonValue &data) {
-	if ( ! valid()) return false;
+	if ( ! registered) return false;
 	sendObject(newError(id, code, msg, data));
 	return true;
 }
 
 bool RemDev::sendNotification(const QString &method, const QJsonObject &params) {
-	if ( ! valid()) return false;
+	if ( ! registered) return false;
 	sendObject(newNotification(method, params));
 	return true;
+}
+
+void RemDev::close(DisconnectReason reason, bool fromRemote) {
+	emit deviceDisconnected(reason, fromRemote);
+	registered = false;
+	terminate(reason, fromRemote);
+	deleteLater();
 }
 
 void RemDev::timeoutPoll() {
@@ -100,7 +111,7 @@ void RemDev::timeoutPoll() {
 		else ++it;
 	}
 	l.unlock();
-	if ( ! valid() && registrationTimeoutTime < time) {
+	if ( ! registered && registrationTimeoutTime < time) {
 		// TODO: Disconnect for registration timeout
 	}
 }
@@ -132,7 +143,7 @@ void RemDev::handleLine(const QByteArray &data) {
 	// Check for registration before handling parsing errors because it will just
 	// return if any errors occurred (we don't want to send anything to prevent
 	// overload attacks if we're unregistered)
-	if ( ! valid()) {
+	if ( ! registered) {
 		if ( ! doc.isObject()) return;
 		handleRegistration(doc.object());
 		return;
@@ -172,13 +183,6 @@ QJsonObject RemDev::newResponse(QJsonValue id, const QJsonValue &result) {
 	return o;
 }
 
-QJsonObject RemDev::newNotification(const QString &method, const QJsonObject &params) const {
-	QJsonObject o(rpc_seed);
-	o.insert("method", method);
-	if (params.size()) o.insert("params", params);
-	return o;
-}
-
 QJsonObject RemDev::newError(QJsonValue id, int code, const QString &msg, const QJsonValue &data) const {
 	QJsonObject e;
 	e.insert("code", code);
@@ -188,6 +192,13 @@ QJsonObject RemDev::newError(QJsonValue id, int code, const QString &msg, const 
 	o.insert("error", e);
 	if (id.type() == QJsonValue::Undefined) id = QJsonValue::Null;
 	o.insert("id", id);
+	return o;
+}
+
+QJsonObject RemDev::newNotification(const QString &method, const QJsonObject &params) const {
+	QJsonObject o(rpc_seed);
+	o.insert("method", method);
+	if (params.size()) o.insert("params", params);
 	return o;
 }
 
@@ -202,7 +213,7 @@ void RemDev::sendObject(const QJsonObject &object) {
 }
 
 void RemDev::handleObject(const QJsonObject &obj) {
-	if ( ! valid()) {
+	if ( ! registered) {
 		handleRegistration(obj);
 		return;
 	}
