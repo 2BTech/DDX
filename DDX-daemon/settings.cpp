@@ -145,23 +145,23 @@ QList<Settings::SetEnt> Settings::registerSettings() const {
 		  false, QMetaType::Bool);
 	
 	b.enterGroup(SG_RPC);
-	b.add("RegistrationPeriod", tr("Registration timeout period in seconds"),
+	b.add("RegistrationPeriod", tr("Registration timeout period (seconds, greater than 0)"),
 		  10, QMetaType::Int);
-	b.add("AllowedAuthors", tr("Comma-separated list of allowed authors; '" APP_AUTHOR "' always allowed; 'any' to disable check"),
+	b.add("AllowedAuthors", tr("Comma-separated list of allowed authors ('" APP_AUTHOR_FULL "' always allowed, 'any' to disable check)"),
 		  QByteArray(""), QMetaType::QByteArray);
 	b.add("MinVersion", tr("The minimum DDX version required ('n.n' format, 'any' to disable check)"),
-		  QString(VERSION_FULL_TEXT), QMetaType::QString);
+		  VERSION_FULL_TEXT, QMetaType::QString);
 	b.add("MaxVersion", tr("The maximum DDX version required ('n.n' format, 'any' to disable check)"),
-		  QString(VERSION_FULL_TEXT), QMetaType::QString);
-	b.add("GlobalPassword", tr("A password which must be known to all devices  ('deny' to disable all RPC connections)"),
+		  VERSION_FULL_TEXT, QMetaType::QString);
+	b.add("GlobalPassword", tr("A password which must be known to all devices  (empty to disable check, 'deny' to disable all RPC connections)"),
 		  QByteArray(""), QMetaType::QByteArray);
-	b.add("DaemonPassword", tr("A password which must be known to all managers ('deny' to disable this role)"),
+	b.add("DaemonPassword", tr("A password which must be known to all managers (empty to disable check, 'deny' to disable this role)"),
 		  QByteArray(""), QMetaType::QByteArray);
-	b.add("ManagerPassword", tr("A password which must be known to all managers ('deny' to disable this role)"),
+	b.add("ManagerPassword", tr("A password which must be known to all managers (empty to disable check, 'deny' to disable this role)"),
 		  QByteArray(""), QMetaType::QByteArray);
-	b.add("VertexPassword", tr("A password which must be known to all managers ('deny' to disable this role)"),
+	b.add("VertexPassword", tr("A password which must be known to all managers (empty to disable check, 'deny' to disable this role)"),
 		  QByteArray(""), QMetaType::QByteArray);
-	b.add("ListenerPassword", tr("A password which must be known to all managers ('deny' to disable this role)"),
+	b.add("ListenerPassword", tr("A password which must be known to all managers (empty to disable check, 'deny' to disable this role)"),
 		  QByteArray(""), QMetaType::QByteArray);
 	
 	b.enterGroup(SG_PATHS);

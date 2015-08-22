@@ -91,11 +91,10 @@ Name|Info|Type
 ### `Config` Type
 
 ### Temporal Types
-All dates and times are formatted according to [ISO 8601](http://www.iso.org/iso/catalogue_detail?csnumber=40874).
-
 Type|Description|Format
 ---|---|---
-`UtcTime`|The ISO 8601 format for UTC|`YYYY-MM-DDTHH:mm:ssZ`
+`UtcTime`|The [ISO 8601](http://www.iso.org/iso/catalogue_detail?csnumber=40874) format for UTC|`YYYY-MM-DDTHH:mm:ssZ`
+`Timezone`|Timezone as an IANA TZdb string or UTC offset|"America/Denver", "UTC-07:00"
 
 ### `DeviceRole` Flags
 Name|Value|Description
@@ -180,8 +179,7 @@ Name|Info|Type
 `Roles`|The roles which this client fills|`DeviceRole`
 `Passwords`|An array of strings containing any passwords that are required|array\<string>
 `Name`|The client's (usually) self-designated name|string
-`Timezone`|The client's timezone as TZdb string|string
-`DaylightSavingsEnabled`|Whether the client's timezone enables DST. _Note_: devices should ignore DST by default|bool
+`Timezone`|The client's timezone|`Timezone`
 `Locale`|The client's locale|string
 
 Result:
@@ -194,8 +192,7 @@ Name|Info|Type
 `Roles`|The roles which this server fills|`DeviceRole`
 `Passwords`|An array of strings containing any passwords that are required|array\<string>
 `Name`|The server's (usually) self-designated name|string
-`Timezone`|The server's timezone as TZdb string|string
-`DaylightSavingsEnabled`|Whether the server's timezone enables DST. _Note_: devices should ignore DST by default|bool
+`Timezone`|The server's timezone|`Timezone`
 `Locale`|The server's locale|string
 
 Upon connection to a daemon, actions will occur based on the connected client type:

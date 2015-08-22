@@ -47,6 +47,9 @@ Daemon::~Daemon() {
 
 void Daemon::init() {
 	
+	// Ensure the current version constant is correctly formatted
+	Q_ASSERT(versionCompare(QString("4.2")) != VERSION_COMPARE_FAILED);
+	
 	if (QString::compare(qVersion(), QT_VERSION_STR) != 0) lg->log
 		(tr("The daemon was compiled to use Qt %1, but it is running on a system "
 			"with Qt %2. It will continue to run, but there may be unexpected "
@@ -193,25 +196,24 @@ QDateTime Daemon::getTime() const {
 	return QDateTime::currentDateTimeUtc().toTimeZone(tz);
 }
 
-int Daemon::versionCompare(QString testVersion) {
-	const QString currentVersion = QString::fromLatin1(VERSION_FULL_TEXT);
-	QStringList current = currentVersion.split('.');
-	QStringList test = testVersion.split(QChar('.'));
-	if (current.size() != 2 || test.size() != 2)
-		return VERSION_COMPARE_FAILED;
-	int cMajor, cMinor, tMajor, tMinor;
+int Daemon::versionCompare(QString versionA, QString versionB, bool ignoreMinor) {
+	QStringList aList = versionA.split('.');
+	QStringList bList = versionB.split('.');
+	if (aList.size() != 2 || bList.size() != 2) return VERSION_COMPARE_FAILED;
+	int a, b;
 	bool ok;
-	cMajor = current[0].toInt(&ok);
+	a = aList[0].toInt(&ok);
 	if ( ! ok) return VERSION_COMPARE_FAILED;
-	cMinor = current[1].toInt(&ok);
+	b = bList[0].toInt(&ok);
 	if ( ! ok) return VERSION_COMPARE_FAILED;
-	tMajor = test[0].toInt(&ok);
+	if (a > b) return 1;
+	if (a < b) return -1;
+	if (ignoreMinor) return 0;
+	a = aList[1].toInt(&ok);
 	if ( ! ok) return VERSION_COMPARE_FAILED;
-	tMinor = test[1].toInt(&ok);
+	b = bList[1].toInt(&ok);
 	if ( ! ok) return VERSION_COMPARE_FAILED;
-	if (cMajor > tMajor) return -1;
-	if (cMajor < tMajor) return 1;
-	if (cMinor > tMinor) return -1;
-	if (cMinor < tMinor) return 1;
+	if (a > b) return 1;
+	if (a < b) return -1;
 	return 0;
 }

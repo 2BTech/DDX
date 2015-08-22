@@ -245,11 +245,26 @@ void RemDev::handleRequest(const QJsonObject &obj) {
 }
 
 void RemDev::handleRegistration(const QJsonObject &obj) {
-	// If this is not a register request, return without error
-	if (QString::compare(obj.value("register").toString(), "register")) return;
-	// Start checking params
-	
-	
+	// If this is not a register request or response, return without error
+	if (inbound && QString::compare(obj.value("method").toString(), "register")) return;
+	if ( ! inbound && ! obj.contains("result")) return;
+	QJsonValue id = obj.value("id");
+	// Check minimum version
+	QString sent = obj.value("DDX_version").toString();
+	QString check = sg->v("MinVersion", SG_RPC).toString();
+	if (QString::compare(check, "any")) {  // If check is required...
+		int vc = Daemon::versionCompare(sent, check);
+		if (vc == VERSION_COMPARE_FAILED) {
+			if (inbound) sendError(id, E_VERSION_UNREADABLE, tr("Version unreadable"));
+			return;
+		}
+		if (vc < 0) {
+			// Send error
+		}
+	}
+	// UPDATE:  I think both devices should independently send register requests to each other.  Why not, right?
+	// It would make a lot of this MUCH cleaner...
+	// A successful result response and a register request should both be required
 	
 	registered = true;
 	d->registerDevice(this);

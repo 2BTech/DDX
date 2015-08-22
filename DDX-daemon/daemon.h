@@ -28,6 +28,7 @@
 #include <QList>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QMutex>
 #include "constants.h"
 
 class Path;
@@ -92,12 +93,14 @@ public:
 	
 	/*!
 	 * \brief Compare a version string with this application's version
-	 * \param testVersion The test version string (must be in the format "4.2")
-	 * \return 0 if equivalent, -1 if testVersion is lesser, 1 if testVersion is greater
+	 * \param versionA Version A (must be in the format "4.2")
+	 * \param versionB Version B (must be in the format "4.2")
+	 * \param ignoreMinor Whether to ignore the second number
+	 * \return 0 if equivalent, 1 if A is greater, -1 if A is lesser
 	 * 
-	 * Returns VERSION_COMPARE_FAILED on error.
+	 * Returns VERSION_COMPARE_FAILED on error.  #versionB defaults to this DDX version.
 	 */
-	static int versionCompare(QString testVersion);
+	static int versionCompare(QString versionA, QString versionB = VERSION_FULL_TEXT, bool ignoreMinor = false);
 	
 	QStringList args;
 
