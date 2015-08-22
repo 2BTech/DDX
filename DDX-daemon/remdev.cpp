@@ -21,6 +21,8 @@
 #include "daemon.h"
 #include "settings.h"
 
+namespace RJ = rapidjson;
+
 RemDev::RemDev(Daemon *daemon, bool inbound) :
 		QObject(0), req_id_lock(QMutex::Recursive) {
 	// Initializations
@@ -30,6 +32,7 @@ RemDev::RemDev(Daemon *daemon, bool inbound) :
 	sg = d->getSettings();
 	lastId = 0;
 	registered = false;
+	registerAccepted = false;
 	this->inbound = inbound;
 	// Add to master device list and get temporary cid
 	cid = d->addDevice(this);
@@ -145,7 +148,7 @@ void RemDev::init() {
 	timeoutPoller->start();  // Start immediately for registration timeout
 }
 
-void RemDev::handleItem(const QByteArray &data) {
+void RemDev::handleItem(char *data) {
 	/*if (data.size() > MAX_TRANSACTION_SIZE) {
 		// TODO
 		return;

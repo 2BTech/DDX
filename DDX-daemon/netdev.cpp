@@ -30,6 +30,6 @@ void NetDev::terminate(DisconnectReason reason, bool fromRemote) {
 	// TODO
 }
 
-void NetDev::write(const QByteArray &data) {
+void NetDev::write(const char *data) {
 	
 }

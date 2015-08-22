@@ -29,6 +29,7 @@
 #include <QFlags>
 #include <QMutex>
 #include <QMutexLocker>
+#include <rapidjson.h>
 #include "constants.h"
 
 class Daemon;
@@ -169,7 +170,13 @@ protected:
 	
 	bool inbound;
 	
-	void handleItem(const QByteArray &data);
+	bool registerAccepted;
+	
+	/*!
+	 * \brief Handle a single, complete incoming item
+	 * \param data A mutable copy of the raw data; will be freed automatically
+	 */
+	void handleItem(char *data);
 	
 	/*!
 	 * \brief Send a log line tagged with the cid
@@ -225,7 +232,7 @@ protected:
 	 * 
 	 * _Warning:_ This function **must** be made thread-safe!
 	 */
-	virtual void write(const QByteArray &data) =0;
+	virtual void write(const char *data) =0;
 	
 private:
 	

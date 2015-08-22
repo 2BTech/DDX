@@ -16,36 +16,14 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#ifndef NETDEV_H
-#define NETDEV_H
+// rapidjson include file
 
-#include <QObject>
-#include <QTcpSocket>
-#include "constants.h"
-#ifdef ENABLE_SSL
-#include <QSsl>
-#endif
-#include "remdev.h"
+#ifndef RAPIDJSON_H
+#define RAPIDJSON_H
 
-class NetDev : public RemDev
-{
-	Q_OBJECT
-public:
-	NetDev(Daemon *daemon, bool inbound);
-	
-	~NetDev();
-	
-	void terminate(DisconnectReason reason, bool fromRemote) override;
-	
-	QTcpSocket *socket() const {return s;}
-	
-private:
-	
-	QTcpSocket *s;
-	
-	bool usingV6;
-	
-	void write(const char *data) override;
-};
+#include "../rapidjson/include/rapidjson/rapidjson.h"
+#include "../rapidjson/include/rapidjson/allocators.h"
+#include "../rapidjson/include/rapidjson/document.h"
+#include "../rapidjson/include/rapidjson/stringbuffer.h"
 
-#endif // NETDEV_H
+#endif // RAPIDJSON_H

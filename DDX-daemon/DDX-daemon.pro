@@ -72,7 +72,8 @@ HEADERS += \
     modules/exampleinlet.h \
     remdev.h \
     netdev.h \
-    pathmanager.h
+    pathmanager.h \
+    rapidjson.h
 
 DISTFILES += \
     DaemonCommandLineArguments.txt \
