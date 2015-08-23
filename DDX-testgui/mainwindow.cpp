@@ -26,7 +26,6 @@ MainWindow::MainWindow(QWidget *parent)
 	logArea->setReadOnly(true);
 	setCentralWidget(logArea);
 	dm = new DevMgr(this);
-	connect(dm, DevMgr::)
 }
 
 MainWindow::~MainWindow()

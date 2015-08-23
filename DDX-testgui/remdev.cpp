@@ -178,24 +178,24 @@ void RemDev::handleItem(char *data) {
 void RemDev::log(const QByteArray &msg) const {
 	QByteArray out(cid);
 	out.append(": ").append(msg);
-	lg->log(msg, isAlert);
+	postToLogArea(msg);
 }
 
-QJsonObject RemDev::newRequest(LocalId id, const QString &method, const QJsonObject &params) const {
-	QJsonObject o(newNotification(method, params));
+/*QJsonObject RemDev::newRequest(LocalId id, const QString &method, const QJsonObject &params) const {
+	/*QJsonObject o(newNotification(method, params));
 	o.insert("id", id);
 	return o;
 }
 
 QJsonObject RemDev::newResponse(QJsonValue id, const QJsonValue &result) {
-	QJsonObject o(rpc_seed);
+	/*QJsonObject o(rpc_seed);
 	o.insert("id", id);
 	o.insert("result", result);
 	return o;
 }
 
 QJsonObject RemDev::newError(QJsonValue id, int code, const QString &msg, const QJsonValue &data) const {
-	QJsonObject e;
+	/*QJsonObject e;
 	e.insert("code", code);
 	e.insert("message", msg);
 	if (data.type() != QJsonValue::Undefined) e.insert("data", data);
@@ -211,16 +211,17 @@ QJsonObject RemDev::newNotification(const QString &method, const QJsonObject &pa
 	o.insert("method", method);
 	if (params.size()) o.insert("params", params);
 	return o;
-}
+}*/
 
 /*void RemDev::simulateError(LocalId id, const RequestRef *ref, int code) {
 	
 }*/
 
-void RemDev::sendObject(const QJsonObject &object) {
-	QByteArray json = QJsonDocument(object).toJson(QJsonDocument::Compact);
-	json.append("\n");
-	write(json);
+void RemDev::sendObject(const rapidjson::Document *doc) {
+	rj::StringBuffer buffer;
+	rj::Writer<rj::StringBuffer> writer(buffer);
+	doc->Accept(writer);
+	write(buffer.GetString());
 }
 
 void RemDev::handleObject(const QJsonObject &obj) {

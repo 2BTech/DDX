@@ -22,6 +22,8 @@
 #include <QObject>
 #include "mainwindow.h"
 
+class RemDev;
+
 class DevMgr : public QObject
 {
 	Q_OBJECT

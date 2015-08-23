@@ -25,5 +25,7 @@
 #include "../rapidjson/include/rapidjson/allocators.h"
 #include "../rapidjson/include/rapidjson/document.h"
 #include "../rapidjson/include/rapidjson/stringbuffer.h"
+#include "../rapidjson/include/rapidjson/memorystream.h"
+#include "../rapidjson/include/rapidjson/writer.h"
 
 #endif // RAPIDJSON_H

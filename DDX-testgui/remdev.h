@@ -158,9 +158,9 @@ private slots:
 protected:
 	DevMgr *dm;  //!< Convenience pointer to Daemon instance
 	
-	QString cid;
+	QByteArray cid;
 	
-	QString client_cid;
+	QByteArray client_cid;
 	
 	QByteArray locale;
 	
@@ -190,7 +190,7 @@ protected:
 	 * \param params Any parameters (will be omitted if empty)
 	 * \return The request object
 	 */
-	QJsonObject newRequest(LocalId id, const QString &method, const QJsonObject &params) const;
+	//QJsonObject newRequest(LocalId id, const QString &method, const QJsonObject &params) const;
 	
 	/*!
 	 * \brief Build a response object
@@ -198,7 +198,7 @@ protected:
 	 * \param result The params value (must **not** be null or undefined)
 	 * \return The response object
 	 */
-	QJsonObject newResponse(QJsonValue id, const QJsonValue &result);
+	//QJsonObject newResponse(QJsonValue id, const QJsonValue &result);
 	
 	/*!
 	 * \brief Build an error object
@@ -208,7 +208,7 @@ protected:
 	 * \param data Data to be sent (undefined will be omitted, all other types will be included)
 	 * \return The error object
 	 */
-	QJsonObject newError(QJsonValue id, int code, const QString &msg, const QJsonValue &data) const;
+	//QJsonObject newError(QJsonValue id, int code, const QString &msg, const QJsonValue &data) const;
 	
 	/*!
 	 * \brief Build a notification object
@@ -216,7 +216,7 @@ protected:
 	 * \param params Any parameters (will be omitted if empty)
 	 * \return The notification object
 	 */
-	QJsonObject newNotification(const QString &method, const QJsonObject &params) const;
+	//QJsonObject newNotification(const QString &method, const QJsonObject &params) const;
 	
 	//void simulateError(LocalId id, const RequestRef *ref, int code);
 	
@@ -271,7 +271,7 @@ private:
 	
 	bool registered;
 	
-	void sendObject(const QJsonObject &obj);
+	void sendObject(const rapidjson::Document *doc);
 	
 	void handleObject(const QJsonObject &obj);
 	
