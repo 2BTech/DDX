@@ -30,6 +30,7 @@
 #include <QThread>
 #include <QByteArray>
 #include "../rapidjson/include/rapidjson/document.h"
+//#include "../rapidjson/include/rapidjson/allocators.h"
 #include "../rapidjson/include/rapidjson/stringbuffer.h"
 #include "../rapidjson/include/rapidjson/writer.h"
 #include "../rapidjson/include/rapidjson/reader.h"
@@ -166,24 +167,24 @@ protected:
 	 * \brief Handle a single, complete incoming item
 	 * \param data A mutable copy of the raw data; will be freed automatically
 	 */
-	void handleItem(char *data);
+	void handleItem(char *data) noexcept ;
 	
 	/*!
 	 * \brief Send an error response
 	 * \param id The remote-generated transaction ID
 	 * \param code The integer error code
-	 * \param msg The error message
+	 * \param msg The error message (_Warning_: null characters will truncate!)
 	 * \param data Data to be sent (undefined will be omitted, all other types will be included)
 	 * \return True on success
 	 */
-	void sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Value *data = 0);
+	void sendError(rapidjson::Document *doc, rapidjson::Value *id, int code, const QString &msg, rapidjson::Value *data = 0) noexcept;
 	
 	/*!
 	 * \brief Send a log line tagged with the cid
 	 * \param msg The message
 	 * \param isAlert Whether it is destined for the user
 	 */
-	void log(const QByteArray &msg) const;
+	void log(const QByteArray &msg) const noexcept;
 	
 	/*!
 	 * \brief Build a request object
@@ -222,9 +223,9 @@ protected:
 	
 	//void simulateError(LocalId id, const RequestRef *ref, int code);
 	
-	virtual void sub_init() {}
+	virtual void sub_init() noexcept {}
 	
-	virtual void terminate(DisconnectReason reason, bool fromRemote) =0;
+	virtual void terminate(DisconnectReason reason, bool fromRemote) noexcept =0;
 	
 	/*!
 	 * \brief Write a single RPC item
@@ -232,7 +233,7 @@ protected:
 	 * 
 	 * _Warning:_ This function **must** be made thread-safe!
 	 */
-	virtual void writeItem(const char *data) =0;
+	virtual void writeItem(const char *data) noexcept =0;
 	
 private:
 	

@@ -19,9 +19,8 @@
 #include "remdev.h"
 #include "devmgr.h"
 
-using rapidjson::Document;
-using rapidjson::Writer;
-using rapidjson::StringBuffer;
+#define RAPIDJSON_IO
+#include "rapidjson_using.h"
 
 RemDev::RemDev(DevMgr *dm, bool inbound) :
 		QObject(0), req_id_lock(QMutex::Recursive) {
@@ -140,7 +139,7 @@ void RemDev::init() {
 	timeoutPoller->start();  // Start immediately for registration timeout*/
 }
 
-void RemDev::handleItem(char *data) {
+void RemDev::handleItem(char *data) noexcept {
 	// Parse document
 	Document doc;
 	if (registered) {  // Parsing procedure is more lenient with registered connections
@@ -188,11 +187,22 @@ void RemDev::handleItem(char *data) {
 	delete data;*/
 }
 
-void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Value *data) {
-	QJsonObject e;
-	e.insert("code", code);
-	e.insert("message", msg);
-	if (data.type() != QJsonValue::Undefined) e.insert("data", data);
+void RemDev::sendError(rapidjson::Document *doc, rapidjson::Value *id, int code, const QString &msg, rapidjson::Value *data) noexcept {
+	if ( ! doc) doc = new Document;
+	//Document *doc;
+	Value e(kObjectType);
+	{
+		Value v(code);
+		e.AddMember("code", v.Move(), doc->GetAllocator());
+		const char *t = msg.toUtf8().data();
+		// Use copy-string because the UTF8 version is temporary
+		// Null characters in messages are unlikely and will truncate by design for simplicity
+		v.SetString(t, doc->GetAllocator());
+		e.AddMember("message", v.Move(), doc->GetAllocator());
+	}
+	if (data) e.AddMember("data", data->Move(), doc->GetAllocator());
+	// Note:  I actually don't know if the above calls to Move() really work or are more efficient.
+	// In the case they don't, "v", "v", and "*data" respectively all compile instead.
 	QJsonObject o(rpc_seed);
 	o.insert("error", e);
 	if (id.type() == QJsonValue::Undefined) id = QJsonValue::Null;
@@ -201,7 +211,7 @@ void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapid
 	sendItem(newError(id, code, msg, data));
 }
 
-void RemDev::log(const QByteArray &msg) const {
+void RemDev::log(const QByteArray &msg) const noexcept {
 	QByteArray out(cid);
 	out.append(": ").append(msg).append("\n");
 	postToLogArea(msg);

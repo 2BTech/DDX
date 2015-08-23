@@ -40,7 +40,8 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     remdev.h \
     constants.h \
-    devmgr.h
+    devmgr.h \
+    rapidjson_using.h
 
 DISTFILES +=
 
