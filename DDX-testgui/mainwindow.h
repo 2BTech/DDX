@@ -20,11 +20,11 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QTimer>
-#include <QTcpSocket>
-#include <QHostAddress>
-#include <QLabel>
-#include <QTime>
+#include <QPlainTextEdit>
+#include <QTextDocument>
+#include <QMutex>
+
+class DevMgr;
 
 class MainWindow : public QMainWindow
 {
@@ -32,17 +32,15 @@ class MainWindow : public QMainWindow
 	
 public:
 	MainWindow(QWidget *parent = 0);
+	
 	~MainWindow();
 	
-public slots:
-	void boop();
+	QPlainTextEdit *logArea;
+	
+	DevMgr *dm;
 	
 private:
-	QTimer *t;
-	QTcpSocket *s;
-	QLabel *l;
-	QString n;
-	int c;
+	
 };
 
 #endif // MAINWINDOW_H

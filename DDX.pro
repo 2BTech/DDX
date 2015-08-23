@@ -20,5 +20,5 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    DDX-gui \	# GUI, data export
-    DDX-daemon	# Data collection, instrument setup & communication, uploading, logging
+    DDX-testgui \	# Test GUI/RPC system
+    DDX-daemon		# Data collection, instrument setup & communication, uploading, logging

@@ -17,51 +17,19 @@
  ******************************************************************************/
 
 #include "mainwindow.h"
+#include "devmgr.h"
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
-	s = new QTcpSocket(this);
-	t = new QTimer(this);
-	t->setInterval(500);
-	connect(t, &QTimer::timeout, this, &MainWindow::boop);
-	l = new QLabel("Initial");
-	this->setCentralWidget(l);
-	n = QString::number(QTime::currentTime().msec());
-	t->start();
-	c = 0;
+	logArea = new QPlainTextEdit();
+	logArea->setReadOnly(true);
+	setCentralWidget(logArea);
+	dm = new DevMgr(this);
+	connect(this, &MainWindow::)
 }
 
 MainWindow::~MainWindow()
 {
-	
-}
-
-void MainWindow::boop() {
-	if (s->state() == QAbstractSocket::ConnectedState) {  // Connected
-		if (c >= 10) {
-			s->write("exit\n");
-			s->flush();
-			l->setText("Sent exit");
-			c = 0;
-			return;
-		}
-		if (c == 5) {
-			//s->disconnectFromHost();
-			l->setText("Disconnected");
-			c++;
-			return;
-		}
-		s->write(QString("{\"test\":\"%1\"}\n").arg(n).toUtf8());
-		s->flush();
-		l->setText(tr("Connected (%1)").arg(n));
-		c++;
-	}
-	else {  // Not connected
-		if (s->state() == QAbstractSocket::HostLookupState
-			|| s->state() == QAbstractSocket::ConnectingState)
-			return;
-		s->connectToHost(QHostAddress(QHostAddress::LocalHost), 4388);
-		l->setText(tr("Connection requested (%1)").arg(n));
-	}
+	delete logArea;
 }

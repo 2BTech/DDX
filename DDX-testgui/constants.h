@@ -19,57 +19,6 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#include <QtGlobal>
-
 #include "../shared_constants.h"
-
-// GENERAL PURPOSE INDICATIVES
-#define VERSION_FULL_TEXT "0.0"
-#define APP_NAME_SHORT "DDX"
-#define APP_NAME "2B DDX"
-#define APP_AUTHOR "2B"
-#define APP_AUTHOR_FULL "2B Technologies"
-#define APP_AUTHOR_DOMAIN "twobtech.com"
-
-// DEBUGGING
-//! Comment to disable error checks that *shouldn't* be necessary in production
-#ifdef QT_DEBUG
-#define ENABLE_CAUTIOUS_ERROR_CHECKING
-#endif
-#ifdef ENABLE_CAUTIOUS_ERROR_CHECKING
-	//! Whether to check for rigorously check for JSON parsing errors in schemes which should come from the DDX itself
-	#define PATH_PARSING_CHECKS
-	#define CAUTIOUS_CHECKS
-	#define LIST_SETTINGS_STARTUP
-#endif
-#define KEEP_UNITMANAGER
-
-// LOGGING
-// Comment to disable timestamping on stdout
-#define LOG_STREAM_TIMESTAMP "yyyy-MM-dd HH:mm:ss.zzz"
-
-// SETTINGS
-#define SETTINGS_INCLUDE_DESCRIPTIONS
-// SETTINGS GROUPS
-#define SG_RPC "rpc"
-#define SG_PATHS "paths"
-#define SG_GUI "gui"
-#define SG_TIME "time"
-#define SG_NETWORK "network"
-
-// DIRECTORIES
-#define ddx_path(path_macro) (SG_PATHS "/" path_macro)
-#define D_INSTALL "install"
-#define D_LOGS "logs"
-#define D_DATA "data"
-#define D_CONFIG "config"
-
-// PLATFORM SPECIALIZATION
-
-// BUFFERING
-#define MAX_SOCKET_BUFFER_SIZE		104857600  // 104857600 = 100mb
-
-// MISCELLANEOUS
-#define VERSION_COMPARE_FAILED 10
 
 #endif // CONSTANTS_H

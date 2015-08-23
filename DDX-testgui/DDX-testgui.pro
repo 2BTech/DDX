@@ -33,11 +33,16 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+    mainwindow.cpp \
+    remdev.cpp \
+    devmgr.cpp
 
 HEADERS  += mainwindow.h \
-    ../DDX-daemon/constants.h \
-    ../NoGit/private_constants.h
+    remdev.h \
+    rapidjson.h \
+    constants.h \
+    devmgr.h
 
-DISTFILES += \
-    ../README.md
+DISTFILES +=
+
+INCLUDEPATH += "$$PWD/../rapidjson/include/rapidjson"
