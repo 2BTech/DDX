@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent)
 	logArea->setReadOnly(true);
 	setCentralWidget(logArea);
 	dm = new DevMgr(this);
+	logArea->appendPlainText("Started\n");
 }
 
 MainWindow::~MainWindow()

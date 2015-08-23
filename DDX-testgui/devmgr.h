@@ -20,6 +20,9 @@
 #define DEVMGR_H
 
 #include <QObject>
+#include <QByteArray>
+#include <QList>
+#include <QHash>
 #include "mainwindow.h"
 
 class RemDev;
@@ -40,6 +43,10 @@ signals:
 public slots:
 	
 private:
+	
+	QList<RemDev*> devices;
+	
+	QMutex dLock;
 	
 	MainWindow *mw;
 	

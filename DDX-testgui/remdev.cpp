@@ -19,7 +19,9 @@
 #include "remdev.h"
 #include "devmgr.h"
 
-namespace rj = rapidjson;
+using rapidjson::Document;
+using rapidjson::Writer;
+using rapidjson::StringBuffer;
 
 RemDev::RemDev(DevMgr *dm, bool inbound) :
 		QObject(0), req_id_lock(QMutex::Recursive) {
@@ -78,15 +80,9 @@ bool RemDev::sendResponse(rapidjson::Value *id, rapidjson::Value *result) {
 	if ( ! registered) return false;
 	sendObject(newResponse(id, result));
 	return true;
-}
+}*/
 
-bool RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Value *data) {
-	if ( ! registered) return false;
-	sendObject(newError(id, code, msg, data));
-	return true;
-}
-
-bool RemDev::sendNotification(const char *method, rapidjson::Value *params) {
+/*bool RemDev::sendNotification(const char *method, rapidjson::Value *params) {
 	if ( ! registered) return false;
 	sendObject(newNotification(method, params));
 	return true;
@@ -145,39 +141,69 @@ void RemDev::init() {
 }
 
 void RemDev::handleItem(char *data) {
-	/*if (data.size() > MAX_TRANSACTION_SIZE) {
-		// TODO
-		return;
-	}*/
-	/*QJsonParseError error;
-	QJsonDocument doc = QJsonDocument::fromJson(data, &error);
+	// Parse document
+	Document doc;
+	if (registered) {  // Parsing procedure is more lenient with registered connections
+		doc.ParseInsitu(data);
+	}
+	else {
+		doc.ParseInsitu<rapidjson::kParseValidateEncodingFlag |
+						rapidjson::kParseIterativeFlag>
+				(data);
+		// Assume this is a fake connection; return nothing if there's a parse error
+		if (doc.HasParseError()) {
+			delete data;
+			return;
+		}
+	}
+	if (doc.HasParseError()) {
+		
+	}
+	/*
 	// Check for registration before handling parsing errors because it will just
 	// return if any errors occurred (we don't want to send anything to prevent
 	// overload attacks if we're unregistered)
 	if ( ! registered) {
 		if ( ! doc.isObject()) return;
 		handleRegistration(doc.object());
+		delete data;
 		return;
 	}
 	if (error.error != QJsonParseError::NoError) {
 		
+		delete data;
 		return;
 	}
 	if (doc.isArray()) {
 		// TODO
+		delete data;
 		return;
 	}
 	if (doc.isObject()) {
 		QJsonObject obj = doc.object();
 		handleObject(obj);
+		delete data;
 		return;
 	}
-	// TODO:  Failed*/
+	delete data;*/
+}
+
+void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Value *data) {
+	QJsonObject e;
+	e.insert("code", code);
+	e.insert("message", msg);
+	if (data.type() != QJsonValue::Undefined) e.insert("data", data);
+	QJsonObject o(rpc_seed);
+	o.insert("error", e);
+	if (id.type() == QJsonValue::Undefined) id = QJsonValue::Null;
+	o.insert("id", id);
+	return o;
+	sendItem(newError(id, code, msg, data));
 }
 
 void RemDev::log(const QByteArray &msg) const {
 	QByteArray out(cid);
-	out.append(": ").append(msg);
+	out.append(": ").append(msg).append("\n");
 	postToLogArea(msg);
 }
 
@@ -195,7 +221,7 @@ QJsonObject RemDev::newResponse(QJsonValue id, const QJsonValue &result) {
 }
 
 QJsonObject RemDev::newError(QJsonValue id, int code, const QString &msg, const QJsonValue &data) const {
-	/*QJsonObject e;
+	QJsonObject e;
 	e.insert("code", code);
 	e.insert("message", msg);
 	if (data.type() != QJsonValue::Undefined) e.insert("data", data);
@@ -217,27 +243,12 @@ QJsonObject RemDev::newNotification(const QString &method, const QJsonObject &pa
 	
 }*/
 
-void RemDev::sendObject(const rapidjson::Document *doc) {
-	rj::StringBuffer buffer;
-	rj::Writer<rj::StringBuffer> writer(buffer);
-	doc->Accept(writer);
-	write(buffer.GetString());
-}
-
-void RemDev::handleObject(const QJsonObject &obj) {
-	if ( ! registered) {
-		handleRegistration(obj);
-		return;
-	}
-	if (obj.contains("method")) {
-		
-		return;
-	}
-	if (obj.contains("id")) {
-		// handle response/error, including null-id error
-		return;
-	}
-	// The request was invalid
+void RemDev::sendDocument(rapidjson::Document *d) {
+	StringBuffer buffer;
+	Writer<StringBuffer> writer(buffer);
+	d->Accept(writer);
+	delete d;
+	writeItem(buffer.GetString());
 }
 
 void RemDev::handleRequest(const QJsonObject &obj) {
@@ -245,7 +256,7 @@ void RemDev::handleRequest(const QJsonObject &obj) {
 }
 
 void RemDev::handleRegistration(const QJsonObject &obj) {
-	// If this is not a register request or response, return without error
+/*	// If this is not a register request or response, return without error
 	if (inbound && QString::compare(obj.value("method").toString(), "register")) return;
 	if ( ! inbound && ! obj.contains("result")) return;
 	QJsonValue id = obj.value("id");
@@ -267,16 +278,8 @@ void RemDev::handleRegistration(const QJsonObject &obj) {
 	// A successful result response and a register request should both be required
 	
 	registered = true;
-	d->registerDevice(this);
+	d->registerDevice(this);*/
 }
-
-const QJsonObject RemDev::rpc_seed{{"jsonrpc","2.0"}};
-
-
-
-
-
-
 
 
 

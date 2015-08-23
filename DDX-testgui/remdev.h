@@ -28,7 +28,11 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include <QThread>
-#include <rapidjson.h>
+#include <QByteArray>
+#include "../rapidjson/include/rapidjson/document.h"
+#include "../rapidjson/include/rapidjson/stringbuffer.h"
+#include "../rapidjson/include/rapidjson/writer.h"
+#include "../rapidjson/include/rapidjson/reader.h"
 #include "constants.h"
 
 class DevMgr;
@@ -89,16 +93,6 @@ public:
 	//bool sendResponse(rapidjson::Value *id = 0, rapidjson::Value *result = rapidjson::Value(rapidjson::kTrueType));
 	
 	/*!
-	 * \brief Send an error response
-	 * \param id The remote-generated transaction ID
-	 * \param code The integer error code
-	 * \param msg The error message
-	 * \param data Data to be sent (undefined will be omitted, all other types will be included)
-	 * \return True on success
-	 */
-	//bool sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Value *data = 0);
-	
-	/*!
 	 * \brief Send a notification
 	 * \param method The method name
 	 * \param params Any parameters (will be omitted if empty)
@@ -119,8 +113,6 @@ public:
 	void close(DisconnectReason reason = ConnectionTerminated, bool fromRemote = false);
 	
 	bool valid() const {return registered;}
-	
-	static const QJsonObject rpc_seed;
 	
 signals:
 	
@@ -177,6 +169,16 @@ protected:
 	void handleItem(char *data);
 	
 	/*!
+	 * \brief Send an error response
+	 * \param id The remote-generated transaction ID
+	 * \param code The integer error code
+	 * \param msg The error message
+	 * \param data Data to be sent (undefined will be omitted, all other types will be included)
+	 * \return True on success
+	 */
+	void sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Value *data = 0);
+	
+	/*!
 	 * \brief Send a log line tagged with the cid
 	 * \param msg The message
 	 * \param isAlert Whether it is destined for the user
@@ -225,12 +227,12 @@ protected:
 	virtual void terminate(DisconnectReason reason, bool fromRemote) =0;
 	
 	/*!
-	 * \brief write
-	 * \param data
+	 * \brief Write a single RPC item
+	 * \param data The data to be written (will be freed upon returning)
 	 * 
 	 * _Warning:_ This function **must** be made thread-safe!
 	 */
-	virtual void write(const char *data) =0;
+	virtual void writeItem(const char *data) =0;
 	
 private:
 	
@@ -271,7 +273,7 @@ private:
 	
 	bool registered;
 	
-	void sendObject(const rapidjson::Document *doc);
+	void sendDocument(rapidjson::Document *d);
 	
 	void handleObject(const QJsonObject &obj);
 	

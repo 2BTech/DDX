@@ -20,23 +20,23 @@
 #include "remdev.h"
 #include "mainwindow.h"
 
-DevManager::DevManager(QObject *parent) : QObject(parent)
+DevMgr::DevMgr(MainWindow *parent) : QObject(parent)
 {
 	
 }
 
-DevManager::~DevManager()
+DevMgr::~DevMgr()
 {
 	
 }
 
 
 
-QString DevMgr::addDevice(RemDev *dev) {
-	connect(dev, &RemDev::postToLogArea, mw->logArea, &QTextEdit::append);
+QByteArray DevMgr::addDevice(RemDev *dev) {
+	connect(dev, &RemDev::postToLogArea, mw->logArea, &QPlainTextEdit::appendPlainText);
 	dLock.lock();
 	devices.append(dev);
 	int ct = devices.size();
 	dLock.unlock();
-	return tr("UnregisteredDevice%1").arg(ct);
+	return tr("UnregisteredDevice%1").arg(ct).toUtf8();
 }

@@ -39,7 +39,6 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     remdev.h \
-    rapidjson.h \
     constants.h \
     devmgr.h
 
