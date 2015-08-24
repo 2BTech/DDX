@@ -208,7 +208,7 @@ void RemDev::sendError(rapidjson::Document *doc, rapidjson::Value *id, int code,
 	if (id.type() == QJsonValue::Undefined) id = QJsonValue::Null;
 	o.insert("id", id);
 	return o;
-	sendItem(newError(id, code, msg, data));
+	sendDocument(doc);
 }
 
 void RemDev::log(const QByteArray &msg) const noexcept {
