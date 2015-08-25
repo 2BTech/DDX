@@ -180,6 +180,7 @@ Name|Info|Type
 `Roles`|The roles which this client fills|`DeviceRole`
 `Requestor`|The requestor ID|string
 `Target`|The target ID|string
+`RequestorInfo`|Information about the requestor which the target can use to determine whether to accept the connection or not (null if coming from the client)|any
 `Passwords`|An array of strings containing any passwords that are required|array\<string>
 `Name`|The client's (usually) self-designated name|string
 `Timezone`|The client's timezone|`Timezone`

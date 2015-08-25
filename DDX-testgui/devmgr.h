@@ -25,8 +25,8 @@
 #include <QHash>
 #include <QMutex>
 #include <QPlainTextEdit>
+#include "remdev.h"
 
-class RemDev;
 class MainWindow;
 
 class DevMgr : public QObject
@@ -40,13 +40,15 @@ public:
 	
 	QByteArray addDevice(RemDev *dev);
 	
+	void closeAll(RemDev::DisconnectReason reason = RemDev::ShuttingDown);
+	
 signals:
 	
 public slots:
 	
 private:
 	
-	QList<RemDev*> devices;
+	RemDev::DeviceList devices;
 	
 	QMutex dLock;
 	

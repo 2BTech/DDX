@@ -41,7 +41,7 @@ protected:
 	
 	void terminate(DisconnectReason reason, bool fromRemote) noexcept override;
 	
-	void writeItem(const char *data) noexcept override;
+	void writeItem(rapidjson::StringBuffer *buffer) noexcept override;
 	
 	const char *getType() const noexcept override {return "Network";}
 	

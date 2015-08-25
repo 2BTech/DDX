@@ -38,11 +38,13 @@ void TestDev::sub_init() noexcept {
 void TestDev::terminate(DisconnectReason reason, bool fromRemote) noexcept {
 	(void) reason;
 	(void) fromRemote;
+	log(tr("Terminate called"));
 }
 
-void TestDev::writeItem(const char *data) noexcept {
+void TestDev::writeItem(rapidjson::StringBuffer *buffer) noexcept {
 	QString out(tr("Sent: "));
-	out.append(data);
+	out.append(buffer->GetString());
+	delete buffer;
 	log(out);
 }
 
@@ -60,5 +62,6 @@ void TestDev::timeout() {
 		strcpy(data, "{\"jsonrpc\":\"2.0\",\"method\":\"register\"}\n");
 		handleItem(data);
 	}
+	else if (eventCt == 5) eventCt = 0;
 	else delete data;
 }

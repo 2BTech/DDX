@@ -16,7 +16,6 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#include "remdev.h"
 #include "devmgr.h"
 
 #define RAPIDJSON_IO
@@ -30,6 +29,7 @@ RemDev::RemDev(DevMgr *dm, bool inbound) :
 	lastId = 0;
 	registered = false;
 	regState = UnregisteredState;
+	closed = false;
 	this->inbound = inbound;
 	// Add to master device list and get temporary cid
 	cid = dm->addDevice(this);
@@ -51,13 +51,18 @@ RemDev::~RemDev() {
 	delete timeoutPoller;
 }
 
-/*int RemDev::sendRequest(ResponseHandler handler, const char *method,
-						const rapidjson::Value *params, qint64 timeout) {
-	if ( ! registered) return 0;
-	// Obtain a server-unique ID
+int RemDev::sendRequest(ResponseHandler handler, const char *method, rapidjson::Document *doc,
+						rapidjson::Value *params, qint64 timeout) {
 	LocalId id;
 	RequestRef ref(handler, timeout);
 	req_id_lock.lock();
+	// Check that the connection is still open while we've got the lock
+	if (closed) {
+		req_id_lock.unlock();
+		if (doc) delete doc;
+		return -1;
+	}
+	// Obtain a server-unique ID
 	do {
 		id = ++lastId;
 		if (id == std::numeric_limits<LocalId>::max()) {
@@ -68,15 +73,25 @@ RemDev::~RemDev() {
 	// Insert into request list
 	reqs.insert(id, ref);
 	req_id_lock.unlock();
+	// Build & send request
+	if ( ! doc) doc = new Document;
+	rapidjson::MemoryPoolAllocator<> &a = doc->GetAllocator();
+	prepareDocument(doc, a);
+	doc->AddMember("method", Value().SetString(rapidjson::StringRef(method)), a);
+	doc->AddMember("id", Value(id), a);
+	if (params) doc->AddMember("params", *params, a);
+	sendDocument(doc);
 	// Start timeout timer if required
 	if (timeout && ! timeoutPoller->isActive())
 		timeoutPoller->start();
-	// Build & send request
-	sendObject(newRequest(id, method, params));
 	return id;
-}*/
+}
 
 void RemDev::sendResponse(rapidjson::Value &id, rapidjson::Document *doc, rapidjson::Value *result) {
+	if (closed) {
+		if (doc) delete doc;
+		return;
+	}
 	if ( ! doc) doc = new Document;
 	rapidjson::MemoryPoolAllocator<> &a = doc->GetAllocator();
 	prepareDocument(doc, a);
@@ -87,6 +102,10 @@ void RemDev::sendResponse(rapidjson::Value &id, rapidjson::Document *doc, rapidj
 }
 
 void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc, rapidjson::Value *data) noexcept {
+	if (closed) {
+		if (doc) delete doc;
+		return;
+	}
 	if ( ! doc) doc = new Document;
 	rapidjson::MemoryPoolAllocator<> &a = doc->GetAllocator();
 	Value e(kObjectType);
@@ -112,19 +131,22 @@ void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapid
 }
 */
 void RemDev::close(DisconnectReason reason, bool fromRemote) noexcept {
-/*	registered = false;
-	terminate(reason, fromRemote);
 	emit deviceDisconnected(this, reason, fromRemote);
+	req_id_lock.lock();
+	closed = true;
 	if (reqs.size()) {
-		req_id_lock.lock();
-		QJsonObject error({{"code", E_DEVICE_DISCONNECTED},
+		// TODO
+		/*QJsonObject error({{"code", E_DEVICE_DISCONNECTED},
 						   {"message", tr("Device disconnected")},
 						   {"data", reason}});
 		RequestHash::const_iterator it;
 		for (it = reqs.constBegin(); it != reqs.constEnd(); ++it)
-			(*it->handler)(it.key(), error, false);
+			(*it->handler)(it.key(), error, false);*/
 	}
-	deleteLater();*/
+	req_id_lock.unlock();
+	terminate(reason, fromRemote);
+	log(tr("Connection closed"));
+	deleteLater();
 }
 
 void RemDev::timeoutPoll() noexcept {
@@ -174,7 +196,8 @@ void RemDev::handleItem(char *data) noexcept {
 	dataBase.PushBack(data2, doc->GetAllocator());
 	Value id(389268);
 	//sendError(0, 372, "Sample error", doc, &dataBase);
-	sendResponse(id, doc, &dataBase);
+	//sendResponse(id, doc, &dataBase);
+	sendRequest(0, "TestRequest", doc, &dataBase);
 	if ( ! dataBase.IsNull()) log("DATABASE IS NOT NULL!!!");
 	delete data;
 	return;
@@ -248,16 +271,12 @@ QJsonObject RemDev::newNotification(const QString &method, const QJsonObject &pa
 	return o;
 }*/
 
-/*void RemDev::simulateError(LocalId id, const RequestRef *ref, int code) {
-	
-}*/
-
 void RemDev::sendDocument(rapidjson::Document *doc) {
-	StringBuffer buffer;
-	Writer<StringBuffer> writer(buffer);
+	StringBuffer *buffer = new StringBuffer;
+	Writer<StringBuffer> writer(*buffer);
 	doc->Accept(writer);
 	delete doc;
-	writeItem(buffer.GetString());
+	writeItem(buffer);
 }
 
 void RemDev::handleRequest(const QJsonObject &obj) {

@@ -29,6 +29,10 @@ MainWindow::MainWindow(QWidget *parent)
 	newTestDeviceAct->setStatusTip(tr("Add a new test device"));
 	connect(newTestDeviceAct, &QAction::triggered, this, &MainWindow::newTestDevice);
 	m->addAction(newTestDeviceAct);
+	closeAllDevicesAct = new QAction(tr("&Close all", "Devices menu"), this);
+	closeAllDevicesAct->setStatusTip(tr("Close all devices"));
+	connect(closeAllDevicesAct, &QAction::triggered, this, &MainWindow::closeAllDevices);
+	m->addAction(closeAllDevicesAct);
 	
 	// Log area
 	logArea = new QPlainTextEdit();
@@ -49,9 +53,22 @@ MainWindow::~MainWindow()
 	delete logArea;
 }
 
+void MainWindow::closeEvent(QCloseEvent *event) {
+	closeAllDevices();
+	event->accept();  // ignore() to prevent closing
+}
+
 void MainWindow::newTestDevice(bool checked) {
 	(void) checked;
-	((QAction *) sender())->setEnabled(false);
+	//newTestDeviceAct->setEnabled(false);
 	logArea->appendPlainText("Starting test device");
 	if ( ! td) td = new TestDev(dm, true);
+	else new TestDev(dm, true);
+}
+
+void MainWindow::closeAllDevices(bool checked) {
+	(void) checked;
+	dm->closeAll();
+	td = 0;
+	newTestDeviceAct->setEnabled(true);
 }

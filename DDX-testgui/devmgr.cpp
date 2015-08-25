@@ -17,7 +17,6 @@
  ******************************************************************************/
 
 #include "devmgr.h"
-#include "remdev.h"
 #include "mainwindow.h"
 
 DevMgr::DevMgr(MainWindow *parent) : QObject(parent)
@@ -38,4 +37,13 @@ QByteArray DevMgr::addDevice(RemDev *dev) {
 	dLock.unlock();
 	QString name = tr("Unknown%1").arg(++unregCt);
 	return name.toUtf8();
+}
+
+void DevMgr::closeAll(RemDev::DisconnectReason reason) {
+	dLock.lock();
+	for (int i = 0; i < devices.size(); i++) {
+		devices.at(i)->close(reason);
+	}
+	devices.clear();
+	dLock.unlock();
 }

@@ -25,6 +25,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QAction>
+#include <QCloseEvent>
 #include <QMutex>
 
 class DevMgr;
@@ -41,15 +42,21 @@ public:
 	
 	QPlainTextEdit *getLogArea() const {return logArea;}
 	
+	void closeEvent(QCloseEvent *event) override;
+	
 private slots:
 	
-	void newTestDevice(bool checked);
+	void newTestDevice(bool checked = false);
+	
+	void closeAllDevices(bool checked = false);
 	
 private:
 	
 	QPlainTextEdit *logArea;
 	
 	QAction *newTestDeviceAct;
+	
+	QAction *closeAllDevicesAct;
 	
 	DevMgr *dm;
 	

@@ -66,8 +66,28 @@ public:
 		ConnectionTerminated,  //!< The connection was explicitly terminated
 		RegistrationTimeout,  //!< The connection was alive too long without registering
 		BufferOverflow,  //!< The connection sent an object too long to be handled
-		StreamClosed,  //!< The stream was closed by its low-level handler
-		PasswordInvalid  //!< The passwords sent in response to registration were invalid
+		StreamClosed  //!< The stream was closed by its low-level handler
+	};
+	
+	struct Response {
+		Response(bool successful, int id, rapidjson::Document *doc,
+				 char *buffer = 0, rapidjson::Value *response_data = 0) {
+			this->successful = successful;
+			this->id = id;
+			this->response_data = response_data;
+			this->doc = doc;
+			this->buffer = buffer;
+		}
+		~Response() {
+			delete doc;
+			if (buffer) delete buffer;
+		}
+		bool successful;
+		int id;
+		rapidjson::Value *response_data;
+		rapidjson::Document *doc;
+	private:
+		char *buffer;
 	};
 	
 	explicit RemDev(DevMgr *dm, bool inbound);
@@ -77,13 +97,14 @@ public:
 	/*!
 	 * \brief Send a new request
 	 * \param handler
-	 * \param method
-	 * \param params Any parameters (will be omitted if empty)
-	 * \param timeout
+	 * \param method The method name (UTF8)
+	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
+	 * \param params Any parameters (0 to omit, will be **nullified, not deleted**)
+	 * \param timeout Request timeout in msecs
 	 * \return 
 	 */
-	//int sendRequest(ResponseHandler handler, const char *method,
-	//				const rapidjson::Value *params = 0, qint64 timeout = DEFAULT_REQUEST_TIMEOUT);
+	int sendRequest(ResponseHandler handler, const char *method, rapidjson::Document *doc = 0,
+					rapidjson::Value *params = 0, qint64 timeout = DEFAULT_REQUEST_TIMEOUT);
 	
 	/*!
 	 * \brief Send a successful response
@@ -105,7 +126,7 @@ public:
 	
 	/*!
 	 * \brief Send a notification
-	 * \param method The method name
+	 * \param method The method name (UTF8)
 	 * \param params Any parameters (will be omitted if empty)
 	 * \return True on success
 	 */
@@ -113,6 +134,10 @@ public:
 	
 	// TODO
 	bool sendRegistration(const QStringList &passwords) noexcept;
+	
+	bool valid() const noexcept {return registered;}
+	
+public slots:
 	
 	/*!
 	 * \brief Close this connection
@@ -122,8 +147,6 @@ public:
 	 * _Note:_ this will schedule the called object for deletion.
 	 */
 	void close(DisconnectReason reason = ConnectionTerminated, bool fromRemote = false) noexcept;
-	
-	bool valid() const noexcept {return registered;}
 	
 signals:
 	
@@ -181,6 +204,8 @@ protected:
 	bool inbound;
 	
 	RegistrationState regState;
+	
+	bool closed;
 	
 	/*!
 	 * \brief Handle a single, complete incoming item
@@ -240,11 +265,13 @@ protected:
 	
 	/*!
 	 * \brief Write a single RPC item
-	 * \param data The data to be written (will be freed upon return)
+	 * \param data The data to be written (**must** be manually freed)
+	 * 
+	 * This function should quickly write to a buffer and then return.
 	 * 
 	 * _Warning:_ This function **must** be made thread-safe!
 	 */
-	virtual void writeItem(const char *data) noexcept =0;
+	virtual void writeItem(rapidjson::StringBuffer *buffer) noexcept =0;
 	
 	virtual const char *getType() const noexcept =0;
 	

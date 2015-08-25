@@ -32,9 +32,10 @@ void NetDev::sub_init() noexcept {
 }
 
 void NetDev::terminate(DisconnectReason reason, bool fromRemote) noexcept {
-	
+	(void) reason;
+	(void) fromRemote;
 }
 
-void NetDev::writeItem(const char *data) noexcept {
-	
+void NetDev::writeItem(rapidjson::StringBuffer *buffer) noexcept {
+	delete buffer;
 }
