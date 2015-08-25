@@ -30,7 +30,7 @@ TestDev::~TestDev() {
 void TestDev::sub_init() noexcept {
 	QTimer *timer = new QTimer(this);
 	timer->setTimerType(Qt::CoarseTimer);
-	timer->setInterval(3000);
+	timer->setInterval(1500);
 	connect(timer, &QTimer::timeout, this, &TestDev::timeout);
 	timer->start();  // Start immediately for registration timeout
 }
@@ -55,10 +55,10 @@ void TestDev::timeout() {
 		strcpy(data, "this means nothing\n");
 		handleItem(data);
 	}
-	if (eventCt == 2) {
+	else if (eventCt == 2) {
 		log(tr("[test] sending a valid request"));
 		strcpy(data, "{\"jsonrpc\":\"2.0\",\"method\":\"register\"}\n");
 		handleItem(data);
 	}
-	delete data;
+	else delete data;
 }
