@@ -87,7 +87,7 @@ bool RemDev::sendResponse(rapidjson::Value *id, rapidjson::Value *result) {
 	return true;
 }
 */
-void RemDev::close(DisconnectReason reason, bool fromRemote) {
+void RemDev::close(DisconnectReason reason, bool fromRemote) noexcept {
 /*	registered = false;
 	terminate(reason, fromRemote);
 	emit deviceDisconnected(this, reason, fromRemote);
@@ -103,7 +103,7 @@ void RemDev::close(DisconnectReason reason, bool fromRemote) {
 	deleteLater();*/
 }
 
-void RemDev::timeoutPoll() {
+void RemDev::timeoutPoll() noexcept {
 /*	qint64 time = QDateTime::currentMSecsSinceEpoch();
 	QJsonObject error({{"code", E_REQUEST_TIMEOUT},
 					   {"message", tr("Request timed out")}});
@@ -122,7 +122,7 @@ void RemDev::timeoutPoll() {
 	}*/
 }
 
-void RemDev::init() {
+void RemDev::init() noexcept {
 /*	int registrationPeriod = sg->v("RegistrationPeriod", SG_RPC).toInt();
 	if (registrationPeriod < 1) {
 		lg->log(tr("User attempted to set a registration period less than 1 second; defaulting"));
@@ -144,8 +144,11 @@ void RemDev::handleItem(char *data) noexcept {
 	Document doc;
 	if (registered) {  // Parsing procedure is more lenient with registered connections
 		doc.ParseInsitu(data);
+		if (doc.HasParseError()) {
+			
+		}
 	}
-	else {
+	else {  // Unregistered: strict parsing, return if errors
 		doc.ParseInsitu<rapidjson::kParseValidateEncodingFlag |
 						rapidjson::kParseIterativeFlag>
 				(data);
@@ -154,9 +157,6 @@ void RemDev::handleItem(char *data) noexcept {
 			delete data;
 			return;
 		}
-	}
-	if (doc.HasParseError()) {
-		
 	}
 	/*
 	// Check for registration before handling parsing errors because it will just
@@ -187,27 +187,22 @@ void RemDev::handleItem(char *data) noexcept {
 	delete data;*/
 }
 
-void RemDev::sendError(rapidjson::Document *doc, rapidjson::Value *id, int code, const QString &msg, rapidjson::Value *data) noexcept {
+void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc, rapidjson::Value *data) noexcept {
 	if ( ! doc) doc = new Document;
-	//Document *doc;
+	rapidjson::MemoryPoolAllocator<> &a = doc->GetAllocator();
 	Value e(kObjectType);
 	{
 		Value v(code);
-		e.AddMember("code", v.Move(), doc->GetAllocator());
-		const char *t = msg.toUtf8().data();
-		// Use copy-string because the UTF8 version is temporary
-		// Null characters in messages are unlikely and will truncate by design for simplicity
-		v.SetString(t, doc->GetAllocator());
-		e.AddMember("message", v.Move(), doc->GetAllocator());
+		e.AddMember("code", v, a);
+		QByteArray encodedMsg = msg.toUtf8();
+		v.SetString(encodedMsg.constData(), encodedMsg.size(), a);
+		e.AddMember("message", v, a);
 	}
-	if (data) e.AddMember("data", data->Move(), doc->GetAllocator());
-	// Note:  I actually don't know if the above calls to Move() really work or are more efficient.
-	// In the case they don't, "v", "v", and "*data" respectively all compile instead.
-	QJsonObject o(rpc_seed);
-	o.insert("error", e);
-	if (id.type() == QJsonValue::Undefined) id = QJsonValue::Null;
-	o.insert("id", id);
-	return o;
+	if (data) e.AddMember("data", *data, a);
+	prepareDocument(doc);
+	doc->AddMember("error", e, a);
+	if (id) doc->AddMember("id", *id, a);
+	else doc->AddMember("id", Value().Move(), a);  // Add null if no id present
 	sendDocument(doc);
 }
 
@@ -253,11 +248,11 @@ QJsonObject RemDev::newNotification(const QString &method, const QJsonObject &pa
 	
 }*/
 
-void RemDev::sendDocument(rapidjson::Document *d) {
+void RemDev::sendDocument(rapidjson::Document *doc) {
 	StringBuffer buffer;
 	Writer<StringBuffer> writer(buffer);
-	d->Accept(writer);
-	delete d;
+	doc->Accept(writer);
+	delete doc;
 	writeItem(buffer.GetString());
 }
 
@@ -291,7 +286,10 @@ void RemDev::handleRegistration(const QJsonObject &obj) {
 	d->registerDevice(this);*/
 }
 
-
+void RemDev::prepareDocument(rapidjson::Document *doc) {
+	doc->SetObject();
+	doc->AddMember("jsonrpc", "2.0", doc->GetAllocator());
+}
 
 
 

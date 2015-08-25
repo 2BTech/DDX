@@ -33,7 +33,7 @@ DevMgr::~DevMgr()
 
 
 QByteArray DevMgr::addDevice(RemDev *dev) {
-	connect(dev, &RemDev::postToLogArea, mw->logArea, &QPlainTextEdit::appendPlainText);
+	connect(dev, &RemDev::postToLogArea, mw->getLogArea(), &QPlainTextEdit::appendPlainText);
 	dLock.lock();
 	devices.append(dev);
 	int ct = devices.size();

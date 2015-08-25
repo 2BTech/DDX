@@ -35,13 +35,17 @@ TEMPLATE = app
 SOURCES += main.cpp\
     mainwindow.cpp \
     remdev.cpp \
-    devmgr.cpp
+    devmgr.cpp \
+    netdev.cpp \
+    testdev.cpp
 
 HEADERS  += mainwindow.h \
     remdev.h \
     constants.h \
     devmgr.h \
-    rapidjson_using.h
+    rapidjson_using.h \
+    netdev.h \
+    testdev.h
 
 DISTFILES +=
 

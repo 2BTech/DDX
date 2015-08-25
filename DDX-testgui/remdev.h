@@ -102,7 +102,7 @@ public:
 	//bool sendNotification(const char *method, rapidjson::Value *params = 0);
 	
 	// TODO
-	bool sendRegistration(const QStringList &passwords);
+	bool sendRegistration(const QStringList &passwords) noexcept;
 	
 	/*!
 	 * \brief Close this connection
@@ -111,9 +111,9 @@ public:
 	 * 
 	 * _Note:_ this will schedule the called object for deletion.
 	 */
-	void close(DisconnectReason reason = ConnectionTerminated, bool fromRemote = false);
+	void close(DisconnectReason reason = ConnectionTerminated, bool fromRemote = false) noexcept;
 	
-	bool valid() const {return registered;}
+	bool valid() const noexcept {return registered;}
 	
 signals:
 	
@@ -144,9 +144,9 @@ private slots:
 	 * This function is called regularly by the #timeoutPoller QTimer.  This timer
 	 * is automatically started and stopped as needed.
 	 */
-	void timeoutPoll();
+	void timeoutPoll() noexcept;
 	
-	void init();
+	void init() noexcept;
 	
 protected:
 	DevMgr *dm;  //!< Convenience pointer to Daemon instance
@@ -167,17 +167,17 @@ protected:
 	 * \brief Handle a single, complete incoming item
 	 * \param data A mutable copy of the raw data; will be freed automatically
 	 */
-	void handleItem(char *data) noexcept ;
+	void handleItem(char *data) noexcept;
 	
 	/*!
 	 * \brief Send an error response
-	 * \param id The remote-generated transaction ID
+	 * \param id Pointer to remote-generated transaction ID, (0 -> null, will be **nullified, not deleted**)
 	 * \param code The integer error code
-	 * \param msg The error message (_Warning_: null characters will truncate!)
-	 * \param data Data to be sent (undefined will be omitted, all other types will be included)
-	 * \return True on success
+	 * \param msg The error message
+	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
+	 * \param data Pointer to any data (0 to omit, will be **nullified, not deleted**)
 	 */
-	void sendError(rapidjson::Document *doc, rapidjson::Value *id, int code, const QString &msg, rapidjson::Value *data = 0) noexcept;
+	void sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc = 0, rapidjson::Value *data = 0) noexcept;
 	
 	/*!
 	 * \brief Send a log line tagged with the cid
@@ -229,7 +229,7 @@ protected:
 	
 	/*!
 	 * \brief Write a single RPC item
-	 * \param data The data to be written (will be freed upon returning)
+	 * \param data The data to be written (will be freed upon return)
 	 * 
 	 * _Warning:_ This function **must** be made thread-safe!
 	 */
@@ -274,7 +274,7 @@ private:
 	
 	bool registered;
 	
-	void sendDocument(rapidjson::Document *d);
+	void sendDocument(rapidjson::Document *doc);
 	
 	void handleObject(const QJsonObject &obj);
 	
@@ -283,6 +283,8 @@ private:
 	void handleNotification(const QJsonObject &obj);
 	
 	void handleRegistration(const QJsonObject &obj);
+	
+	static void prepareDocument(rapidjson::Document *doc);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(RemDev::DeviceRoles)

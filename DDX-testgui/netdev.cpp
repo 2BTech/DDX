@@ -16,41 +16,25 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#include "netdev.h"
 
-#include <QMainWindow>
-#include <QPlainTextEdit>
-#include <QBoxLayout>
-#include <QPushButton>
-#include <QMutex>
+NetDev::NetDev(DevMgr *dm, bool inbound) : RemDev(dm, inbound) {
+	
+}
 
-class DevMgr;
-class TestDev;
-
-class MainWindow : public QMainWindow
+NetDev::~NetDev()
 {
-	Q_OBJECT
 	
-public:
-	MainWindow(QWidget *parent = 0);
-	
-	~MainWindow();
-	
-	QPlainTextEdit *getLogArea() const {return logArea;}
-	
-private slots:
-	
-	void newTestDevice(bool checked);
-	
-private:
-	
-	QPlainTextEdit *logArea;
-	
-	DevMgr *dm;
-	
-	TestDev *td;
-	
-};
+}
 
-#endif // MAINWINDOW_H
+void NetDev::sub_init() noexcept {
+	
+}
+
+void NetDev::terminate(DisconnectReason reason, bool fromRemote) noexcept {
+	
+}
+
+void NetDev::writeItem(const char *data) noexcept {
+	
+}
