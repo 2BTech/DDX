@@ -21,8 +21,9 @@
 
 #include <QMainWindow>
 #include <QPlainTextEdit>
-#include <QBoxLayout>
-#include <QPushButton>
+#include <QMenu>
+#include <QMenuBar>
+#include <QAction>
 #include <QMutex>
 
 class DevMgr;
@@ -46,6 +47,8 @@ private slots:
 private:
 	
 	QPlainTextEdit *logArea;
+	
+	QAction *newTestDeviceAct;
 	
 	DevMgr *dm;
 	

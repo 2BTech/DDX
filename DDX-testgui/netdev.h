@@ -19,6 +19,7 @@
 #ifndef NETDEV_H
 #define NETDEV_H
 
+#include <QObject>
 #include <QTcpSocket>
 #include <QSslSocket>
 #include "remdev.h"

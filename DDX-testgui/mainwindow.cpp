@@ -23,28 +23,25 @@
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
-	// Buttons
-	QBoxLayout *buttonLayout = new QBoxLayout(QBoxLayout::LeftToRight);
-	QPushButton *b = new QPushButton("TestDev", this);
-	buttonLayout->addWidget(b);
-	connect(b, &QPushButton::clicked, this, &MainWindow::newTestDevice);
-	b = new QPushButton("Do nothing", this);
-	buttonLayout->addWidget(b);
+	// Connection menu
+	QMenu *m = menuBar()->addMenu(tr("&Devices"));
+	newTestDeviceAct = new QAction(tr("Add new &TestDev", "Devices menu"), this);
+	newTestDeviceAct->setStatusTip(tr("Add a new test device"));
+	connect(newTestDeviceAct, &QAction::triggered, this, &MainWindow::newTestDevice);
+	m->addAction(newTestDeviceAct);
 	
 	// Log area
 	logArea = new QPlainTextEdit();
 	logArea->setReadOnly(true);
-	
-	// Master layout
-	QBoxLayout *masterLayout = new QBoxLayout(QBoxLayout::TopToBottom);
-	masterLayout->addLayout(buttonLayout);
-	masterLayout->addWidget(logArea);
-	setLayout(masterLayout);
+	setCentralWidget(logArea);
+	logArea->appendPlainText(tr("Started\n"));
 	
 	// Initializations
+	setWindowTitle(tr("DDX Test GUI"));
+	resize(1000,500);
 	td = 0;
+	logArea->appendPlainText(tr("Instantiating DevMgr"));
 	dm = new DevMgr(this);
-	logArea->appendPlainText("Started\n");
 }
 
 MainWindow::~MainWindow()
@@ -53,8 +50,8 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::newTestDevice(bool checked) {
-	checked;
-	((QPushButton *) sender())->setEnabled(false);
+	(void) checked;
+	((QAction *) sender())->setEnabled(false);
 	logArea->appendPlainText("Starting test device...");
 	if ( ! td) td = new TestDev(dm, true);
 	logArea->appendPlainText("Test device constructor returned");
