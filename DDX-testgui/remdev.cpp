@@ -33,7 +33,9 @@ RemDev::RemDev(DevMgr *dm, bool inbound) :
 	this->inbound = inbound;
 	// Add to master device list and get temporary cid
 	cid = dm->addDevice(this);
+	log(tr("New unregistered device"));
 	// Threading
+	/*
 #ifdef REMDEV_THREADS
 	QThread *t = new QThread(dm);
 	moveToThread(t);
@@ -43,7 +45,7 @@ RemDev::RemDev(DevMgr *dm, bool inbound) :
 	t->start();
 #else
 	init();
-#endif
+#endif*/
 }
 
 RemDev::~RemDev() {
@@ -206,10 +208,18 @@ void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapid
 	sendDocument(doc);
 }
 
-void RemDev::log(const QByteArray &msg) const noexcept {
+void RemDev::log(const QByteArray &msg, bool isAlert) const noexcept {
+	(void) isAlert;
 	QByteArray out(cid);
 	out.append(": ").append(msg).append("\n");
 	postToLogArea(msg);
+}
+
+void RemDev::log(const QString &msg, bool isAlert) const noexcept {
+	(void) isAlert;
+	QString out(cid);
+	out.append(": ").append(msg).append("\n");
+	emit postToLogArea(msg);
 }
 
 /*QJsonObject RemDev::newRequest(LocalId id, const QString &method, const QJsonObject &params) const {

@@ -184,7 +184,16 @@ protected:
 	 * \param msg The message
 	 * \param isAlert Whether it is destined for the user
 	 */
-	void log(const QByteArray &msg) const noexcept;
+	void log(const QByteArray &msg, bool isAlert = false) const noexcept;
+	
+	/*!
+	 * \brief Send a log line tagged with the cid
+	 * \param msg The message
+	 * \param isAlert Whether it is destined for the user
+	 * 
+	 * This is an overload which converts the QString to QByteArray.
+	 */
+	void log(const QString &msg, bool isAlert = false) const noexcept;
 	
 	/*!
 	 * \brief Build a request object

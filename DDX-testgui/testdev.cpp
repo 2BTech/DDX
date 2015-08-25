@@ -17,18 +17,22 @@
  ******************************************************************************/
 
 #include "testdev.h"
+#include "devmgr.h"
 
 TestDev::TestDev(DevMgr *dm, bool inbound) : RemDev(dm, inbound) {
-	
+	eventCt = 0;
 }
 
-TestDev::~TestDev()
-{
+TestDev::~TestDev() {
 	
 }
 
 void TestDev::sub_init() noexcept {
-	
+	QTimer *timer = new QTimer(this);
+	timer->setTimerType(Qt::CoarseTimer);
+	timer->setInterval(3000);
+	connect(timer, &QTimer::timeout, this, &TestDev::timeout);
+	timer->start();  // Start immediately for registration timeout
 }
 
 void TestDev::terminate(DisconnectReason reason, bool fromRemote) noexcept {
@@ -36,5 +40,19 @@ void TestDev::terminate(DisconnectReason reason, bool fromRemote) noexcept {
 }
 
 void TestDev::writeItem(const char *data) noexcept {
+	QString out(tr("Sent: "));
+	out.append(data);
+	log(out);
+}
+
+void TestDev::timeout() {
+	eventCt++;
 	
+	char *data = new char[1000];
+	
+	if (eventCt == 1) {
+		log(tr("[test] sending bad data"));
+		strcpy(data, "this means nothing");
+		handleItem(data);
+	}
 }

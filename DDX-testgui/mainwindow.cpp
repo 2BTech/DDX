@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
 	logArea = new QPlainTextEdit();
 	logArea->setReadOnly(true);
 	setCentralWidget(logArea);
-	logArea->appendPlainText(tr("Started\n"));
+	logArea->appendPlainText(tr("Started"));
 	
 	// Initializations
 	setWindowTitle(tr("DDX Test GUI"));
@@ -52,7 +52,6 @@ MainWindow::~MainWindow()
 void MainWindow::newTestDevice(bool checked) {
 	(void) checked;
 	((QAction *) sender())->setEnabled(false);
-	logArea->appendPlainText("Starting test device...");
+	logArea->appendPlainText("Starting test device");
 	if ( ! td) td = new TestDev(dm, true);
-	logArea->appendPlainText("Test device constructor returned");
 }

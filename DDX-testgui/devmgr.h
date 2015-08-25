@@ -23,9 +23,10 @@
 #include <QByteArray>
 #include <QList>
 #include <QHash>
-#include "mainwindow.h"
+#include <QPlainTextEdit>
 
 class RemDev;
+class MainWindow;
 
 class DevMgr : public QObject
 {
@@ -47,6 +48,8 @@ private:
 	QList<RemDev*> devices;
 	
 	QMutex dLock;
+	
+	int unregCt;
 	
 	MainWindow *mw;
 	

@@ -19,6 +19,8 @@
 #ifndef TESTDEV_H
 #define TESTDEV_H
 
+#include <QObject>
+#include <QTimer>
 #include "remdev.h"
 
 class DevMgr;
@@ -40,8 +42,13 @@ protected:
 	
 	virtual void writeItem(const char *data) noexcept override;
 	
+private slots:
+	
+	void timeout();
+	
 private:
 	
+	int eventCt = 0;
 };
 
 #endif // TESTDEV_H

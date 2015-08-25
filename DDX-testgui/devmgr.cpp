@@ -22,7 +22,8 @@
 
 DevMgr::DevMgr(MainWindow *parent) : QObject(parent)
 {
-	
+	mw = parent;
+	unregCt = 0;
 }
 
 DevMgr::~DevMgr()
@@ -30,13 +31,12 @@ DevMgr::~DevMgr()
 	
 }
 
-
-
 QByteArray DevMgr::addDevice(RemDev *dev) {
 	connect(dev, &RemDev::postToLogArea, mw->getLogArea(), &QPlainTextEdit::appendPlainText);
 	dLock.lock();
 	devices.append(dev);
-	int ct = devices.size();
 	dLock.unlock();
-	return tr("UnregisteredDevice%1").arg(ct).toUtf8();
+	QString name = tr("Unknown%1").arg(++unregCt);
+	mw->getLogArea()->appendPlainText("ntoehunote");
+	return name.toUtf8();
 }
