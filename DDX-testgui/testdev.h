@@ -42,7 +42,7 @@ protected:
 	
 	virtual void writeItem(const char *data) noexcept override;
 	
-private slots:
+public slots:
 	
 	void timeout();
 	

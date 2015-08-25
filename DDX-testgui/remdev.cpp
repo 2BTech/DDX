@@ -35,7 +35,6 @@ RemDev::RemDev(DevMgr *dm, bool inbound) :
 	cid = dm->addDevice(this);
 	log(tr("New unregistered device"));
 	// Threading
-	/*
 #ifdef REMDEV_THREADS
 	QThread *t = new QThread(dm);
 	moveToThread(t);
@@ -45,7 +44,7 @@ RemDev::RemDev(DevMgr *dm, bool inbound) :
 	t->start();
 #else
 	init();
-#endif*/
+#endif
 }
 
 RemDev::~RemDev() {
@@ -130,7 +129,7 @@ void RemDev::init() noexcept {
 		lg->log(tr("User attempted to set a registration period less than 1 second; defaulting"));
 		registrationPeriod = sg->reset("RegistrationPeriod", SG_RPC).toInt();
 	}
-	registrationTimeoutTime = connectTime + (registrationPeriod * 1000);
+	registrationTimeoutTime = connectTime + (registrationPeriod * 1000);*/
 	// Set up timeout polling
 	timeoutPoller = new QTimer(this);
 	timeoutPoller->setTimerType(Qt::CoarseTimer);
@@ -138,7 +137,7 @@ void RemDev::init() noexcept {
 	connect(timeoutPoller, &QTimer::timeout, this, &RemDev::timeoutPoll);
 	// Call the subclass init function
 	sub_init();
-	timeoutPoller->start();  // Start immediately for registration timeout*/
+	//timeoutPoller->start();  // Start immediately for registration timeout*/
 }
 
 void RemDev::handleItem(char *data) noexcept {
@@ -208,18 +207,11 @@ void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapid
 	sendDocument(doc);
 }
 
-void RemDev::log(const QByteArray &msg, bool isAlert) const noexcept {
-	(void) isAlert;
-	QByteArray out(cid);
-	out.append(": ").append(msg).append("\n");
-	postToLogArea(msg);
-}
-
 void RemDev::log(const QString &msg, bool isAlert) const noexcept {
 	(void) isAlert;
-	QString out(cid);
-	out.append(": ").append(msg).append("\n");
-	emit postToLogArea(msg);
+	QString out = QString::fromUtf8(cid);
+	out.append(": ").append(msg);
+	emit postToLogArea(out);
 }
 
 /*QJsonObject RemDev::newRequest(LocalId id, const QString &method, const QJsonObject &params) const {

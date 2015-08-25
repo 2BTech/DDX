@@ -55,4 +55,9 @@ void TestDev::timeout() {
 		strcpy(data, "this means nothing");
 		handleItem(data);
 	}
+	if (eventCt == 2) {
+		log(tr("[test] sending a valid request"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"method\":\"register\"}");
+	}
+	delete data;
 }

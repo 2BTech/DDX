@@ -37,6 +37,5 @@ QByteArray DevMgr::addDevice(RemDev *dev) {
 	devices.append(dev);
 	dLock.unlock();
 	QString name = tr("Unknown%1").arg(++unregCt);
-	mw->getLogArea()->appendPlainText("ntoehunote");
 	return name.toUtf8();
 }

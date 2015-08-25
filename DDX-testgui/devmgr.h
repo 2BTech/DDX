@@ -23,6 +23,7 @@
 #include <QByteArray>
 #include <QList>
 #include <QHash>
+#include <QMutex>
 #include <QPlainTextEdit>
 
 class RemDev;

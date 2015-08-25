@@ -153,7 +153,7 @@ protected:
 	
 	QByteArray cid;
 	
-	QByteArray client_cid;
+	QByteArray remote_cid;
 	
 	QByteArray locale;
 	
@@ -178,13 +178,6 @@ protected:
 	 * \param data Pointer to any data (0 to omit, will be **nullified, not deleted**)
 	 */
 	void sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc = 0, rapidjson::Value *data = 0) noexcept;
-	
-	/*!
-	 * \brief Send a log line tagged with the cid
-	 * \param msg The message
-	 * \param isAlert Whether it is destined for the user
-	 */
-	void log(const QByteArray &msg, bool isAlert = false) const noexcept;
 	
 	/*!
 	 * \brief Send a log line tagged with the cid
