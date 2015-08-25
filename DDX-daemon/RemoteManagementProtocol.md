@@ -143,9 +143,9 @@ data member of the error will contain the `DisconnectReason` value.
 
 ## Registration & Disconnection
 Registration is a required handshake that allows connecting devices to understand
-each other's environment, capabilities, and identity.  Sending the registration
-command and initiating any encryption handshakes is always the responsibility of
-the connecting device (client).
+each other's environment, capabilities, identity, and reason for connecting.  Both devices
+must send a `register` request to the other, both of which need to complete successfully
+before messages will be passed.
 
 ### Network Devices & SSL
 It is highly recommended that network implementations of the DDX-RPC utilize SSL to encrypt
@@ -161,8 +161,9 @@ the DDX daemon, but may be in the future.
 ### Passwords
 DDX-RPC implementations can require a distinct password for each individual role in addition
 to a global password.  Every required password must be listed in the `register` request
-for it to succeed.  If a connecting client requires passwords of its server, the client
-should disconnect with `PasswordInvalid` if the response passwords were invalid.
+for it to succeed.
+
+### 
 
 ### Server request: `register`
 Every connection must be registered before its requests will be honored.  Any requests or
@@ -177,23 +178,12 @@ Name|Info|Type
 `DDX_author`|The client's DDX author|string
 `CID`|The client-given, server-taken connection ID; see "Connection IDs"|string
 `Roles`|The roles which this client fills|`DeviceRole`
+`Requestor`|The requestor ID|string
+`Target`|The target ID|string
 `Passwords`|An array of strings containing any passwords that are required|array\<string>
 `Name`|The client's (usually) self-designated name|string
 `Timezone`|The client's timezone|`Timezone`
 `Locale`|The client's locale|string
-
-Result:
-
-Name|Info|Type
----|---|---
-`DDX_version`|The server's DDX version in the format "n.n"|string
-`DDX_author`|The server's DDX author|string
-`CID`|The server-given, client-taken connection ID; see "Connection IDs"|string
-`Roles`|The roles which this server fills|`DeviceRole`
-`Passwords`|An array of strings containing any passwords that are required|array\<string>
-`Name`|The server's (usually) self-designated name|string
-`Timezone`|The server's timezone|`Timezone`
-`Locale`|The server's locale|string
 
 Upon connection to a daemon, actions will occur based on the connected client type:
 
@@ -214,6 +204,7 @@ Code|Message|Macro
 504|A specified client role is explicitly forbidden|E_CLIENT_TYPE_FORBIDDEN
 505|Version unreadable|E_VERSION_UNREADABLE
 506|Password invalid|E_PASSWORD_INVALID
+507|Target invalid|E_TARGET_INVALID
 
 Error E_PASSWORD_INVALID should contain a `DeviceRole` flag integer which specifies any
 roles which were denied because of invalid passwords.

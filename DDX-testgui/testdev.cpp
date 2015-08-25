@@ -36,7 +36,8 @@ void TestDev::sub_init() noexcept {
 }
 
 void TestDev::terminate(DisconnectReason reason, bool fromRemote) noexcept {
-	
+	(void) reason;
+	(void) fromRemote;
 }
 
 void TestDev::writeItem(const char *data) noexcept {
@@ -47,17 +48,17 @@ void TestDev::writeItem(const char *data) noexcept {
 
 void TestDev::timeout() {
 	eventCt++;
-	
 	char *data = new char[1000];
 	
 	if (eventCt == 1) {
 		log(tr("[test] sending bad data"));
-		strcpy(data, "this means nothing");
+		strcpy(data, "this means nothing\n");
 		handleItem(data);
 	}
 	if (eventCt == 2) {
 		log(tr("[test] sending a valid request"));
-		strcpy(data, "{\"jsonrpc\":\"2.0\",\"method\":\"register\"}");
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"method\":\"register\"}\n");
+		handleItem(data);
 	}
 	delete data;
 }

@@ -37,11 +37,13 @@ public:
 	
 protected:
 	
-	virtual void sub_init() noexcept override;
+	void sub_init() noexcept override;
 	
-	virtual void terminate(DisconnectReason reason, bool fromRemote) noexcept override;
+	void terminate(DisconnectReason reason, bool fromRemote) noexcept override;
 	
-	virtual void writeItem(const char *data) noexcept override;
+	void writeItem(const char *data) noexcept override;
+	
+	const char *getType() const noexcept override {return "Network";}
 	
 private:
 	

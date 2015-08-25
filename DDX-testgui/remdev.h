@@ -87,11 +87,21 @@ public:
 	
 	/*!
 	 * \brief Send a successful response
-	 * \param id The remote-generated transaction ID
-	 * \param result The result (must **not** be undefined)
-	 * \return True on success
+	 * \param id The remote-generated transaction ID (will be **nullified, not deleted**)
+	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
+	 * \param result The result (0 -> true, will be **nullified, not deleted**)
 	 */
-	//bool sendResponse(rapidjson::Value *id = 0, rapidjson::Value *result = rapidjson::Value(rapidjson::kTrueType));
+	void sendResponse(rapidjson::Value &id, rapidjson::Document *doc = 0, rapidjson::Value *result = 0);
+	
+	/*!
+	 * \brief Send an error response
+	 * \param id Pointer to remote-generated transaction ID, (0 -> null, will be **nullified, not deleted**)
+	 * \param code The integer error code
+	 * \param msg The error message
+	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
+	 * \param data Pointer to any data (0 to omit, will be **nullified, not deleted**)
+	 */
+	void sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc = 0, rapidjson::Value *data = 0) noexcept;
 	
 	/*!
 	 * \brief Send a notification
@@ -149,6 +159,15 @@ private slots:
 	void init() noexcept;
 	
 protected:
+	
+	enum RegistrationState {
+		UnregisteredState = 0x0,
+		RegSentFlag = 0x1,
+		RegAcceptedFlag = 0x2,
+		RemoteRegAcceptedFlag = 0x4,
+		RegisteredState = RegSentFlag|RegAcceptedFlag|RemoteRegAcceptedFlag
+	};
+	
 	DevMgr *dm;  //!< Convenience pointer to Daemon instance
 	
 	QByteArray cid;
@@ -161,23 +180,13 @@ protected:
 	
 	bool inbound;
 	
-	bool registerAccepted;
+	RegistrationState regState;
 	
 	/*!
 	 * \brief Handle a single, complete incoming item
 	 * \param data A mutable copy of the raw data; will be freed automatically
 	 */
 	void handleItem(char *data) noexcept;
-	
-	/*!
-	 * \brief Send an error response
-	 * \param id Pointer to remote-generated transaction ID, (0 -> null, will be **nullified, not deleted**)
-	 * \param code The integer error code
-	 * \param msg The error message
-	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
-	 * \param data Pointer to any data (0 to omit, will be **nullified, not deleted**)
-	 */
-	void sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc = 0, rapidjson::Value *data = 0) noexcept;
 	
 	/*!
 	 * \brief Send a log line tagged with the cid
@@ -237,6 +246,8 @@ protected:
 	 */
 	virtual void writeItem(const char *data) noexcept =0;
 	
+	virtual const char *getType() const noexcept =0;
+	
 private:
 	
 	struct RequestRef {
@@ -284,9 +295,9 @@ private:
 	
 	void handleNotification(const QJsonObject &obj);
 	
-	void handleRegistration(const QJsonObject &obj);
+	void handleRegistration(const rapidjson::Document &doc);
 	
-	static void prepareDocument(rapidjson::Document *doc);
+	static inline void prepareDocument(rapidjson::Document *doc, rapidjson::MemoryPoolAllocator<> &a);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(RemDev::DeviceRoles)

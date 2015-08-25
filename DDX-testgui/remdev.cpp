@@ -29,7 +29,7 @@ RemDev::RemDev(DevMgr *dm, bool inbound) :
 	this->dm = dm;
 	lastId = 0;
 	registered = false;
-	registerAccepted = false;
+	regState = UnregisteredState;
 	this->inbound = inbound;
 	// Add to master device list and get temporary cid
 	cid = dm->addDevice(this);
@@ -74,13 +74,36 @@ RemDev::~RemDev() {
 	// Build & send request
 	sendObject(newRequest(id, method, params));
 	return id;
+}*/
+
+void RemDev::sendResponse(rapidjson::Value &id, rapidjson::Document *doc, rapidjson::Value *result) {
+	if ( ! doc) doc = new Document;
+	rapidjson::MemoryPoolAllocator<> &a = doc->GetAllocator();
+	prepareDocument(doc, a);
+	doc->AddMember("id", id, a);
+	if (result) doc->AddMember("result", *result, a);
+	else doc->AddMember("result", Value(rapidjson::kTrueType), a);
+	sendDocument(doc);
 }
 
-bool RemDev::sendResponse(rapidjson::Value *id, rapidjson::Value *result) {
-	if ( ! registered) return false;
-	sendObject(newResponse(id, result));
-	return true;
-}*/
+void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc, rapidjson::Value *data) noexcept {
+	if ( ! doc) doc = new Document;
+	rapidjson::MemoryPoolAllocator<> &a = doc->GetAllocator();
+	Value e(kObjectType);
+	{
+		Value v(code);
+		e.AddMember("code", v, a);
+		QByteArray encodedMsg = msg.toUtf8();
+		v.SetString(encodedMsg.constData(), encodedMsg.size(), a);
+		e.AddMember("message", v, a);
+	}
+	if (data) e.AddMember("data", *data, a);
+	prepareDocument(doc, a);
+	doc->AddMember("error", e, a);
+	if (id) doc->AddMember("id", *id, a);
+	else doc->AddMember("id", Value(rapidjson::kNullType), a);  // Add null if no id present
+	sendDocument(doc);
+}
 
 /*bool RemDev::sendNotification(const char *method, rapidjson::Value *params) {
 	if ( ! registered) return false;
@@ -141,10 +164,24 @@ void RemDev::init() noexcept {
 }
 
 void RemDev::handleItem(char *data) noexcept {
+	Document *doc = new Document;
+	Value dataBase(kArrayType);
+	dataBase.PushBack("Whoopidoo", doc->GetAllocator());
+	dataBase.PushBack(Value(-3214), doc->GetAllocator());
+	Value data2(kArrayType);
+	data2.PushBack("Another\nthing", doc->GetAllocator());
+	data2.PushBack("from\nanother\tday", doc->GetAllocator());
+	dataBase.PushBack(data2, doc->GetAllocator());
+	Value id(389268);
+	//sendError(0, 372, "Sample error", doc, &dataBase);
+	sendResponse(id, doc, &dataBase);
+	if ( ! dataBase.IsNull()) log("DATABASE IS NOT NULL!!!");
+	delete data;
+	return;
 	// Parse document
-	Document doc;
+	/*Document doc;
 	if (registered) {  // Parsing procedure is more lenient with registered connections
-		doc.ParseInsitu(data);
+		doc.ParseInsitu(dataBase);
 		if (doc.HasParseError()) {
 			
 		}
@@ -152,12 +189,15 @@ void RemDev::handleItem(char *data) noexcept {
 	else {  // Unregistered: strict parsing, return if errors
 		doc.ParseInsitu<rapidjson::kParseValidateEncodingFlag |
 						rapidjson::kParseIterativeFlag>
-				(data);
+				(dataBase);
 		// Assume this is a fake connection; return nothing if there's a parse error
 		if (doc.HasParseError()) {
-			delete data;
+			delete dataBase;
 			return;
 		}
+		handleRegistration(doc);
+		delete dataBase;
+		return;
 	}
 	/*
 	// Check for registration before handling parsing errors because it will just
@@ -184,27 +224,8 @@ void RemDev::handleItem(char *data) noexcept {
 		handleObject(obj);
 		delete data;
 		return;
-	}
-	delete data;*/
-}
-
-void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc, rapidjson::Value *data) noexcept {
-	if ( ! doc) doc = new Document;
-	rapidjson::MemoryPoolAllocator<> &a = doc->GetAllocator();
-	Value e(kObjectType);
-	{
-		Value v(code);
-		e.AddMember("code", v, a);
-		QByteArray encodedMsg = msg.toUtf8();
-		v.SetString(encodedMsg.constData(), encodedMsg.size(), a);
-		e.AddMember("message", v, a);
-	}
-	if (data) e.AddMember("data", *data, a);
-	prepareDocument(doc);
-	doc->AddMember("error", e, a);
-	if (id) doc->AddMember("id", *id, a);
-	else doc->AddMember("id", Value().Move(), a);  // Add null if no id present
-	sendDocument(doc);
+	}*/
+	delete data;
 }
 
 void RemDev::log(const QString &msg, bool isAlert) const noexcept {
@@ -216,25 +237,6 @@ void RemDev::log(const QString &msg, bool isAlert) const noexcept {
 
 /*QJsonObject RemDev::newRequest(LocalId id, const QString &method, const QJsonObject &params) const {
 	/*QJsonObject o(newNotification(method, params));
-	o.insert("id", id);
-	return o;
-}
-
-QJsonObject RemDev::newResponse(QJsonValue id, const QJsonValue &result) {
-	/*QJsonObject o(rpc_seed);
-	o.insert("id", id);
-	o.insert("result", result);
-	return o;
-}
-
-QJsonObject RemDev::newError(QJsonValue id, int code, const QString &msg, const QJsonValue &data) const {
-	QJsonObject e;
-	e.insert("code", code);
-	e.insert("message", msg);
-	if (data.type() != QJsonValue::Undefined) e.insert("data", data);
-	QJsonObject o(rpc_seed);
-	o.insert("error", e);
-	if (id.type() == QJsonValue::Undefined) id = QJsonValue::Null;
 	o.insert("id", id);
 	return o;
 }
@@ -262,13 +264,16 @@ void RemDev::handleRequest(const QJsonObject &obj) {
 	
 }
 
-void RemDev::handleRegistration(const QJsonObject &obj) {
-/*	// If this is not a register request or response, return without error
-	if (inbound && QString::compare(obj.value("method").toString(), "register")) return;
-	if ( ! inbound && ! obj.contains("result")) return;
-	QJsonValue id = obj.value("id");
+void RemDev::handleRegistration(const rapidjson::Document &doc) {
+	// If this is not a register request or response, return without error
+	if ((regState & RegSentFlag) && doc.HasMember("result")) {  // This is a response to our registration
+		
+	}
+	/*if (inbound && QString::compare(doc.value("method").toString(), "register")) return;
+	if ( ! inbound && ! doc.contains("result")) return;
+	QJsonValue id = doc.value("id");
 	// Check minimum version
-	QString sent = obj.value("DDX_version").toString();
+	QString sent = doc.value("DDX_version").toString();
 	QString check = sg->v("MinVersion", SG_RPC).toString();
 	if (QString::compare(check, "any")) {  // If check is required...
 		int vc = Daemon::versionCompare(sent, check);
@@ -284,13 +289,15 @@ void RemDev::handleRegistration(const QJsonObject &obj) {
 	// It would make a lot of this MUCH cleaner...
 	// A successful result response and a register request should both be required
 	
+	
+	//log(tr("Now known as %1").arg(
 	registered = true;
 	d->registerDevice(this);*/
 }
 
-void RemDev::prepareDocument(rapidjson::Document *doc) {
+inline void RemDev::prepareDocument(rapidjson::Document *doc, rapidjson::MemoryPoolAllocator<> &a) {
 	doc->SetObject();
-	doc->AddMember("jsonrpc", "2.0", doc->GetAllocator());
+	doc->AddMember("jsonrpc", "2.0", a);
 }
 
 
