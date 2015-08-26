@@ -31,7 +31,6 @@
 #include <QByteArray>
 #include <QPointer>
 #include "../rapidjson/include/rapidjson/document.h"
-//#include "../rapidjson/include/rapidjson/allocators.h"
 #include "../rapidjson/include/rapidjson/stringbuffer.h"
 #include "../rapidjson/include/rapidjson/writer.h"
 #include "../rapidjson/include/rapidjson/reader.h"
@@ -76,17 +75,17 @@ public:
 	 * is required, that copy must be built with one of RapidJSON's deep copy operations, such
 	 * as Value::CopyFrom.
 	 * 
-	 * Response handlers will be called with queued connections (and thus will be
-	 * executed by the receiving event loop).  They **must** eventually delete the
-	 * Response they are passed.
+	 * Response handlers must have the prototype "void fn(RemDev::Response *)" and will be
+	 * called with queued connections (and thus will be executed by the receiving event loop).
+	 * They **must** eventually delete the Response they are passed.
 	 */
 	class Response {
 	public:
 		Response(bool successful, int id, rapidjson::Document *doc,
-				 char *buffer = 0, rapidjson::Value *main = 0) {
+				 char *buffer = 0, rapidjson::Value *mainVal = 0) {
 			this->successful = successful;
 			this->id = id;
-			this->main = main;
+			this->mainVal = mainVal;
 			this->doc = doc;
 			this->buffer = buffer;
 		}
@@ -102,7 +101,7 @@ public:
 		int id;
 		
 		//! The contents of the "response" element on success or "error" on error
-		rapidjson::Value *main;
+		rapidjson::Value *mainVal;
 		
 	private:
 		//! Root document pointer
@@ -125,6 +124,9 @@ public:
 	 * \param params Any parameters (0 to omit, will be **nullified, not deleted**)
 	 * \param timeout Request timeout in msecs
 	 * \return The integer ID which will also be in the corresponding Response object
+	 * 
+	 * Note that if this is called immediately before termination, it will return 0
+	 * and so request will be sent.
 	 */
 	int sendRequest(QObject *self, const char *handler, const char *method, rapidjson::Document *doc = 0,
 					rapidjson::Value *params = 0, qint64 timeout = DEFAULT_REQUEST_TIMEOUT);
@@ -145,20 +147,27 @@ public:
 	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
 	 * \param data Pointer to any data (0 to omit, will be **nullified, not deleted**)
 	 */
-	void sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc = 0, rapidjson::Value *data = 0) noexcept;
+	void sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc = 0,
+				   rapidjson::Value *data = 0) noexcept;
 	
 	/*!
 	 * \brief Send a notification
 	 * \param method The method name (UTF8)
-	 * \param params Any parameters (will be omitted if empty)
-	 * \return True on success
+	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
+	 * \param params Any parameters (0 to omit, will be **nullified, not deleted**)
 	 */
-	//bool sendNotification(const char *method, rapidjson::Value *params = 0);
+	void sendNotification(const char *method, rapidjson::Document *doc = 0,
+						  rapidjson::Value *params = 0) noexcept;
 	
 	// TODO
 	bool sendRegistration(const QStringList &passwords) noexcept;
 	
 	bool valid() const noexcept {return registered;}
+	
+#ifdef QT_DEBUG
+	void printReqs() const;
+	QByteArray serializeValue(rapidjson::Value &v) const;
+#endif
 	
 public slots:
 	
@@ -311,12 +320,12 @@ private:
 		RequestRef() {handlerObj = 0;}  // Mark invalid
 		/*!
 		 * \brief Determine request validity
-		 * \param time Current time or 0 to disable check
+		 * \param time Current time or 0 to disable timeout check
 		 * \return Whether the request is still valid
 		 * 
 		 * Requests can become invalid if their receiver is destroyed or they timeout.
 		 */
-		bool valid(qint64 time = 0) {
+		bool valid(qint64 time) const {
 			if (time && timeout_time)
 				if (time < timeout_time) return false;
 			return ! handlerObj.isNull();
@@ -335,7 +344,7 @@ private:
 	RequestHash reqs;
 	
 	//! Locks the request hash and lastId variable
-	QMutex req_id_lock;
+	mutable QMutex req_id_lock;
 	
 	//! Polls for timeouts; see timeoutPoll()
 	QTimer *timeoutPoller;

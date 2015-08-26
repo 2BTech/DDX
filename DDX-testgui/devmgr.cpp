@@ -23,11 +23,23 @@ DevMgr::DevMgr(MainWindow *parent) : QObject(parent)
 {
 	mw = parent;
 	unregCt = 0;
+	closing = false;
 }
 
 DevMgr::~DevMgr()
 {
 	
+}
+
+void DevMgr::closeAll(RemDev::DisconnectReason reason) {
+	closing = true;
+	dLock.lock();
+	for (int i = 0; i < devices.size(); i++) {
+		devices.at(i)->close(reason);
+	}
+	devices.clear();
+	dLock.unlock();
+	closing = false;
 }
 
 QByteArray DevMgr::addDevice(RemDev *dev) {
@@ -39,11 +51,9 @@ QByteArray DevMgr::addDevice(RemDev *dev) {
 	return name.toUtf8();
 }
 
-void DevMgr::closeAll(RemDev::DisconnectReason reason) {
+void DevMgr::removeDevice(RemDev *dev) {
+	if (closing) return;
 	dLock.lock();
-	for (int i = 0; i < devices.size(); i++) {
-		devices.at(i)->close(reason);
-	}
-	devices.clear();
+	devices.removeOne(dev);
 	dLock.unlock();
 }

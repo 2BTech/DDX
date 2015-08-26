@@ -37,6 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
 	// Log area
 	logArea = new QPlainTextEdit();
 	logArea->setReadOnly(true);
+	logArea->setFont(QFont("Consolas", 12));
 	setCentralWidget(logArea);
 	logArea->appendPlainText(tr("Started"));
 	

@@ -16,6 +16,7 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
+#include "remdev.h"
 #include "devmgr.h"
 
 #define RAPIDJSON_IO
@@ -23,6 +24,7 @@
 
 RemDev::RemDev(DevMgr *dm, bool inbound) :
 		QObject(0), req_id_lock(QMutex::Recursive) {
+	// TODO:  I don't believe req_id_lock needs to be recursive anymore?
 	// Initializations
 	connectTime = QDateTime::currentMSecsSinceEpoch();
 	this->dm = dm;
@@ -84,6 +86,7 @@ int RemDev::sendRequest(QObject *self, const char *handler, const char *method, 
 	// Start timeout timer if required
 	if (timeout && ! timeoutPoller->isActive())
 		timeoutPoller->start();
+	printReqs();
 	return id;
 }
 
@@ -124,12 +127,19 @@ void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapid
 	sendDocument(doc);
 }
 
-/*bool RemDev::sendNotification(const char *method, rapidjson::Value *params) {
-	if ( ! registered) return false;
-	sendObject(newNotification(method, params));
-	return true;
+void RemDev::sendNotification(const char *method, rapidjson::Document *doc, rapidjson::Value *params) noexcept {
+	if (closed) {
+		if (doc) delete doc;
+		return;
+	}
+	if ( ! doc) doc = new Document;
+	rapidjson::MemoryPoolAllocator<> &a = doc->GetAllocator();
+	prepareDocument(doc, a);
+	doc->AddMember("method", Value().SetString(rapidjson::StringRef(method)), a);
+	if (params) doc->AddMember("params", *params, a);
+	sendDocument(doc);
 }
-*/
+
 void RemDev::close(DisconnectReason reason, bool fromRemote) noexcept {
 	emit deviceDisconnected(this, reason, fromRemote);
 	req_id_lock.lock();
@@ -146,6 +156,7 @@ void RemDev::close(DisconnectReason reason, bool fromRemote) noexcept {
 	req_id_lock.unlock();
 	terminate(reason, fromRemote);
 	log(tr("Connection closed"));
+	dm->removeDevice(this);
 	deleteLater();
 }
 
@@ -262,19 +273,6 @@ void RemDev::log(const QString &msg, bool isAlert) const noexcept {
 	emit postToLogArea(out);
 }
 
-/*QJsonObject RemDev::newRequest(LocalId id, const QString &method, const QJsonObject &params) const {
-	/*QJsonObject o(newNotification(method, params));
-	o.insert("id", id);
-	return o;
-}
-
-QJsonObject RemDev::newNotification(const QString &method, const QJsonObject &params) const {
-	QJsonObject o(rpc_seed);
-	o.insert("method", method);
-	if (params.size()) o.insert("params", params);
-	return o;
-}*/
-
 void RemDev::sendDocument(rapidjson::Document *doc) {
 	StringBuffer *buffer = new StringBuffer;
 	Writer<StringBuffer> writer(*buffer);
@@ -285,22 +283,21 @@ void RemDev::sendDocument(rapidjson::Document *doc) {
 
 void RemDev::handleRequest_Notif(rapidjson::Document *doc, char *buffer) {
 	// TODO
+	log(tr("Unhandled request or notification"));
 }
 
 void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
 	// Find and type-check all elements efficiently
 	Value *idVal = 0, *mainVal = 0;
 	bool error = false, foundRpc = false, wasSuccessful;
+	// Scan the document for all possible members
 	for (Value::ConstMemberIterator it = doc->MemberBegin(); it != doc->MemberEnd(); ++it) {
 		const char *name = it->name.GetString();
 		// TODO:  These pointers might be invalidated on every loop
 		Value &value = (Value &) it->value;
-		if ( ! foundRpc) if (strcmp("jsonrpc", name) == 0) {
-			foundRpc = true;
-			continue;
-		}
-		if ( ! idVal) if (strcmp("id", name) == 0) {
-			if ( ! value.IsInt()) {
+		if (strcmp("jsonrpc", name) == 0) continue;
+		if (strcmp("id", name) == 0) {
+			if ( ! value.IsInt() || idVal) {
 				error = true;
 				break;
 			}
@@ -332,9 +329,9 @@ void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
 	if ( ! error) {
 		int id = idVal->GetInt();
 		req_id_lock.lock();
-		RequestRef &&req = reqs.take(id);
+		RequestRef &&req = reqs.take(id);  // Will be invalid if the id does not exist
 		req_id_lock.unlock();
-		if (req.valid()) {  // Proceed to sending error if otherwise
+		if (req.valid(0)) {  // Proceed to sending error if otherwise
 			Response *res = new Response(wasSuccessful, id, doc, buffer, mainVal);
 			// TODO:  If this fails because the type is not registered, it can problably be
 			// passed to Q_ARG as void*
@@ -383,10 +380,52 @@ void RemDev::handleRegistration(const rapidjson::Document *doc) {
 }
 
 inline void RemDev::prepareDocument(rapidjson::Document *doc, rapidjson::MemoryPoolAllocator<> &a) {
-	doc->Clear();
 	doc->SetObject();
 	doc->AddMember("jsonrpc", "2.0", a);
 }
+
+#ifdef QT_DEBUG
+void RemDev::printReqs() const {
+	Document doc;
+	rapidjson::MemoryPoolAllocator<> &a = doc.GetAllocator();
+	doc.SetArray();
+	req_id_lock.lock();
+	for (RequestHash::ConstIterator it = reqs.constBegin(); it != reqs.constEnd(); ++it) {
+		Value v(kArrayType);
+		v.PushBack(Value(it.key()), a);
+		QByteArray time = QDateTime::fromMSecsSinceEpoch(it->timeout_time).toString("HH:mm:ss.zzz").toUtf8();
+		Value s;
+		s.SetString(time.constData(), a);
+		v.PushBack(s, a);
+		s.SetString(rapidjson::StringRef(it->handlerFn));
+		v.PushBack(s, a);
+		if (it->valid(0)) {
+			const char *name = it->handlerObj->metaObject()->className();
+			s.SetString(rapidjson::StringRef(name));
+			v.PushBack(s, a);
+			v.PushBack(Value(rapidjson::kTrueType), a);
+		}
+		else v.PushBack(Value(rapidjson::kFalseType), a);
+		doc.PushBack(v, a);
+	}
+	StringBuffer buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+	log(buffer.GetString());
+	req_id_lock.unlock();
+}
+
+QByteArray RemDev::serializeValue(rapidjson::Value &v) const {
+	Document doc;
+	doc.CopyFrom(v, doc.GetAllocator());
+	StringBuffer buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+	QByteArray array(buffer.GetString());
+	Q_ASSERT(buffer.GetSize() == array.size());
+	return array;
+}
+#endif
 
 
 

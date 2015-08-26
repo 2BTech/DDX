@@ -19,12 +19,24 @@
 #include "testdev.h"
 #include "devmgr.h"
 
+#define RAPIDJSON_IO
+#include "rapidjson_using.h"
+
 TestDev::TestDev(DevMgr *dm, bool inbound) : RemDev(dm, inbound) {
 	eventCt = 0;
 }
 
 TestDev::~TestDev() {
 	
+}
+
+void TestDev::responseHandler(RemDev::Response *r) const {
+	QString str("TD response to %1: %2 with %3");
+	str.arg(r->id);
+	str.arg(r->successful ? "success" : "error");
+	str.arg(QString(serializeValue(*r->mainVal)));
+	log(str);
+	delete r;
 }
 
 void TestDev::sub_init() noexcept {
@@ -38,11 +50,10 @@ void TestDev::sub_init() noexcept {
 void TestDev::terminate(DisconnectReason reason, bool fromRemote) noexcept {
 	(void) reason;
 	(void) fromRemote;
-	log(tr("Terminate called"));
 }
 
 void TestDev::writeItem(rapidjson::StringBuffer *buffer) noexcept {
-	QString out(tr("Sent: "));
+	QString out(tr("RD wrote: "));
 	out.append(buffer->GetString());
 	delete buffer;
 	log(out);
@@ -53,15 +64,53 @@ void TestDev::timeout() {
 	char *data = new char[1000];
 	
 	if (eventCt == 1) {
-		log(tr("[test] sending bad data"));
+		log(tr("TD emitting bad data"));
 		strcpy(data, "this means nothing\n");
 		handleItem(data);
 	}
 	else if (eventCt == 2) {
-		log(tr("[test] sending a valid request"));
+		log(tr("TD emitting a valid request"));
 		strcpy(data, "{\"jsonrpc\":\"2.0\",\"method\":\"register\"}\n");
 		handleItem(data);
 	}
-	else if (eventCt == 5) eventCt = 0;
+	else if (eventCt == 3) {
+		delete data;
+		log(tr("RD sending a valid request"));
+		sendRequest(this, "responseHandler", "method-name");
+	}
+	else if (eventCt == 4) {
+		delete data;
+		log(tr("RD sending a valid request with params"));
+		Document *doc = new Document;
+		Value v(kObjectType);
+		v.SetObject();
+		v.AddMember("Onething", Value(3829), doc->GetAllocator());
+		v.AddMember("Twothing", Value(rapidjson::kTrueType), doc->GetAllocator());
+		v.AddMember("final", Value((long long) 3892837592836592835), doc->GetAllocator());
+		sendRequest(this, "responseHandler", "method-name", doc, &v);
+	}
+	else if (eventCt == 5) {
+		delete data;
+		log(tr("RD sending a valid notification"));
+		sendNotification("notif.method");
+	}
+	else if (eventCt == 6) {
+		delete data;
+		log(tr("RD sending a valid notification with params"));
+		Document *doc = new Document;
+		Value v(kObjectType);
+		v.SetObject();
+		v.AddMember("Onething", Value(3829), doc->GetAllocator());
+		v.AddMember("Twothing", Value(rapidjson::kTrueType), doc->GetAllocator());
+		v.AddMember("final", Value((long long) 3892837592836592835), doc->GetAllocator());
+		sendNotification("notif.methodPARAMS", doc, &v);
+	}
+	else if (eventCt == 10) {
+		delete data;
+		log(tr("TD closing"));
+		close(RemDev::ConnectionTerminated);
+		eventCt = 0;
+		//log(tr("TD RESETTING-------------------------------------------------"));
+	}
 	else delete data;
 }

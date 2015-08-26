@@ -34,6 +34,8 @@ public:
 	
 	~TestDev();
 	
+	void responseHandler(RemDev::Response *r) const;
+	
 protected:
 	
 	void sub_init() noexcept override;
@@ -51,6 +53,8 @@ public slots:
 private:
 	
 	int eventCt = 0;
+	
+	QList<int> valid_response_ids;
 };
 
 #endif // TESTDEV_H

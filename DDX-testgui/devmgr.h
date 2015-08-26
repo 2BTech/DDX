@@ -33,12 +33,11 @@ class DevMgr : public QObject
 {
 	Q_OBJECT
 public:
+	friend class RemDev;
 	
 	explicit DevMgr(MainWindow *parent = 0);
 	
 	~DevMgr();
-	
-	QByteArray addDevice(RemDev *dev);
 	
 	void closeAll(RemDev::DisconnectReason reason = RemDev::ShuttingDown);
 	
@@ -48,13 +47,19 @@ public slots:
 	
 private:
 	
+	MainWindow *mw;
+	
 	RemDev::DeviceList devices;
 	
 	QMutex dLock;
 	
 	int unregCt;
 	
-	MainWindow *mw;
+	bool closing;
+	
+	QByteArray addDevice(RemDev *dev);
+	
+	void removeDevice(RemDev *dev);
 	
 };
 
