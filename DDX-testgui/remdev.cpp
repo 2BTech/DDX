@@ -335,6 +335,8 @@ void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
 			RequestRef &&req = reqs.take(id);
 			req_id_lock.unlock();
 			Response *res = new Response(wasSuccessful, id, doc, buffer, mainVal);
+			// TODO:  If this fails because the type is not registered, it can problably be
+			// passed to Q_ARG as void*
 			metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
 									   Qt::QueuedConnection, Q_ARG(Response*, res));
 			return;
