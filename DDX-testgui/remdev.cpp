@@ -328,8 +328,8 @@ void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
 		break;
 	}
 	if ( ! error) {
-		req_id_lock.lock();
 		int id = idVal->GetInt();
+		req_id_lock.lock();
 		if ( ! reqs.contains(id)) req_id_lock.unlock();  // Proceed to sending error
 		else {
 			RequestRef &&req = reqs.take(id);
