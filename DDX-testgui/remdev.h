@@ -319,7 +319,7 @@ private:
 		bool valid(qint64 time = 0) {
 			if (time && timeout_time)
 				if (time < timeout_time) return false;
-			return handlerObj;
+			return ! handlerObj.isNull();
 		}
 		// Note: No id is necessary because it is the key in RequestHash
 		QPointer<QObject> handlerObj;
