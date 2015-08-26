@@ -35,7 +35,7 @@
 /* Note:  Error codes are automatically generated from RemoteManagementProtocol.md
  * with "(-?[0-9]+)\|([^|\r\n]+)\|(E_[A-Z0-9_]+)" -> "#define $3 $1 //!< $2" */
 #define E_ACCESS_DENIED -32000 //!< Access denied: Client's roles are not sufficient for the request
-#define E_PARAMETER_OBJECT -32001 //!< Parameters not a JSON object
+#define E_INVALID_RESPONSE -32001 //!< Invalid response
 #define E_NOT_SUPPORTED -32002 //!< Not supported
 #define E_RPC_GENERAL -32003 //!< An error occurred
 #define E_TYPE_MISMATCH -32004 //!< Params contain invalid type

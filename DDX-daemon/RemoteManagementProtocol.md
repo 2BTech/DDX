@@ -123,7 +123,7 @@ more information in the `data` field.  The following server errors are also defi
 Code|Message|Macro
 ---|---|---|---
 -32000|Access denied: Client's roles are not sufficient for the request|E_ACCESS_DENIED
--32001|Parameters not a JSON object|E_PARAMETER_OBJECT
+-32001|Invalid response|E_INVALID_RESPONSE
 -32002|Not supported|E_NOT_SUPPORTED
 -32003|An error occurred|E_RPC_GENERAL
 -32004|Params contain invalid type|E_TYPE_MISMATCH

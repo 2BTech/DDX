@@ -193,6 +193,7 @@ void RemDev::handleItem(char *data) noexcept {
 		doc->ParseInsitu(data);
 		if (doc->HasParseError()) {
 			delete data;
+			// TODO
 			// Does this leave doc hanging?  We're overwriting a previously parsed doc...
 			// It might be a memory leak.  Also of note is that we delete the data in which
 			// this document was parsed before we overwrite the doc.
@@ -286,9 +287,65 @@ void RemDev::handleRequest_Notif(rapidjson::Document *doc, char *buffer) {
 }
 
 void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
-	//Document *doc;
-	// TODO:  Does that make a copy of the Value?
-	Value &idVal = doc->operator[]("id");
+	// Find and type-check all elements efficiently
+	Value *idVal = 0, *mainVal = 0;
+	bool error = false, foundRpc = false, wasSuccessful;
+	for (Value::ConstMemberIterator it = doc->MemberBegin(); it != doc->MemberEnd(); ++it) {
+		const char *name = it->name.GetString();
+		// TODO:  These pointers might be invalidated on every loop
+		Value &value = (Value &) it->value;
+		if ( ! foundRpc) if (strcmp("jsonrpc", name) == 0) {
+			foundRpc = true;
+			continue;
+		}
+		if ( ! idVal) if (strcmp("id", name) == 0) {
+			if ( ! value.IsInt()) {
+				error = true;
+				break;
+			}
+			idVal = &value;
+			continue;
+		}
+		if ( ! mainVal) {
+			if (strcmp("result", name) == 0) {
+				// Result does not require type checking
+				mainVal = &value;
+				wasSuccessful = true;
+				continue;
+			}
+			if (strcmp("error", name) == 0) {
+				if ( ! value.IsObject()) {
+					error = true;
+					break;
+				}
+				// TODO:  Check that error item has the correct elements
+				mainVal = &value;
+				wasSuccessful = false;
+				continue;
+			}
+		}
+		error = true;  // There was an unknown (or, theoretically, duplicate) member
+		break;
+	}
+	if ( ! error) {
+		req_id_lock.lock();
+		int id = idVal->GetInt();
+		if ( ! reqs.contains(id)) req_id_lock.unlock();  // Proceed to sending error
+		else {
+			RequestRef &&req = reqs.take(id);
+			req_id_lock.unlock();
+			Response *res = new Response(wasSuccessful, id, doc, buffer, mainVal);
+			metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
+									   Qt::QueuedConnection, Q_ARG(Response*, res));
+			return;
+		}
+	}
+	delete buffer;
+	// TODO
+	// Does this leave doc hanging?  We're overwriting a previously parsed doc...
+	// It might be a memory leak.  Also of note is that we delete the data in which
+	// this document was parsed before we overwrite the doc.
+	sendError(0, E_INVALID_RESPONSE, tr("Invalid response"), doc);
 }
 
 void RemDev::handleRegistration(const rapidjson::Document *doc) {
@@ -323,6 +380,7 @@ void RemDev::handleRegistration(const rapidjson::Document *doc) {
 }
 
 inline void RemDev::prepareDocument(rapidjson::Document *doc, rapidjson::MemoryPoolAllocator<> &a) {
+	doc->Clear();
 	doc->SetObject();
 	doc->AddMember("jsonrpc", "2.0", a);
 }

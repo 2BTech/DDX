@@ -82,10 +82,10 @@ public:
 	class Response {
 	public:
 		Response(bool successful, int id, rapidjson::Document *doc,
-				 char *buffer = 0, rapidjson::Value *response_data = 0) {
+				 char *buffer = 0, rapidjson::Value *main = 0) {
 			this->successful = successful;
 			this->id = id;
-			this->response_data = response_data;
+			this->main = main;
 			this->doc = doc;
 			this->buffer = buffer;
 		}
@@ -100,13 +100,8 @@ public:
 		//! The integer ID returned by the corresponding sendRequest call
 		int id;
 		
-		/*! The contents of the "response" element on success or "data" on error
-		 * 
-		 * _Warning:_ This is guaranteed to be valid for successful responses, but
-		 * error objects can omit the data element, in which case this member will
-		 * be set to 0.  This should be checked before dereferencing on error.
-		 */
-		rapidjson::Value *response_data;
+		//! The contents of the "response" element on success or "error" on error
+		rapidjson::Value *main;
 		
 	private:
 		//! Root document pointer
@@ -311,6 +306,12 @@ private:
 			else timeout_time = 0;
 			this->handlerObj = handlerObj;
 			this->handlerFn = handlerFn;
+		}
+		RequestRef() {
+			// TODO: Uncomment
+			//Logger::get()->log("DDX bug: default-constructed RequstRef");
+			handlerObj = 0;
+			handlerFn = 0;
 		}
 		// Note: No id is necessary because it is the key in RequestHash
 		QObject *handlerObj;
