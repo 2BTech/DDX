@@ -29,6 +29,7 @@
 #include <QMutexLocker>
 #include <QThread>
 #include <QByteArray>
+#include <QPointer>
 #include "../rapidjson/include/rapidjson/document.h"
 //#include "../rapidjson/include/rapidjson/allocators.h"
 #include "../rapidjson/include/rapidjson/stringbuffer.h"
@@ -307,14 +308,21 @@ private:
 			this->handlerObj = handlerObj;
 			this->handlerFn = handlerFn;
 		}
-		RequestRef() {
-			// TODO: Uncomment
-			//Logger::get()->log("DDX bug: default-constructed RequstRef");
-			handlerObj = 0;
-			handlerFn = 0;
+		RequestRef() {handlerObj = 0;}  // Mark invalid
+		/*!
+		 * \brief Determine request validity
+		 * \param time Current time or 0 to disable check
+		 * \return Whether the request is still valid
+		 * 
+		 * Requests can become invalid if their receiver is destroyed or they timeout.
+		 */
+		bool valid(qint64 time = 0) {
+			if (time && timeout_time)
+				if (time < timeout_time) return false;
+			return handlerObj;
 		}
 		// Note: No id is necessary because it is the key in RequestHash
-		QObject *handlerObj;
+		QPointer<QObject> handlerObj;
 		const char *handlerFn;
 		qint64 time;
 		qint64 timeout_time;

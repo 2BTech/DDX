@@ -156,6 +156,7 @@ void RemDev::timeoutPoll() noexcept {
 	QMutexLocker l(&req_id_lock);
 	RequestHash::iterator it = reqs.begin();
 	while (it != reqs.end()) {
+	// TODO: Use valid()
 		if (it->timeout_time && it->timeout_time < time) {
 			(*it->handler)(it.key(), error, false);
 			it = reqs.erase(it);
@@ -327,13 +328,13 @@ void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
 		error = true;  // There was an unknown (or, theoretically, duplicate) member
 		break;
 	}
+	// TODO:  Handle null errors!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	if ( ! error) {
 		int id = idVal->GetInt();
 		req_id_lock.lock();
-		if ( ! reqs.contains(id)) req_id_lock.unlock();  // Proceed to sending error
-		else {
-			RequestRef &&req = reqs.take(id);
-			req_id_lock.unlock();
+		RequestRef &&req = reqs.take(id);
+		req_id_lock.unlock();
+		if (req.valid()) {  // Proceed to sending error if otherwise
 			Response *res = new Response(wasSuccessful, id, doc, buffer, mainVal);
 			// TODO:  If this fails because the type is not registered, it can problably be
 			// passed to Q_ARG as void*
