@@ -51,10 +51,10 @@ RemDev::~RemDev() {
 	delete timeoutPoller;
 }
 
-int RemDev::sendRequest(ResponseHandler handler, const char *method, rapidjson::Document *doc,
+int RemDev::sendRequest(QObject *self, const char *handler, const char *method, rapidjson::Document *doc,
 						rapidjson::Value *params, qint64 timeout) {
 	LocalId id;
-	RequestRef ref(handler, timeout);
+	RequestRef ref(self, handler, timeout);
 	req_id_lock.lock();
 	// Check that the connection is still open while we've got the lock
 	if (closed) {
@@ -187,24 +187,40 @@ void RemDev::init() noexcept {
 
 void RemDev::handleItem(char *data) noexcept {
 	// Parse document
-	Document doc;
+	Document *doc = new Document;
+	registered = true;  // TODO:  Remove this
 	if (registered) {  // Parsing procedure is more lenient with registered connections
-		doc.ParseInsitu(dataBase);
-		if (doc.HasParseError()) {
-			
+		doc->ParseInsitu(data);
+		if (doc->HasParseError()) {
+			delete data;
+			// Does this leave doc hanging?  We're overwriting a previously parsed doc...
+			// It might be a memory leak.  Also of note is that we delete the data in which
+			// this document was parsed before we overwrite the doc.
+			sendError(0, -32700, tr("Parse error"), doc);
+			return;
 		}
 	}
 	else {  // Unregistered: strict parsing, return if errors
-		doc.ParseInsitu<rapidjson::kParseValidateEncodingFlag |
+		doc->ParseInsitu<rapidjson::kParseValidateEncodingFlag |
 						rapidjson::kParseIterativeFlag>
-				(dataBase);
+				(data);
 		// Assume this is a fake connection; return nothing if there's a parse error
-		if (doc.HasParseError()) {
-			delete dataBase;
+		if (doc->HasParseError()) {
+			delete data;
+			delete doc;
 			return;
 		}
 		handleRegistration(doc);
-		delete dataBase;
+		delete data;
+		delete doc;
+		return;
+	}
+	if (doc->HasMember("method")) {
+		handleRequest_Notif(doc, data);
+		return;
+	}
+	if (doc->HasMember("id")) {
+		handleResponse(doc, data);
 		return;
 	}
 	/*
@@ -234,6 +250,7 @@ void RemDev::handleItem(char *data) noexcept {
 		return;
 	}*/
 	delete data;
+	delete doc;
 }
 
 void RemDev::log(const QString &msg, bool isAlert) const noexcept {
@@ -264,13 +281,19 @@ void RemDev::sendDocument(rapidjson::Document *doc) {
 	writeItem(buffer);
 }
 
-void RemDev::handleRequest(const QJsonObject &obj) {
-	
+void RemDev::handleRequest_Notif(rapidjson::Document *doc, char *buffer) {
+	// TODO
 }
 
-void RemDev::handleRegistration(const rapidjson::Document &doc) {
+void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
+	//Document *doc;
+	// TODO:  Does that make a copy of the Value?
+	Value &idVal = doc->operator[]("id");
+}
+
+void RemDev::handleRegistration(const rapidjson::Document *doc) {
 	// If this is not a register request or response, return without error
-	if ((regState & RegSentFlag) && doc.HasMember("result")) {  // This is a response to our registration
+	if ((regState & RegSentFlag) && doc->HasMember("result")) {  // This is a response to our registration
 		
 	}
 	/*if (inbound && QString::compare(doc.value("method").toString(), "register")) return;

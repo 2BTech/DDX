@@ -341,11 +341,13 @@ private:
 	
 	void handleObject(const QJsonObject &obj);
 	
-	void handleRequest(const QJsonObject &obj);
+	void handleRequest_Notif(rapidjson::Document *doc, char *buffer);
+	
+	void handleResponse(rapidjson::Document *doc, char *buffer);
 	
 	void handleNotification(const QJsonObject &obj);
 	
-	void handleRegistration(const rapidjson::Document &doc);
+	void handleRegistration(const rapidjson::Document *doc);
 	
 	static inline void prepareDocument(rapidjson::Document *doc, rapidjson::MemoryPoolAllocator<> &a);
 };
