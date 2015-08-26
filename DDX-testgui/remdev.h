@@ -46,8 +46,6 @@ public:
 	// Bool is for whether it was successful; the second value is the contents of the error object if it failed
 	// Note that errors will already be logged but not alerted
 	typedef int LocalId;
-	typedef void (*ResponseHandler)(int, QJsonValue, bool);
-	typedef void (*RequestHandler)(QJsonValue, QJsonValue, bool);
 	typedef QHash<QByteArray, RemDev*> DeviceHash;
 	typedef QList<RemDev*> DeviceList;
 	enum DeviceRole {
@@ -69,7 +67,20 @@ public:
 		StreamClosed  //!< The stream was closed by its low-level handler
 	};
 	
-	struct Response {
+	/*!
+	 * \brief Response class
+	 * 
+	 * This class represents a response to a request.  Note that the JSON data they contain
+	 * will also be deleted when the Response is deleted, so if a copy of the #response_data
+	 * is required, that copy must be built with one of RapidJSON's deep copy operations, such
+	 * as Value::CopyFrom.
+	 * 
+	 * Response handlers will be called with queued connections (and thus will be
+	 * executed by the receiving event loop).  They **must** eventually delete the
+	 * Response they are passed.
+	 */
+	class Response {
+	public:
 		Response(bool successful, int id, rapidjson::Document *doc,
 				 char *buffer = 0, rapidjson::Value *response_data = 0) {
 			this->successful = successful;
@@ -82,11 +93,26 @@ public:
 			delete doc;
 			if (buffer) delete buffer;
 		}
+		
+		//! True if the response was a response, false if there was an error
 		bool successful;
+		
+		//! The integer ID returned by the corresponding sendRequest call
 		int id;
+		
+		/*! The contents of the "response" element on success or "data" on error
+		 * 
+		 * _Warning:_ This is guaranteed to be valid for successful responses, but
+		 * error objects can omit the data element, in which case this member will
+		 * be set to 0.  This should be checked before dereferencing on error.
+		 */
 		rapidjson::Value *response_data;
-		rapidjson::Document *doc;
+		
 	private:
+		//! Root document pointer
+		rapidjson::Document *doc;
+		
+		//! Buffer pointer (may be 0)
 		char *buffer;
 	};
 	
@@ -96,14 +122,15 @@ public:
 	
 	/*!
 	 * \brief Send a new request
-	 * \param handler
+	 * \param self The object on which the handler will be called
+	 * \param handler The name of the handler function to call
 	 * \param method The method name (UTF8)
 	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
 	 * \param params Any parameters (0 to omit, will be **nullified, not deleted**)
 	 * \param timeout Request timeout in msecs
-	 * \return 
+	 * \return The integer ID which will also be in the corresponding Response object
 	 */
-	int sendRequest(ResponseHandler handler, const char *method, rapidjson::Document *doc = 0,
+	int sendRequest(QObject *self, const char *handler, const char *method, rapidjson::Document *doc = 0,
 					rapidjson::Value *params = 0, qint64 timeout = DEFAULT_REQUEST_TIMEOUT);
 	
 	/*!
@@ -278,14 +305,16 @@ protected:
 private:
 	
 	struct RequestRef {
-		RequestRef(ResponseHandler handler, qint64 timeout) {
+		RequestRef(QObject *handlerObj, const char *handlerFn, qint64 timeout) {
 			time = QDateTime::currentMSecsSinceEpoch();
 			if (timeout) timeout_time = time + timeout;
 			else timeout_time = 0;
-			this->handler = handler;
+			this->handlerObj = handlerObj;
+			this->handlerFn = handlerFn;
 		}
 		// Note: No id is necessary because it is the key in RequestHash
-		ResponseHandler handler;
+		QObject *handlerObj;
+		const char *handlerFn;
 		qint64 time;
 		qint64 timeout_time;
 	};
@@ -298,12 +327,6 @@ private:
 	
 	//! Locks the request hash and lastId variable
 	QMutex req_id_lock;
-	
-	typedef QHash<QString, RequestHandler> HandlerHash;
-	
-	HandlerHash reqHandlers;
-	
-	HandlerHash notifHandlers;
 	
 	//! Polls for timeouts; see timeoutPoll()
 	QTimer *timeoutPoller;

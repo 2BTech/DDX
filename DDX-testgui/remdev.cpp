@@ -186,23 +186,8 @@ void RemDev::init() noexcept {
 }
 
 void RemDev::handleItem(char *data) noexcept {
-	Document *doc = new Document;
-	Value dataBase(kArrayType);
-	dataBase.PushBack("Whoopidoo", doc->GetAllocator());
-	dataBase.PushBack(Value(-3214), doc->GetAllocator());
-	Value data2(kArrayType);
-	data2.PushBack("Another\nthing", doc->GetAllocator());
-	data2.PushBack("from\nanother\tday", doc->GetAllocator());
-	dataBase.PushBack(data2, doc->GetAllocator());
-	Value id(389268);
-	//sendError(0, 372, "Sample error", doc, &dataBase);
-	//sendResponse(id, doc, &dataBase);
-	sendRequest(0, "TestRequest", doc, &dataBase);
-	if ( ! dataBase.IsNull()) log("DATABASE IS NOT NULL!!!");
-	delete data;
-	return;
 	// Parse document
-	/*Document doc;
+	Document doc;
 	if (registered) {  // Parsing procedure is more lenient with registered connections
 		doc.ParseInsitu(dataBase);
 		if (doc.HasParseError()) {
