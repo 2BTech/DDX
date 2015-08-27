@@ -24,7 +24,8 @@ DevMgr::DevMgr(MainWindow *parent) : QObject(parent)
 	mw = parent;
 	unregCt = 0;
 	closing = false;
-	mw->getLogArea()->appendPlainText(tr("Testing: %1").arg(QMetaType::isRegistered(QMetaType::type("Response"))));
+	qRegisterMetaType<Response*>("Response*");
+	mw->getLogArea()->appendPlainText(tr("Testing: %1").arg(QMetaType::isRegistered(QMetaType::type("Response*"))));
 }
 
 DevMgr::~DevMgr()

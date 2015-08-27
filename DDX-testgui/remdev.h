@@ -61,7 +61,7 @@ public:
 		this->doc = doc;
 		this->buffer = buffer;
 	}
-	Response();
+	//Response() {}
 	~Response() {
 		delete doc;
 		if (buffer) delete buffer;
@@ -337,6 +337,6 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(RemDev::DeviceRoles)
 
-Q_DECLARE_METATYPE(Response *)
+Q_DECLARE_METATYPE(Response*)
 
 #endif // REMDEV_H
