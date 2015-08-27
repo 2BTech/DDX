@@ -331,6 +331,8 @@ private:
 	
 	void handleRegistration(const rapidjson::Document *doc);
 	
+	void simulateError(int id, const RequestRef &req, int code, const QString &msg);
+	
 	static inline void prepareDocument(rapidjson::Document *doc, rapidjson::MemoryPoolAllocator<> &a);
 };
 

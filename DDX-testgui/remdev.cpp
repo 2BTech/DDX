@@ -24,7 +24,6 @@
 
 RemDev::RemDev(DevMgr *dm, bool inbound) :
 		QObject(0), req_id_lock(QMutex::Recursive) {
-	// TODO:  I don't believe req_id_lock needs to be recursive anymore?
 	// Initializations
 	connectTime = QDateTime::currentMSecsSinceEpoch();
 	this->dm = dm;
@@ -144,15 +143,9 @@ void RemDev::close(DisconnectReason reason, bool fromRemote) noexcept {
 	emit deviceDisconnected(this, reason, fromRemote);
 	req_id_lock.lock();
 	closed = true;
-	if (reqs.size()) {
-		// TODO
-		/*QJsonObject error({{"code", E_DEVICE_DISCONNECTED},
-						   {"message", tr("Device disconnected")},
-						   {"data", reason}});
-		RequestHash::const_iterator it;
-		for (it = reqs.constBegin(); it != reqs.constEnd(); ++it)
-			(*it->handler)(it.key(), error, false);*/
-	}
+	for (RequestHash::ConstIterator it = reqs.constBegin(); it != reqs.constEnd(); ++it)
+		simulateError(it.key(), it.value(), E_DEVICE_DISCONNECTED,
+					  tr("Device disconnected"));
 	req_id_lock.unlock();
 	terminate(reason, fromRemote);
 	log(tr("Connection closed"));
@@ -166,7 +159,8 @@ void RemDev::timeoutPoll() noexcept {
 	RequestHash::iterator it = reqs.begin();
 	while (it != reqs.end()) {
 		if ( ! it->valid(time)) {
-			(*it->handler)(it.key(), error, false);
+			simulateError(it.key(), it.value(), E_REQUEST_TIMEOUT,
+						  tr("Request timed out"));
 			it = reqs.erase(it);
 		}
 		else ++it;
@@ -372,6 +366,22 @@ void RemDev::handleRegistration(const rapidjson::Document *doc) {
 	//log(tr("Now known as %1").arg(
 	registered = true;
 	d->registerDevice(this);*/
+}
+
+void RemDev::simulateError(int id, const RequestRef &req, int code, const QString &msg) {
+	Document *doc = new Document;
+	rapidjson::MemoryPoolAllocator<> &a = doc->GetAllocator();
+	doc->SetObject();
+	{
+		Value v(code);
+		doc->AddMember("code", v, a);
+		QByteArray encodedMsg = msg.toUtf8();
+		v.SetString(encodedMsg.constData(), encodedMsg.size(), a);
+		doc->AddMember("message", v, a);
+	}
+	Response *res = new Response(false, id, doc, 0, doc);
+	metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
+							   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
 }
 
 inline void RemDev::prepareDocument(rapidjson::Document *doc, rapidjson::MemoryPoolAllocator<> &a) {

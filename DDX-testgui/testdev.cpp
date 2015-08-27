@@ -42,7 +42,7 @@ void TestDev::responseHandler(RemDev::Response *r) const {
 void TestDev::sub_init() noexcept {
 	QTimer *timer = new QTimer(this);
 	timer->setTimerType(Qt::CoarseTimer);
-	timer->setInterval(500);
+	timer->setInterval(300);
 	connect(timer, &QTimer::timeout, this, &TestDev::timeout);
 	timer->start();  // Start immediately for registration timeout
 }
@@ -87,7 +87,7 @@ void TestDev::timeout() {
 		v.AddMember("Onething", Value(3829), doc->GetAllocator());
 		v.AddMember("Twothing", Value(rapidjson::kTrueType), doc->GetAllocator());
 		v.AddMember("final", Value((long long) 3892837592836592835), doc->GetAllocator());
-		validResponses.append(sendRequest(this, "responseHandler", "method-name", doc, &v));
+		validResponses.append(sendRequest(this, "responseHandler", "method-name", doc, &v, 1000));
 	}
 	else if (eventCt == 5) {
 		delete data;
@@ -108,16 +108,16 @@ void TestDev::timeout() {
 	else if (eventCt == 7) {
 		if ( ! validResponses.size()) return;
 		log(tr("TD emitting a successful response"));
-		QString out = "{\"jsonrpc\":\"2.0\",\"id\":%1,\"result\":true}";
+		QString out = "{\"jsonrpc\":\"2.0\",\"id\":%1,\"result\":27}";
 		out = out.arg(validResponses.takeFirst());
 		strcpy(data, out.toUtf8().constData());
 		handleItem(data);
 	}
-	else if (eventCt == 10) {
+	else if (eventCt == 8) {
 		delete data;
-		log(tr("TD closing"));
-		close(RemDev::ConnectionTerminated);
-		eventCt = 0;
+		//log(tr("TD closing"));
+		//close(RemDev::ConnectionTerminated);
+		eventCt = 2;
 		//log(tr("TD RESETTING-------------------------------------------------"));
 	}
 	else delete data;
