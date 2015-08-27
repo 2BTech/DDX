@@ -34,7 +34,7 @@ public:
 	
 	~TestDev();
 	
-	Q_INVOKABLE void responseHandler(Response *r) const;
+	Q_INVOKABLE void responseHandler(RemDev::Response *r) const;
 	
 protected:
 	

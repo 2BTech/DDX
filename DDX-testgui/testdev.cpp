@@ -30,7 +30,7 @@ TestDev::~TestDev() {
 	
 }
 
-void TestDev::responseHandler(Response *r) const {
+void TestDev::responseHandler(RemDev::Response *r) const {
 	QString str("TD response to %1: %2 with %3");
 	str = str.arg(r->id);
 	str = str.arg(r->successful ? "success" : "error");

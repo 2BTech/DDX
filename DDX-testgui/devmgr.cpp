@@ -24,8 +24,7 @@ DevMgr::DevMgr(MainWindow *parent) : QObject(parent)
 	mw = parent;
 	unregCt = 0;
 	closing = false;
-	qRegisterMetaType<Response*>("Response*");
-	mw->getLogArea()->appendPlainText(tr("Testing: %1").arg(QMetaType::isRegistered(QMetaType::type("Response*"))));
+	qRegisterMetaType<RemDev::Response*>("RemDev::Response*");
 }
 
 DevMgr::~DevMgr()
@@ -34,12 +33,13 @@ DevMgr::~DevMgr()
 }
 
 void DevMgr::closeAll(RemDev::DisconnectReason reason) {
-	closing = true;
 	dLock.lock();
+	closing = true;
 	for (int i = 0; i < devices.size(); i++) {
 		devices.at(i)->close(reason);
 	}
 	devices.clear();
+	closing = false;
 	dLock.unlock();
 	closing = false;
 }

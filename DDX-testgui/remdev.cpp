@@ -161,14 +161,11 @@ void RemDev::close(DisconnectReason reason, bool fromRemote) noexcept {
 }
 
 void RemDev::timeoutPoll() noexcept {
-/*	qint64 time = QDateTime::currentMSecsSinceEpoch();
-	QJsonObject error({{"code", E_REQUEST_TIMEOUT},
-					   {"message", tr("Request timed out")}});
+	qint64 time = QDateTime::currentMSecsSinceEpoch();
 	QMutexLocker l(&req_id_lock);
 	RequestHash::iterator it = reqs.begin();
 	while (it != reqs.end()) {
-	// TODO: Use valid()
-		if (it->timeout_time && it->timeout_time < time) {
+		if ( ! it->valid(time)) {
 			(*it->handler)(it.key(), error, false);
 			it = reqs.erase(it);
 		}
@@ -177,7 +174,7 @@ void RemDev::timeoutPoll() noexcept {
 	l.unlock();
 	if ( ! registered && registrationTimeoutTime < time) {
 		// TODO: Disconnect for registration timeout
-	}*/
+	}
 }
 
 void RemDev::init() noexcept {
@@ -334,7 +331,7 @@ void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
 		if (req.valid(0)) {  // Proceed to sending error if otherwise
 			Response *res = new Response(wasSuccessful, id, doc, buffer, mainVal);
 			metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
-									   Qt::QueuedConnection, Q_ARG(Response *, res));
+									   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
 			return;
 		}
 	}

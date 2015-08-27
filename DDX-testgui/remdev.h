@@ -38,52 +38,6 @@
 
 class DevMgr;
 
-/*!
- * \brief Response class
- * 
- * This class represents a response to a request.  Note that the JSON data they contain
- * will also be deleted when the Response is deleted, so if a copy of the #response_data
- * is required, that copy must be built with one of RapidJSON's deep copy operations, such
- * as Value::CopyFrom.
- * 
- * Response handlers must have the prototype "void fn(Response *)" and will be called with
- * queued connections (and thus will be executed by the receiving event loop). They **must**
- * eventually delete the Response they are passed.  The also must either be declared as
- * slots or with the `Q_INVOKABLE` macro.
- */
-class Response {
-public:
-	Response(bool successful, int id, rapidjson::Document *doc,
-			 char *buffer = 0, rapidjson::Value *mainVal = 0) {
-		this->successful = successful;
-		this->id = id;
-		this->mainVal = mainVal;
-		this->doc = doc;
-		this->buffer = buffer;
-	}
-	//Response() {}
-	~Response() {
-		delete doc;
-		if (buffer) delete buffer;
-	}
-	
-	//! True if the response was a response, false if there was an error
-	bool successful;
-	
-	//! The integer ID returned by the corresponding sendRequest call
-	int id;
-	
-	//! The contents of the "response" element on success or "error" on error
-	rapidjson::Value *mainVal;
-	
-private:
-	//! Root document pointer
-	rapidjson::Document *doc;
-	
-	//! Buffer pointer (may be 0)
-	char *buffer;
-};
-
 class RemDev : public QObject
 {
 	Q_OBJECT
@@ -111,6 +65,51 @@ public:
 		RegistrationTimeout,  //!< The connection was alive too long without registering
 		BufferOverflow,  //!< The connection sent an object too long to be handled
 		StreamClosed  //!< The stream was closed by its low-level handler
+	};
+	
+	/*!
+	 * \brief Response class
+	 * 
+	 * This class represents a response to a request.  Note that the JSON data they contain
+	 * will also be deleted when the Response is deleted, so if a copy of the #response_data
+	 * is required, that copy must be built with one of RapidJSON's deep copy operations, such
+	 * as Value::CopyFrom.
+	 * 
+	 * Response handlers must have the prototype "void fn(Response *)" and will be called with
+	 * queued connections (and thus will be executed by the receiving event loop). They **must**
+	 * eventually delete the Response they are passed.  The also must either be declared as
+	 * slots or with the `Q_INVOKABLE` macro.
+	 */
+	class Response {
+	public:
+		Response(bool successful, int id, rapidjson::Document *doc,
+				 char *buffer = 0, rapidjson::Value *mainVal = 0) {
+			this->successful = successful;
+			this->id = id;
+			this->mainVal = mainVal;
+			this->doc = doc;
+			this->buffer = buffer;
+		}
+		~Response() {
+			delete doc;
+			if (buffer) delete buffer;
+		}
+		
+		//! True if the response was a response, false if there was an error
+		bool successful;
+		
+		//! The integer ID returned by the corresponding sendRequest call
+		int id;
+		
+		//! The contents of the "response" element on success or "error" on error
+		rapidjson::Value *mainVal;
+		
+	private:
+		//! Root document pointer
+		rapidjson::Document *doc;
+		
+		//! Buffer pointer (may be 0)
+		char *buffer;
 	};
 	
 	explicit RemDev(DevMgr *dm, bool inbound);
@@ -337,6 +336,6 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(RemDev::DeviceRoles)
 
-Q_DECLARE_METATYPE(Response*)
+Q_DECLARE_METATYPE(RemDev::Response*)
 
 #endif // REMDEV_H
