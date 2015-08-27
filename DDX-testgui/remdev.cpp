@@ -284,7 +284,6 @@ void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
 	// Scan the document for all possible members
 	for (Value::ConstMemberIterator it = doc->MemberBegin(); it != doc->MemberEnd(); ++it) {
 		const char *name = it->name.GetString();
-		// TODO:  These pointers might be invalidated on every loop
 		Value &value = (Value &) it->value;
 		if (strcmp("jsonrpc", name) == 0) continue;
 		if (strcmp("id", name) == 0) {
@@ -317,6 +316,7 @@ void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
 		break;
 	}
 	// TODO:  Handle null errors!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// Also, if the id is set but something else went wrong, we should clear out the return function
 	if ( ! error) {
 		int id = idVal->GetInt();
 		req_id_lock.lock();
