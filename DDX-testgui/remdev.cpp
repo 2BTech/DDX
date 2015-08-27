@@ -219,6 +219,24 @@ void RemDev::handleItem(char *data) noexcept {
 		delete doc;
 		return;
 	}
+	if (doc->IsArray()) {
+		// TODO
+		// Does this leave doc hanging?  We're overwriting a previously parsed doc...
+		// It might be a memory leak.  Also of note is that we delete the data in which
+		// this document was parsed before we overwrite the doc.
+		sendError(0, E_NO_BATCH, tr("Batch not supported"), doc);
+		delete data;
+		return;
+	}
+	if ( ! doc->IsObject()) {
+		// TODO
+		// Does this leave doc hanging?  We're overwriting a previously parsed doc...
+		// It might be a memory leak.  Also of note is that we delete the data in which
+		// this document was parsed before we overwrite the doc.
+		sendError(0, E_JSON_PARSE, tr("Invalid JSON"), doc);
+		delete data;
+		return;
+	}
 	if (doc->HasMember("method")) {
 		handleRequest_Notif(doc, data);
 		return;
@@ -420,7 +438,7 @@ void RemDev::printReqs() const {
 	req_id_lock.unlock();
 }
 
-QByteArray RemDev::serializeValue(rapidjson::Value &v) const {
+QByteArray RemDev::serializeValue(const rapidjson::Value &v) {
 	Document doc;
 	doc.CopyFrom(v, doc.GetAllocator());
 	StringBuffer buffer;

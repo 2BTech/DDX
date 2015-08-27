@@ -126,10 +126,10 @@ Code|Message|Macro
 -32001|Invalid response|E_INVALID_RESPONSE
 -32002|Not supported|E_NOT_SUPPORTED
 -32003|An error occurred|E_RPC_GENERAL
--32004|Params contain invalid type|E_TYPE_MISMATCH
+-32004|Batch not supported|E_NO_BATCH
 -32005|Request timed out|E_REQUEST_TIMEOUT
 -32006|Encryption required|E_ENCRYPTION_REQUIRED
--32007|Method gave invalid response|E_METHOD_RESPONSE_INVALID
+-32007|--|--
 -32008|Device disconnected|E_DEVICE_DISCONNECTED
 
 Note that the "Request timed out" error is reserved for sending by the DDX-RPC

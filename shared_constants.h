@@ -38,10 +38,9 @@
 #define E_INVALID_RESPONSE -32001 //!< Invalid response
 #define E_NOT_SUPPORTED -32002 //!< Not supported
 #define E_RPC_GENERAL -32003 //!< An error occurred
-#define E_TYPE_MISMATCH -32004 //!< Params contain invalid type
+#define E_NO_BATCH -32004 //!< Batch not supported
 #define E_REQUEST_TIMEOUT -32005 //!< Request timed out
 #define E_ENCRYPTION_REQUIRED -32006 //!< Encryption required
-#define E_METHOD_RESPONSE_INVALID -32007 //!< Method gave invalid response
 #define E_DEVICE_DISCONNECTED -32008 //!< Device disconnected
 #define E_NETWORK_DISABLED 500 //!< Server does not implement network communication (for future use)
 #define E_VERSION_FORBIDDEN 501 //!< Server is not compatible with the client version
@@ -58,5 +57,12 @@
 #define E_SETTING_SAVEREQUIRED 124 //!< Setting reset requests must be saved
 #define E_SETTINGS_VERSION 10 //!< DDX settings are for higher version or corrupted
 #define E_TCP_SERVER_FAILED 20 //!< A TCP server could not be established
+
+// JSON ERROR CODES
+#define E_JSON_PARSE -32700 //!< Invalid JSON or parse error
+#define E_JSON_REQUEST -32600 //!< Invalid request
+#define E_JSON_METHOD -32601 //!< Method not found
+#define E_JSON_PARAMS -32602 //!< Invalid params
+#define E_JSON_INTERNAL -32603 //!< Internal error
 
 #endif // SHARED_CONSTANTS_H

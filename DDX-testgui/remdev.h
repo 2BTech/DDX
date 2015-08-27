@@ -177,7 +177,7 @@ public:
 	
 #ifdef QT_DEBUG
 	void printReqs() const;
-	QByteArray serializeValue(rapidjson::Value &v) const;
+	static QByteArray serializeValue(const rapidjson::Value &v);
 #endif
 	
 public slots:
