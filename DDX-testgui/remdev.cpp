@@ -55,7 +55,7 @@ RemDev::~RemDev() {
 int RemDev::sendRequest(QObject *self, const char *handler, const char *method, rapidjson::Document *doc,
 						rapidjson::Value *params, qint64 timeout) {
 	LocalId id;
-	RequestRef ref(self, handler, timeout);
+	RequestRef ref(self, handler, method, timeout);
 	req_id_lock.lock();
 	// Check that the connection is still open while we've got the lock
 	if (closed) {
@@ -280,7 +280,7 @@ void RemDev::handleRequest_Notif(rapidjson::Document *doc, char *buffer) {
 void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
 	// Find and type-check all elements efficiently
 	Value *idVal = 0, *mainVal = 0;
-	bool error = false, foundRpc = false, wasSuccessful;
+	bool error = false, wasSuccessful;
 	// Scan the document for all possible members
 	for (Value::ConstMemberIterator it = doc->MemberBegin(); it != doc->MemberEnd(); ++it) {
 		const char *name = it->name.GetString();
@@ -323,7 +323,7 @@ void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
 		RequestRef &&req = reqs.take(id);  // Will be invalid if the id does not exist
 		req_id_lock.unlock();
 		if (req.valid(0)) {  // Proceed to sending error if otherwise
-			Response *res = new Response(wasSuccessful, id, doc, buffer, mainVal);
+			Response *res = new Response(wasSuccessful, id, req.method, doc, buffer, mainVal);
 			metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
 									   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
 			return;
@@ -379,7 +379,7 @@ void RemDev::simulateError(int id, const RequestRef &req, int code, const QStrin
 		v.SetString(encodedMsg.constData(), encodedMsg.size(), a);
 		doc->AddMember("message", v, a);
 	}
-	Response *res = new Response(false, id, doc, 0, doc);
+	Response *res = new Response(false, id, req.method, doc, 0, doc);
 	metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
 							   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
 }

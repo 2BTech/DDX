@@ -31,10 +31,11 @@ TestDev::~TestDev() {
 }
 
 void TestDev::responseHandler(RemDev::Response *r) const {
-	QString str("TD response to %1: %2 with %3");
+	QString str("TD response to %1 (%4): %2 with %3");
 	str = str.arg(r->id);
 	str = str.arg(r->successful ? "success" : "error");
 	str = str.arg(QString(serializeValue(*r->mainVal)));
+	str = str.arg(QString(r->method));
 	log(str);
 	delete r;
 }
@@ -87,7 +88,7 @@ void TestDev::timeout() {
 		v.AddMember("Onething", Value(3829), doc->GetAllocator());
 		v.AddMember("Twothing", Value(rapidjson::kTrueType), doc->GetAllocator());
 		v.AddMember("final", Value((long long) 3892837592836592835), doc->GetAllocator());
-		validResponses.append(sendRequest(this, "responseHandler", "method-name", doc, &v, 1000));
+		validResponses.append(sendRequest(this, "responseHandler", "Params!!!", doc, &v, 1000));
 	}
 	else if (eventCt == 5) {
 		delete data;
@@ -109,7 +110,7 @@ void TestDev::timeout() {
 		if ( ! validResponses.size()) return;
 		log(tr("TD emitting a successful response"));
 		QString out = "{\"jsonrpc\":\"2.0\",\"id\":%1,\"result\":27}";
-		out = out.arg(validResponses.takeFirst());
+		out = out.arg(validResponses.takeLast());
 		strcpy(data, out.toUtf8().constData());
 		handleItem(data);
 	}

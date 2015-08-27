@@ -82,10 +82,11 @@ public:
 	 */
 	class Response {
 	public:
-		Response(bool successful, int id, rapidjson::Document *doc,
+		Response(bool successful, int id, const char *method, rapidjson::Document *doc,
 				 char *buffer = 0, rapidjson::Value *mainVal = 0) {
 			this->successful = successful;
 			this->id = id;
+			this->method = method;
 			this->mainVal = mainVal;
 			this->doc = doc;
 			this->buffer = buffer;
@@ -104,8 +105,17 @@ public:
 		//! The contents of the "response" element on success or "error" on error
 		rapidjson::Value *mainVal;
 		
+		/*!
+		 * \brief The method name which was passed to sendRequest
+		 * 
+		 * Pointer comparison can be used to determine the method regardless of the
+		 * string's lifetime as long as the original pointer is also known.  If the
+		 * string's lifetime is safe, it can be dereferenced and checked by strcmp().
+		 */
+		const char *method;
+		
 	private:
-		//! Root document pointer
+		//! Root document pointer (may be equivalent to #mainVal)
 		rapidjson::Document *doc;
 		
 		//! Buffer pointer (may be 0)
@@ -274,12 +284,13 @@ protected:
 private:
 	
 	struct RequestRef {
-		RequestRef(QObject *handlerObj, const char *handlerFn, qint64 timeout) {
+		RequestRef(QObject *handlerObj, const char *handlerFn, const char *method, qint64 timeout) {
 			time = QDateTime::currentMSecsSinceEpoch();
 			if (timeout) timeout_time = time + timeout;
 			else timeout_time = 0;
 			this->handlerObj = handlerObj;
 			this->handlerFn = handlerFn;
+			this->method = method;
 		}
 		RequestRef() {handlerObj = 0;}  // Mark invalid
 		/*!
@@ -297,6 +308,7 @@ private:
 		// Note: No id is necessary because it is the key in RequestHash
 		QPointer<QObject> handlerObj;
 		const char *handlerFn;
+		const char *method;
 		qint64 time;
 		qint64 timeout_time;
 	};
