@@ -34,7 +34,7 @@ public:
 	
 	~TestDev();
 	
-	void responseHandler(RemDev::Response *r) const;
+	Q_INVOKABLE void responseHandler(Response *r) const;
 	
 protected:
 	
@@ -54,7 +54,7 @@ private:
 	
 	int eventCt = 0;
 	
-	QList<int> valid_response_ids;
+	QList<int> validResponses;
 };
 
 #endif // TESTDEV_H

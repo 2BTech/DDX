@@ -30,11 +30,11 @@ TestDev::~TestDev() {
 	
 }
 
-void TestDev::responseHandler(RemDev::Response *r) const {
+void TestDev::responseHandler(Response *r) const {
 	QString str("TD response to %1: %2 with %3");
-	str.arg(r->id);
-	str.arg(r->successful ? "success" : "error");
-	str.arg(QString(serializeValue(*r->mainVal)));
+	str = str.arg(r->id);
+	str = str.arg(r->successful ? "success" : "error");
+	str = str.arg(QString(serializeValue(*r->mainVal)));
 	log(str);
 	delete r;
 }
@@ -42,7 +42,7 @@ void TestDev::responseHandler(RemDev::Response *r) const {
 void TestDev::sub_init() noexcept {
 	QTimer *timer = new QTimer(this);
 	timer->setTimerType(Qt::CoarseTimer);
-	timer->setInterval(1500);
+	timer->setInterval(500);
 	connect(timer, &QTimer::timeout, this, &TestDev::timeout);
 	timer->start();  // Start immediately for registration timeout
 }
@@ -76,7 +76,7 @@ void TestDev::timeout() {
 	else if (eventCt == 3) {
 		delete data;
 		log(tr("RD sending a valid request"));
-		sendRequest(this, "responseHandler", "method-name");
+		validResponses.append(sendRequest(this, "responseHandler", "method-name"));
 	}
 	else if (eventCt == 4) {
 		delete data;
@@ -87,7 +87,7 @@ void TestDev::timeout() {
 		v.AddMember("Onething", Value(3829), doc->GetAllocator());
 		v.AddMember("Twothing", Value(rapidjson::kTrueType), doc->GetAllocator());
 		v.AddMember("final", Value((long long) 3892837592836592835), doc->GetAllocator());
-		sendRequest(this, "responseHandler", "method-name", doc, &v);
+		validResponses.append(sendRequest(this, "responseHandler", "method-name", doc, &v));
 	}
 	else if (eventCt == 5) {
 		delete data;
@@ -104,6 +104,14 @@ void TestDev::timeout() {
 		v.AddMember("Twothing", Value(rapidjson::kTrueType), doc->GetAllocator());
 		v.AddMember("final", Value((long long) 3892837592836592835), doc->GetAllocator());
 		sendNotification("notif.methodPARAMS", doc, &v);
+	}
+	else if (eventCt == 7) {
+		if ( ! validResponses.size()) return;
+		log(tr("TD emitting a successful response"));
+		QString out = "{\"jsonrpc\":\"2.0\",\"id\":%1,\"result\":true}";
+		out = out.arg(validResponses.takeFirst());
+		strcpy(data, out.toUtf8().constData());
+		handleItem(data);
 	}
 	else if (eventCt == 10) {
 		delete data;

@@ -333,10 +333,8 @@ void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
 		req_id_lock.unlock();
 		if (req.valid(0)) {  // Proceed to sending error if otherwise
 			Response *res = new Response(wasSuccessful, id, doc, buffer, mainVal);
-			// TODO:  If this fails because the type is not registered, it can problably be
-			// passed to Q_ARG as void*
 			metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
-									   Qt::QueuedConnection, Q_ARG(Response*, res));
+									   Qt::QueuedConnection, Q_ARG(Response *, res));
 			return;
 		}
 	}
@@ -422,7 +420,7 @@ QByteArray RemDev::serializeValue(rapidjson::Value &v) const {
 	Writer<StringBuffer> writer(buffer);
 	doc.Accept(writer);
 	QByteArray array(buffer.GetString());
-	Q_ASSERT(buffer.GetSize() == array.size());
+	Q_ASSERT(buffer.GetSize() == (uint) array.size());
 	return array;
 }
 #endif

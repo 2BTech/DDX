@@ -38,6 +38,52 @@
 
 class DevMgr;
 
+/*!
+ * \brief Response class
+ * 
+ * This class represents a response to a request.  Note that the JSON data they contain
+ * will also be deleted when the Response is deleted, so if a copy of the #response_data
+ * is required, that copy must be built with one of RapidJSON's deep copy operations, such
+ * as Value::CopyFrom.
+ * 
+ * Response handlers must have the prototype "void fn(Response *)" and will be called with
+ * queued connections (and thus will be executed by the receiving event loop). They **must**
+ * eventually delete the Response they are passed.  The also must either be declared as
+ * slots or with the `Q_INVOKABLE` macro.
+ */
+class Response {
+public:
+	Response(bool successful, int id, rapidjson::Document *doc,
+			 char *buffer = 0, rapidjson::Value *mainVal = 0) {
+		this->successful = successful;
+		this->id = id;
+		this->mainVal = mainVal;
+		this->doc = doc;
+		this->buffer = buffer;
+	}
+	Response();
+	~Response() {
+		delete doc;
+		if (buffer) delete buffer;
+	}
+	
+	//! True if the response was a response, false if there was an error
+	bool successful;
+	
+	//! The integer ID returned by the corresponding sendRequest call
+	int id;
+	
+	//! The contents of the "response" element on success or "error" on error
+	rapidjson::Value *mainVal;
+	
+private:
+	//! Root document pointer
+	rapidjson::Document *doc;
+	
+	//! Buffer pointer (may be 0)
+	char *buffer;
+};
+
 class RemDev : public QObject
 {
 	Q_OBJECT
@@ -65,50 +111,6 @@ public:
 		RegistrationTimeout,  //!< The connection was alive too long without registering
 		BufferOverflow,  //!< The connection sent an object too long to be handled
 		StreamClosed  //!< The stream was closed by its low-level handler
-	};
-	
-	/*!
-	 * \brief Response class
-	 * 
-	 * This class represents a response to a request.  Note that the JSON data they contain
-	 * will also be deleted when the Response is deleted, so if a copy of the #response_data
-	 * is required, that copy must be built with one of RapidJSON's deep copy operations, such
-	 * as Value::CopyFrom.
-	 * 
-	 * Response handlers must have the prototype "void fn(RemDev::Response *)" and will be
-	 * called with queued connections (and thus will be executed by the receiving event loop).
-	 * They **must** eventually delete the Response they are passed.
-	 */
-	class Response {
-	public:
-		Response(bool successful, int id, rapidjson::Document *doc,
-				 char *buffer = 0, rapidjson::Value *mainVal = 0) {
-			this->successful = successful;
-			this->id = id;
-			this->mainVal = mainVal;
-			this->doc = doc;
-			this->buffer = buffer;
-		}
-		~Response() {
-			delete doc;
-			if (buffer) delete buffer;
-		}
-		
-		//! True if the response was a response, false if there was an error
-		bool successful;
-		
-		//! The integer ID returned by the corresponding sendRequest call
-		int id;
-		
-		//! The contents of the "response" element on success or "error" on error
-		rapidjson::Value *mainVal;
-		
-	private:
-		//! Root document pointer
-		rapidjson::Document *doc;
-		
-		//! Buffer pointer (may be 0)
-		char *buffer;
 	};
 	
 	explicit RemDev(DevMgr *dm, bool inbound);
@@ -254,43 +256,6 @@ protected:
 	 */
 	void log(const QString &msg, bool isAlert = false) const noexcept;
 	
-	/*!
-	 * \brief Build a request object
-	 * \param id The locally-generated integer ID (must **not** be 0)
-	 * \param method The method name 
-	 * \param params Any parameters (will be omitted if empty)
-	 * \return The request object
-	 */
-	//QJsonObject newRequest(LocalId id, const QString &method, const QJsonObject &params) const;
-	
-	/*!
-	 * \brief Build a response object
-	 * \param id The remote-generated ID
-	 * \param result The params value (must **not** be null or undefined)
-	 * \return The response object
-	 */
-	//QJsonObject newResponse(QJsonValue id, const QJsonValue &result);
-	
-	/*!
-	 * \brief Build an error object
-	 * \param id The remote-generated ID (undefined IDs will be converted to null)
-	 * \param code The integer error code
-	 * \param msg The error message
-	 * \param data Data to be sent (undefined will be omitted, all other types will be included)
-	 * \return The error object
-	 */
-	//QJsonObject newError(QJsonValue id, int code, const QString &msg, const QJsonValue &data) const;
-	
-	/*!
-	 * \brief Build a notification object
-	 * \param method The method name
-	 * \param params Any parameters (will be omitted if empty)
-	 * \return The notification object
-	 */
-	//QJsonObject newNotification(const QString &method, const QJsonObject &params) const;
-	
-	//void simulateError(LocalId id, const RequestRef *ref, int code);
-	
 	virtual void sub_init() noexcept {}
 	
 	virtual void terminate(DisconnectReason reason, bool fromRemote) noexcept =0;
@@ -371,5 +336,7 @@ private:
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(RemDev::DeviceRoles)
+
+Q_DECLARE_METATYPE(Response *)
 
 #endif // REMDEV_H
