@@ -43,19 +43,17 @@ class RemDev : public QObject
 	Q_OBJECT
 public:
 	
-	// Bool is for whether it was successful; the second value is the contents of the error object if it failed
-	// Note that errors will already be logged but not alerted
 	typedef int LocalId;
-	typedef QHash<QByteArray, RemDev*> DeviceHash;
-	typedef QList<RemDev*> DeviceList;
-	enum DeviceRole {
+	
+	enum DeviceRoles {
 		DaemonRole = 0x1,  //!< Can execute paths
 		ManagerRole = 0x2,  //!< An interface for a device which executes paths
 		VertexRole = 0x4,  //!< A data responder or producer which does not execute paths
 		ListenerRole = 0x8,  //!< A destination for loglines and alerts
-		GlobalRole = 0x80  //!< A pseudo-role which indicates role-less information
+		GlobalRole = 0x80,  //!< A pseudo-role which indicates role-less information
+		
 	};
-	Q_DECLARE_FLAGS(DeviceRoles, DeviceRole)
+	
 	enum DisconnectReason {
 		UnknownReason,  //!< Unknown disconnection
 		ShuttingDown,  //!< The disconnecting member is shutting down by request
@@ -116,6 +114,56 @@ public:
 		
 	private:
 		//! Root document pointer (may be equivalent to #mainVal)
+		rapidjson::Document *doc;
+		
+		//! Buffer pointer (may be 0)
+		char *buffer;
+	};
+	
+	enum HandleFlag {
+		HandleRequest = 0x1,
+		HandleNotification = 0x2
+	};
+	
+	class RequestHandler {
+	public:
+		RequestHandler(QObject *handlerObj, const char *handlerFn, const char *method,
+					   HandleFlags handleFlags, DeviceRoles requiredRoles) {
+			
+		}
+	private:
+		QPointer<QObject> handlerObj;
+		const char *handlerFn;
+	};
+	friend class RequestHandler;
+	
+	class Request {
+	public:
+		Request(rapidjson::Value *method, rapidjson::Value *params, rapidjson::Document *doc,
+				rapidjson::Value *id, char *buffer = 0) {
+			this->method = method;
+			this->params = params;
+			this->id = id;
+			this->doc = doc;
+			this->buffer = buffer;
+		}
+		~Request() {
+			delete doc;
+			if (buffer) delete buffer;
+		}
+		
+		//! Method (guaranteed to be a string)
+		rapidjson::Value *method;
+		
+		//! The contents of the params element
+		rapidjson::Value *params;
+		
+		//! ID value (will be 0 if this is a notification)
+		rapidjson::Value *id;
+		
+	private:
+		
+		//! Root document pointer
 		rapidjson::Document *doc;
 		
 		//! Buffer pointer (may be 0)
@@ -319,6 +367,10 @@ private:
 	//! Manages all open outgoing requests to direct responses appropriately
 	RequestHash reqs;
 	
+	typedef QHash<QByteArray, RequestHandler> HandlerHash;
+	
+	HandlerHash handlers;
+	
 	//! Locks the request hash and lastId variable
 	mutable QMutex req_id_lock;
 	
@@ -349,7 +401,9 @@ private:
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(RemDev::DeviceRoles)
+Q_DECLARE_OPERATORS_FOR_FLAGS(RemDev::HandlerRoles)
 
 Q_DECLARE_METATYPE(RemDev::Response*)
+Q_DECLARE_METATYPE(RemDev::Request*)
 
 #endif // REMDEV_H

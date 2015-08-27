@@ -26,6 +26,7 @@ DevMgr::DevMgr(MainWindow *parent) : QObject(parent)
 	closing = false;
 	// Enable invocation of handler functions
 	qRegisterMetaType<RemDev::Response*>("RemDev::Response*");
+	qRegisterMetaType<RemDev::Request*>("RemDev::Request*");
 }
 
 DevMgr::~DevMgr()

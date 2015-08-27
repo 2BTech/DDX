@@ -37,6 +37,10 @@ public:
 	
 	explicit DevMgr(MainWindow *parent = 0);
 	
+	typedef QHash<QByteArray, RemDev*> DeviceHash;
+	
+	typedef QList<RemDev*> DeviceList;
+	
 	~DevMgr();
 	
 	void closeAll(RemDev::DisconnectReason reason = RemDev::ShuttingDown);
@@ -49,7 +53,7 @@ private:
 	
 	MainWindow *mw;
 	
-	RemDev::DeviceList devices;
+	DeviceList devices;
 	
 	QMutex dLock;
 	
