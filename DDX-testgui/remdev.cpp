@@ -291,8 +291,8 @@ void RemDev::sendDocument(rapidjson::Document *doc) {
 }
 
 void RemDev::handleRequest_Notif(rapidjson::Document *doc, char *buffer) {
-	// TODO
-	log(tr("Unhandled request or notification"));
+	//Document *doc;
+	//if (doc->HasMember())
 }
 
 void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {

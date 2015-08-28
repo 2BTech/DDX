@@ -125,17 +125,23 @@ public:
 		HandleNotification = 0x2
 	};
 	
-	class RequestHandler {
+	/*class RequestHandler {
 	public:
 		RequestHandler(QObject *handlerObj, const char *handlerFn, const char *method,
-					   HandleFlags handleFlags, DeviceRoles requiredRoles) {
+					   HandleFlag handleFlags, DeviceRoles requiredRoles) {
 			
+			this->handlerObj = handlerObj;
+			this->handlerFn = handleFn;
+			this->handleFlags = handleFlags;
+			this->reqRoles = requiredRoles;
 		}
 	private:
 		QPointer<QObject> handlerObj;
 		const char *handlerFn;
+		HandleFlag handleFlags;
+		DeviceRoles reqRoles;
 	};
-	friend class RequestHandler;
+	friend class RequestHandler;*/
 	
 	class Request {
 	public:
@@ -155,7 +161,7 @@ public:
 		//! Method (guaranteed to be a string)
 		rapidjson::Value *method;
 		
-		//! The contents of the params element
+		//! The contents of the params element (may be 0)
 		rapidjson::Value *params;
 		
 		//! ID value (will be 0 if this is a notification)
@@ -343,14 +349,14 @@ private:
 		RequestRef() {handlerObj = 0;}  // Mark invalid
 		/*!
 		 * \brief Determine request validity
-		 * \param time Current time or 0 to disable timeout check
+		 * \param checkTime Current time or 0 to disable timeout check
 		 * \return Whether the request is still valid
 		 * 
 		 * Requests can become invalid if their receiver is destroyed or they timeout.
 		 */
-		bool valid(qint64 time) const {
-			if (time && timeout_time)
-				if (time < timeout_time) return false;
+		bool valid(qint64 checkTime) const {
+			if (checkTime && timeout_time)
+				if (checkTime < timeout_time) return false;
 			return ! handlerObj.isNull();
 		}
 		// Note: No id is necessary because it is the key in RequestHash
@@ -367,9 +373,11 @@ private:
 	//! Manages all open outgoing requests to direct responses appropriately
 	RequestHash reqs;
 	
-	typedef QHash<QByteArray, RequestHandler> HandlerHash;
+	/*typedef QHash<QByteArray, RequestHandler> HandlerHash;
 	
 	HandlerHash handlers;
+	
+	QReadWriteMutex hLock;*/
 	
 	//! Locks the request hash and lastId variable
 	mutable QMutex req_id_lock;
@@ -399,9 +407,6 @@ private:
 	
 	static inline void prepareDocument(rapidjson::Document *doc, rapidjson::MemoryPoolAllocator<> &a);
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(RemDev::DeviceRoles)
-Q_DECLARE_OPERATORS_FOR_FLAGS(RemDev::HandlerRoles)
 
 Q_DECLARE_METATYPE(RemDev::Response*)
 Q_DECLARE_METATYPE(RemDev::Request*)

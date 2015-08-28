@@ -36,6 +36,8 @@ public:
 	
 	Q_INVOKABLE void responseHandler(RemDev::Response *r) const;
 	
+	Q_INVOKABLE void requestHandler(RemDev::Request *r);
+	
 protected:
 	
 	void sub_init() noexcept override;

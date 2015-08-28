@@ -40,10 +40,23 @@ void TestDev::responseHandler(RemDev::Response *r) const {
 	delete r;
 }
 
+void TestDev::requestHandler(RemDev::Request *r) {
+	QString str("TD %1 to %3 with %2");
+	if (r->id)
+		str = str.arg(QString("request [ID %1]").arg(r->id->GetInt()));
+	else
+		str = str.arg("notification");
+	if (r->params) str = str.arg(QString(serializeValue(*r->params)));
+	else str = str.arg("no params");
+	str = str.arg(QString(r->method->GetString()));
+	log(str);
+	delete r;
+}
+
 void TestDev::sub_init() noexcept {
 	QTimer *timer = new QTimer(this);
 	timer->setTimerType(Qt::CoarseTimer);
-	timer->setInterval(300);
+	timer->setInterval(500);
 	connect(timer, &QTimer::timeout, this, &TestDev::timeout);
 	timer->start();  // Start immediately for registration timeout
 }
@@ -88,7 +101,7 @@ void TestDev::timeout() {
 		v.AddMember("Onething", Value(3829), doc->GetAllocator());
 		v.AddMember("Twothing", Value(rapidjson::kTrueType), doc->GetAllocator());
 		v.AddMember("final", Value((long long) 3892837592836592835), doc->GetAllocator());
-		validResponses.append(sendRequest(this, "responseHandler", "Params!!!", doc, &v, 1000));
+		validResponses.append(sendRequest(this, "responseHandler", "Params!!!", doc, &v));
 	}
 	else if (eventCt == 5) {
 		delete data;
