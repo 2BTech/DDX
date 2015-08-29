@@ -356,7 +356,7 @@ private:
 		 */
 		bool valid(qint64 checkTime) const {
 			if (checkTime && timeout_time)
-				if (checkTime < timeout_time) return false;
+				if (timeout_time < checkTime) return false;
 			return ! handlerObj.isNull();
 		}
 		// Note: No id is necessary because it is the key in RequestHash

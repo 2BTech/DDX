@@ -90,7 +90,7 @@ void TestDev::timeout() {
 	else if (eventCt == 3) {
 		delete data;
 		log(tr("RD sending a valid request"));
-		validResponses.append(sendRequest(this, "responseHandler", "method-name"));
+		validResponses.append(sendRequest(this, "responseHandler", "method-name", 0, 0, 11000));
 	}
 	else if (eventCt == 4) {
 		delete data;
