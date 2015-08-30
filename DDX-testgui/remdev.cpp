@@ -28,6 +28,7 @@ RemDev::RemDev(DevMgr *dm, bool inbound) :
 	connectTime = QDateTime::currentMSecsSinceEpoch();
 	this->dm = dm;
 	lastId = 0;
+	pollerRefCount = 0;
 	registered = false;
 	regState = UnregisteredState;
 	closed = false;
@@ -83,8 +84,7 @@ int RemDev::sendRequest(QObject *self, const char *handler, const char *method, 
 	if (params) doc->AddMember("params", *params, a);
 	sendDocument(doc);
 	// Start timeout timer if required
-	if (timeout && ! timeoutPoller->isActive())
-		timeoutPoller->start();
+	addPoller();
 	printReqs();
 	return id;
 }
@@ -162,6 +162,7 @@ void RemDev::timeoutPoll() noexcept {
 			simulateError(it.key(), it.value(), E_REQUEST_TIMEOUT,
 						  tr("Request timed out"));
 			it = reqs.erase(it);
+			dropPoller();
 		}
 		else ++it;
 	}
@@ -185,7 +186,7 @@ void RemDev::init() noexcept {
 	connect(timeoutPoller, &QTimer::timeout, this, &RemDev::timeoutPoll);
 	// Call the subclass init function
 	sub_init();
-	//timeoutPoller->start();  // Start immediately for registration timeout*/
+	addPoller();
 }
 
 void RemDev::handleItem(char *data) noexcept {
@@ -341,6 +342,7 @@ void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
 		RequestRef &&req = reqs.take(id);  // Will be invalid if the id does not exist
 		req_id_lock.unlock();
 		if (req.valid(0)) {  // Proceed to sending error if otherwise
+			dropPoller();
 			Response *res = new Response(wasSuccessful, id, req.method, doc, buffer, mainVal);
 			metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
 									   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
@@ -382,6 +384,7 @@ void RemDev::handleRegistration(const rapidjson::Document *doc) {
 	
 	
 	//log(tr("Now known as %1").arg(
+	dropPoller();
 	registered = true;
 	d->registerDevice(this);*/
 }
@@ -400,6 +403,22 @@ void RemDev::simulateError(int id, const RequestRef &req, int code, const QStrin
 	Response *res = new Response(false, id, req.method, doc, 0, doc);
 	metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
 							   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
+}
+
+void RemDev::addPoller() {
+	if ( ! timeoutPoller->isActive()) {
+		timeoutPoller->start();
+		log("Poller started");
+	}
+	pollerRefCount++;
+}
+
+void RemDev::dropPoller() {
+	pollerRefCount--;
+	if (pollerRefCount < 1) {
+		timeoutPoller->stop();
+		log("Poller stopped");
+	}
 }
 
 inline void RemDev::prepareDocument(rapidjson::Document *doc, rapidjson::MemoryPoolAllocator<> &a) {

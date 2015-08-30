@@ -385,6 +385,8 @@ private:
 	//! Polls for timeouts; see timeoutPoll()
 	QTimer *timeoutPoller;
 	
+	int pollerRefCount;
+	
 	LocalId lastId;
 	
 	qint64 registrationTimeoutTime;
@@ -404,6 +406,10 @@ private:
 	void handleRegistration(const rapidjson::Document *doc);
 	
 	void simulateError(int id, const RequestRef &req, int code, const QString &msg);
+	
+	void addPoller();
+	
+	void dropPoller();
 	
 	static inline void prepareDocument(rapidjson::Document *doc, rapidjson::MemoryPoolAllocator<> &a);
 };
