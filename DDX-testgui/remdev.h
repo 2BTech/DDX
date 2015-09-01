@@ -50,8 +50,7 @@ public:
 		ManagerRole = 0x2,  //!< An interface for a device which executes paths
 		VertexRole = 0x4,  //!< A data responder or producer which does not execute paths
 		ListenerRole = 0x8,  //!< A destination for loglines and alerts
-		GlobalRole = 0x80,  //!< A pseudo-role which indicates role-less information
-		
+		GlobalRole = 0x80  //!< A pseudo-role which indicates role-less information
 	};
 	
 	enum DisconnectReason {
@@ -77,6 +76,11 @@ public:
 	 * queued connections (and thus will be executed by the receiving event loop). They **must**
 	 * eventually delete the Response they are passed.  The also must either be declared as
 	 * slots or with the `Q_INVOKABLE` macro.
+	 * 
+	 * If #successful is false, #mainVal is guaranteed to be a "verified" error object.  This
+	 * means that it has a "code" member for which IsInt() returns true and a "message" member for
+	 * which IsString() returns true.  The guarantee made if #successful is true is that #mainVal
+	 * is set.
 	 */
 	class Response {
 	public:
@@ -103,13 +107,7 @@ public:
 		//! The contents of the "response" element on success or "error" on error
 		rapidjson::Value *mainVal;
 		
-		/*!
-		 * \brief The method name which was passed to sendRequest
-		 * 
-		 * Pointer comparison can be used to determine the method regardless of the
-		 * string's lifetime as long as the original pointer is also known.  If the
-		 * string's lifetime is safe, it can be dereferenced and checked by strcmp().
-		 */
+		//!The method name which was passed to sendRequest
 		const char *method;
 		
 	private:
@@ -118,11 +116,6 @@ public:
 		
 		//! Buffer pointer (may be 0)
 		char *buffer;
-	};
-	
-	enum HandleFlag {
-		HandleRequest = 0x1,
-		HandleNotification = 0x2
 	};
 	
 	/*class RequestHandler {
@@ -184,7 +177,7 @@ public:
 	 * \brief Send a new request
 	 * \param self The object on which the handler will be called
 	 * \param handler The name of the handler function to call
-	 * \param method The method name (UTF8)
+	 * \param method The method name (UTF8, must live through handling)
 	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
 	 * \param params Any parameters (0 to omit, will be **nullified, not deleted**)
 	 * \param timeout Request timeout in msecs
@@ -245,14 +238,6 @@ public slots:
 	 */
 	void close(DisconnectReason reason = ConnectionTerminated, bool fromRemote = false) noexcept;
 	
-signals:
-	
-	void postToLogArea(const QString &msg) const;
-	
-	void deviceDisconnected(RemDev *dev, DisconnectReason reason, bool fromRemote) const;
-	
-private slots:
-	
 	/*!
 	 * \brief Poll for operations that have timed out
 	 * 
@@ -276,6 +261,14 @@ private slots:
 	 */
 	void timeoutPoll() noexcept;
 	
+signals:
+	
+	void postToLogArea(const QString &msg) const;
+	
+	void deviceDisconnected(RemDev *dev, DisconnectReason reason, bool fromRemote) const;
+	
+private slots:
+	
 	void init() noexcept;
 	
 protected:
@@ -288,7 +281,7 @@ protected:
 		RegisteredState = RegSentFlag|RegAcceptedFlag|RemoteRegAcceptedFlag
 	};
 	
-	DevMgr *dm;  //!< Convenience pointer to Daemon instance
+	DevMgr *dm;  //!< Convenience pointer to DevMgr instance
 	
 	QByteArray cid;
 	
@@ -382,9 +375,6 @@ private:
 	//! Locks the request hash and lastId variable
 	mutable QMutex req_id_lock;
 	
-	//! Polls for timeouts; see timeoutPoll()
-	QTimer *timeoutPoller;
-	
 	int pollerRefCount;
 	
 	LocalId lastId;
@@ -403,13 +393,18 @@ private:
 	
 	void handleNotification(const QJsonObject &obj);
 	
-	void handleRegistration(const rapidjson::Document *doc);
+	void handleRegistration(rapidjson::Document *doc, char *buffer);
+	
+	void handleDisconnect(rapidjson::Document *doc, char *buffer);
 	
 	void simulateError(int id, const RequestRef &req, int code, const QString &msg);
 	
-	void addPoller();
-	
-	void dropPoller();
+	/*!
+	 * \brief Log an incoming or simulated error
+	 * \param errorVal The error object to log (must be verified, see Response)
+	 * \param method The method name (will be assumed to be a null error if 0)
+	 */
+	void logError(const rapidjson::Value *errorVal, const char *method = 0) const;
 	
 	static inline void prepareDocument(rapidjson::Document *doc, rapidjson::MemoryPoolAllocator<> &a);
 };

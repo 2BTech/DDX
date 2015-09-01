@@ -19,19 +19,22 @@
 #include "devmgr.h"
 #include "mainwindow.h"
 
-DevMgr::DevMgr(MainWindow *parent) : QObject(parent)
-{
+DevMgr::DevMgr(MainWindow *parent) : QObject(parent) {
 	mw = parent;
 	unregCt = 0;
 	closing = false;
 	// Enable invocation of handler functions
 	qRegisterMetaType<RemDev::Response*>("RemDev::Response*");
 	qRegisterMetaType<RemDev::Request*>("RemDev::Request*");
+	// Set up timeout polling
+	timeoutPoller = new QTimer(this);
+	timeoutPoller->setTimerType(Qt::CoarseTimer);
+	timeoutPoller->setInterval(TIMEOUT_POLL_INTERVAL);
+	timeoutPoller->start();
 }
 
-DevMgr::~DevMgr()
-{
-	
+DevMgr::~DevMgr() {
+	delete timeoutPoller;
 }
 
 void DevMgr::closeAll(RemDev::DisconnectReason reason) {
@@ -48,6 +51,7 @@ void DevMgr::closeAll(RemDev::DisconnectReason reason) {
 
 QByteArray DevMgr::addDevice(RemDev *dev) {
 	connect(dev, &RemDev::postToLogArea, mw->getLogArea(), &QPlainTextEdit::appendPlainText);
+	connect(timeoutPoller, &QTimer::timeout, dev, &RemDev::timeoutPoll);
 	dLock.lock();
 	devices.append(dev);
 	dLock.unlock();

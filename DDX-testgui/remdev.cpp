@@ -50,7 +50,7 @@ RemDev::RemDev(DevMgr *dm, bool inbound) :
 }
 
 RemDev::~RemDev() {
-	delete timeoutPoller;
+	if ( ! closed) close(UnknownReason);
 }
 
 int RemDev::sendRequest(QObject *self, const char *handler, const char *method, rapidjson::Document *doc,
@@ -83,8 +83,7 @@ int RemDev::sendRequest(QObject *self, const char *handler, const char *method, 
 	doc->AddMember("id", Value(id), a);
 	if (params) doc->AddMember("params", *params, a);
 	sendDocument(doc);
-	// Start timeout timer if required
-	addPoller();
+	// DEBUG
 	printReqs();
 	return id;
 }
@@ -155,18 +154,17 @@ void RemDev::close(DisconnectReason reason, bool fromRemote) noexcept {
 
 void RemDev::timeoutPoll() noexcept {
 	qint64 time = QDateTime::currentMSecsSinceEpoch();
-	QMutexLocker l(&req_id_lock);
+	req_id_lock.lock();
 	RequestHash::iterator it = reqs.begin();
 	while (it != reqs.end()) {
 		if ( ! it->valid(time)) {
 			simulateError(it.key(), it.value(), E_REQUEST_TIMEOUT,
 						  tr("Request timed out"));
 			it = reqs.erase(it);
-			dropPoller();
 		}
 		else ++it;
 	}
-	l.unlock();
+	req_id_lock.unlock();
 	if ( ! registered && registrationTimeoutTime < time) {
 		// TODO: Disconnect for registration timeout
 	}
@@ -179,14 +177,8 @@ void RemDev::init() noexcept {
 		registrationPeriod = sg->reset("RegistrationPeriod", SG_RPC).toInt();
 	}
 	registrationTimeoutTime = connectTime + (registrationPeriod * 1000);*/
-	// Set up timeout polling
-	timeoutPoller = new QTimer(this);
-	timeoutPoller->setTimerType(Qt::CoarseTimer);
-	timeoutPoller->setInterval(TIMEOUT_POLL_INTERVAL);
-	connect(timeoutPoller, &QTimer::timeout, this, &RemDev::timeoutPoll);
 	// Call the subclass init function
 	sub_init();
-	addPoller();
 }
 
 void RemDev::handleItem(char *data) noexcept {
@@ -201,13 +193,13 @@ void RemDev::handleItem(char *data) noexcept {
 			// Does this leave doc hanging?  We're overwriting a previously parsed doc...
 			// It might be a memory leak.  Also of note is that we delete the data in which
 			// this document was parsed before we overwrite the doc.
-			sendError(0, -32700, tr("Parse error"), doc);
+			sendError(0, E_JSON_PARSE, tr("Parse error"), doc);
 			return;
 		}
 	}
 	else {  // Unregistered: strict parsing, return if errors
 		doc->ParseInsitu<rapidjson::kParseValidateEncodingFlag |
-						rapidjson::kParseIterativeFlag>
+						 rapidjson::kParseIterativeFlag>
 				(data);
 		// Assume this is a fake connection; return nothing if there's a parse error
 		if (doc->HasParseError()) {
@@ -215,9 +207,7 @@ void RemDev::handleItem(char *data) noexcept {
 			delete doc;
 			return;
 		}
-		handleRegistration(doc);
-		delete data;
-		delete doc;
+		handleRegistration(doc, data);
 		return;
 	}
 	if (doc->IsArray()) {
@@ -246,32 +236,6 @@ void RemDev::handleItem(char *data) noexcept {
 		handleResponse(doc, data);
 		return;
 	}
-	/*
-	// Check for registration before handling parsing errors because it will just
-	// return if any errors occurred (we don't want to send anything to prevent
-	// overload attacks if we're unregistered)
-	if ( ! registered) {
-		if ( ! doc.isObject()) return;
-		handleRegistration(doc.object());
-		delete data;
-		return;
-	}
-	if (error.error != QJsonParseError::NoError) {
-		
-		delete data;
-		return;
-	}
-	if (doc.isArray()) {
-		// TODO
-		delete data;
-		return;
-	}
-	if (doc.isObject()) {
-		QJsonObject obj = doc.object();
-		handleObject(obj);
-		delete data;
-		return;
-	}*/
 	delete data;
 	delete doc;
 }
@@ -299,65 +263,86 @@ void RemDev::handleRequest_Notif(rapidjson::Document *doc, char *buffer) {
 void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
 	// Find and type-check all elements efficiently
 	Value *idVal = 0, *mainVal = 0;
-	bool error = false, wasSuccessful;
-	// Scan the document for all possible members
+	bool wasSuccessful;
+	// Breaking out of this loop while idVal or mainVal is 0 constitutes an error,
+	// whereas finishing with both pointers set allows proper handling
 	for (Value::ConstMemberIterator it = doc->MemberBegin(); it != doc->MemberEnd(); ++it) {
 		const char *name = it->name.GetString();
 		Value &value = (Value &) it->value;
 		if (strcmp("jsonrpc", name) == 0) continue;
 		if (strcmp("id", name) == 0) {
-			if ( ! value.IsInt() || idVal) {
-				error = true;
+			if ( ! (value.IsInt() || value.IsNull())) {
+				idVal = 0;  // Force an error (possible attack with two ID values otherwise)
 				break;
 			}
 			idVal = &value;
 			continue;
 		}
 		if ( ! mainVal) {
+			// Check for successful result
 			if (strcmp("result", name) == 0) {
-				// Result does not require type checking
 				mainVal = &value;
 				wasSuccessful = true;
 				continue;
 			}
+			// Check for error
 			if (strcmp("error", name) == 0) {
-				if ( ! value.IsObject()) {
-					error = true;
+				// Verify that the error object meets basic requirements
+				if ( ! value.IsObject()) break;
+				if ( ! value.FindMember("code")->value.IsInt() ||
+					 ! value.FindMember("message")->value.IsString())
 					break;
-				}
-				// TODO:  Check that error item has the correct elements
 				mainVal = &value;
 				wasSuccessful = false;
 				continue;
 			}
 		}
-		error = true;  // There was an unknown (or, theoretically, duplicate) member
+		// There was an unknown member
 		break;
 	}
-	// TODO:  Handle null errors!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// Also, if the id is set but something else went wrong, we should clear out the return function
-	if ( ! error) {
+	if (idVal && mainVal) {  // If everything was found successfully...
+		// Handle null errors
+		if (idVal->IsNull()) {
+			if (wasSuccessful) log(tr("Received successful null-ID response; ignoring"));
+			else logError(mainVal);
+			delete doc;
+			delete buffer;
+			return;
+		}
+		// Handle normal response
 		int id = idVal->GetInt();
 		req_id_lock.lock();
 		RequestRef &&req = reqs.take(id);  // Will be invalid if the id does not exist
 		req_id_lock.unlock();
-		if (req.valid(0)) {  // Proceed to sending error if otherwise
-			dropPoller();
+		if (req.valid(0)) {  // If the request (still) exists...
+			// Log errors
+			if ( ! wasSuccessful) logError(mainVal, req.method);
+			// Call handler
 			Response *res = new Response(wasSuccessful, id, req.method, doc, buffer, mainVal);
 			metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
 									   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
-			return;
+		}
+		else {  // If the request does not exist...
+			delete buffer;
+			// TODO
+			// Does this leave doc hanging?  We're overwriting a previously parsed doc...
+			// It might be a memory leak.  Also of note is that we delete the data in which
+			// this document was parsed before we overwrite the doc.
+			sendError(0, E_INVALID_RESPONSE, tr("Invalid response"), doc, idVal);
+			// TODO:  also check that idVal is deleted when doc is deleted
 		}
 	}
-	delete buffer;
-	// TODO
-	// Does this leave doc hanging?  We're overwriting a previously parsed doc...
-	// It might be a memory leak.  Also of note is that we delete the data in which
-	// this document was parsed before we overwrite the doc.
-	sendError(0, E_INVALID_RESPONSE, tr("Invalid response"), doc);
+	else {
+		delete buffer;
+		// TODO
+		// Does this leave doc hanging?  We're overwriting a previously parsed doc...
+		// It might be a memory leak.  Also of note is that we delete the data in which
+		// this document was parsed before we overwrite the doc.
+		sendError(0, E_JSON_PARSE, tr("Invalid JSON"), doc);
+	}
 }
 
-void RemDev::handleRegistration(const rapidjson::Document *doc) {
+void RemDev::handleRegistration(rapidjson::Document *doc, char *buffer) {
 	// If this is not a register request or response, return without error
 	if ((regState & RegSentFlag) && doc->HasMember("result")) {  // This is a response to our registration
 		
@@ -389,6 +374,10 @@ void RemDev::handleRegistration(const rapidjson::Document *doc) {
 	d->registerDevice(this);*/
 }
 
+void RemDev::handleDisconnect(rapidjson::Document *doc, char *buffer) {
+	
+}
+
 void RemDev::simulateError(int id, const RequestRef &req, int code, const QString &msg) {
 	Document *doc = new Document;
 	rapidjson::MemoryPoolAllocator<> &a = doc->GetAllocator();
@@ -400,25 +389,21 @@ void RemDev::simulateError(int id, const RequestRef &req, int code, const QStrin
 		v.SetString(encodedMsg.constData(), encodedMsg.size(), a);
 		doc->AddMember("message", v, a);
 	}
+	logError(doc, req.method);
 	Response *res = new Response(false, id, req.method, doc, 0, doc);
 	metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
 							   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
 }
 
-void RemDev::addPoller() {
-	if ( ! timeoutPoller->isActive()) {
-		timeoutPoller->start();
-		log("Poller started");
-	}
-	pollerRefCount++;
-}
-
-void RemDev::dropPoller() {
-	pollerRefCount--;
-	if (pollerRefCount < 1) {
-		timeoutPoller->stop();
-		log("Poller stopped");
-	}
+void RemDev::logError(const Value *errorVal, const char *method) const {
+	QString logStr;
+	if (method)
+		logStr = tr("Request to '%1' failed with error %2: %3").arg(QString::fromUtf8(method));
+	else
+		logStr = tr("Received null response %2: %3");
+	const Value &code = errorVal->FindMember("code")->value;
+	const Value &message = errorVal->FindMember("message")->value;
+	log(logStr.arg(QString::number(code.GetInt()), QString::fromUtf8(message.GetString())));
 }
 
 inline void RemDev::prepareDocument(rapidjson::Document *doc, rapidjson::MemoryPoolAllocator<> &a) {

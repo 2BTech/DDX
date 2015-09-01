@@ -25,6 +25,7 @@
 #include <QHash>
 #include <QMutex>
 #include <QPlainTextEdit>
+#include <QTimer>
 #include "remdev.h"
 
 class MainWindow;
@@ -56,6 +57,8 @@ private:
 	DeviceList devices;
 	
 	QMutex dLock;
+	
+	QTimer *timeoutPoller;
 	
 	int unregCt;
 	
