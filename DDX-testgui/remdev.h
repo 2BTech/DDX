@@ -79,8 +79,8 @@ public:
 	 * 
 	 * If #successful is false, #mainVal is guaranteed to be a "verified" error object.  This
 	 * means that it has a "code" member for which IsInt() returns true and a "message" member for
-	 * which IsString() returns true.  The guarantee made if #successful is true is that #mainVal
-	 * is set.
+	 * which IsString() returns true.  The only guarantee made if #successful is true is that
+	 * #mainVal is set.
 	 */
 	class Response {
 	public:
