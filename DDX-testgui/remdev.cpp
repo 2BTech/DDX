@@ -100,6 +100,14 @@ void RemDev::sendResponse(rapidjson::Value &id, rapidjson::Document *doc, rapidj
 	sendDocument(doc);
 }
 
+void RemDev::sendResponse(Request *req, rapidjson::Value *result) {
+	if (req->id) {
+		sendResponse(*req->id, req->outDoc, result);
+		req->outDoc = 0;
+	}
+	delete req;
+}
+
 void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc, rapidjson::Value *data) noexcept {
 	if (closed) {
 		if (doc) delete doc;
@@ -121,6 +129,26 @@ void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapid
 	if (id) doc->AddMember("id", *id, a);
 	else doc->AddMember("id", Value(rapidjson::kNullType), a);  // Add null if no id present
 	sendDocument(doc);
+}
+
+void RemDev::sendError(Request *req, int code, const QString &msg, rapidjson::Value *data) noexcept {
+	if (req->id) {
+		sendError(req->id, code, msg, req->outDoc, data);
+		req->outDoc = 0;
+	}
+	delete req;
+}
+
+void RemDev::sendError(Request *req, int code) noexcept {
+	QString msg;
+	switch (code) {
+	case E_JSON_INTERNAL: msg = tr("Internal error"); break;
+	case E_ACCESS_DENIED: msg = tr("Access denied"); break;
+	case E_NOT_SUPPORTED: msg = tr("Not supported"); break;
+	case E_JSON_PARAMS: msg = tr("Invalid params"); break;
+	default: msg = tr("Unknown error");
+	}
+	sendError(req, code, msg);
 }
 
 void RemDev::sendNotification(const char *method, rapidjson::Document *doc, rapidjson::Value *params) noexcept {
@@ -249,9 +277,56 @@ void RemDev::sendDocument(rapidjson::Document *doc) {
 }
 
 void RemDev::handleRequest_Notif(rapidjson::Document *doc) {
-	//Document *doc;
-	//if (doc->HasMember())
-	delete doc;
+	// Find and type-check all elements efficiently
+	Value *idVal = 0, *paramsVal = 0, *methodVal = 0;
+	// Breaking out of this loop while methodVal is 0 constitutes an error,
+	// whereas finishing with both pointers set allows proper handling
+	for (Value::ConstMemberIterator it = doc->MemberBegin(); it != doc->MemberEnd(); ++it) {
+		const char *name = it->name.GetString();
+		Value &value = (Value &) it->value;
+		if (strcmp("jsonrpc", name) == 0) continue;
+		if (strcmp("id", name) == 0) {
+			idVal = &value;
+			continue;
+		}
+		if (strcmp("method", name) == 0) {
+			if ( ! value.IsString()) {
+				methodVal = 0;
+				break;
+			}
+			methodVal = &value;
+			continue;
+		}
+		if (strcmp("params", name) == 0) {
+			if ( ! value.IsObject()) {
+				methodVal = 0;
+				break;
+			}
+			paramsVal = &value;
+			continue;
+		}
+		// There was an unknown member
+		methodVal = 0;
+		break;
+	}
+	if (methodVal) {  // If this is likely a valid request...
+		if (req.valid(0)) {  // If the request (still) exists...
+			// Log errors
+			if ( ! wasSuccessful) logError(mainVal, req.method);
+			// Call handler
+			Response *res = new Response(wasSuccessful, id, req.method, doc, mainVal);
+			metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
+									   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
+		}
+	}
+	else {
+		// TODO
+		// Does this leave doc hanging?  We're overwriting a previously parsed doc...
+		// It might be a memory leak.  Also of note is that we delete the data in which
+		// this document was parsed before we overwrite the doc.
+		sendError(0, E_JSON_PARSE, tr("Invalid JSON"), doc);
+	}
+	// TODO:  Should try very hard to stick the correct id into errors
 }
 
 void RemDev::handleResponse(rapidjson::Document *doc) {

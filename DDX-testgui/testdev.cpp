@@ -192,7 +192,7 @@ int TestDev::getInvalidId() {
 }
 
 #ifndef QT_DEBUG
-void RemDev::printReqs() const {
+void TestDev::printReqs() const {
 	Document doc;
 	rapidjson::MemoryPoolAllocator<> &a = doc.GetAllocator();
 	doc.SetArray();
@@ -222,7 +222,7 @@ void RemDev::printReqs() const {
 	req_id_lock.unlock();
 }
 
-QByteArray RemDev::serializeValue(const rapidjson::Value &v) {
+QByteArray TestDev::serializeValue(const rapidjson::Value &v) {
 	Document doc;
 	doc.CopyFrom(v, doc.GetAllocator());
 	StringBuffer buffer;

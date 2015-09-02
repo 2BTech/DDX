@@ -33,15 +33,14 @@
 
 // ERROR CODES
 /* Note:  Error codes are automatically generated from RemoteManagementProtocol.md
- * with "(-?[0-9]+)\|([^|\r\n]+)\|(E_[A-Z0-9_]+)" -> "#define $3 $1 //!< $2" */
-#define E_ACCESS_DENIED -32000 //!< Access denied: Client's roles are not sufficient for the request
+ * with "(-?[0-9]+)\|([^|\r\n]+)\|(E_[A-Z0-9_]+)[^\r\n]*" -> "#define $3 $1 //!< $2" */
+#define E_ACCESS_DENIED -32000 //!< Access denied
 #define E_INVALID_RESPONSE -32001 //!< Invalid response
 #define E_NOT_SUPPORTED -32002 //!< Not supported
-#define E_RPC_GENERAL -32003 //!< An error occurred
-#define E_NO_BATCH -32004 //!< Batch not supported
-#define E_REQUEST_TIMEOUT -32005 //!< Request timed out
-#define E_ENCRYPTION_REQUIRED -32006 //!< Encryption required
-#define E_DEVICE_DISCONNECTED -32008 //!< Device disconnected
+#define E_NO_BATCH -32003 //!< Batch not supported
+#define E_REQUEST_TIMEOUT -32004 //!< Request timed out
+#define E_ENCRYPTION_REQUIRED -32005 //!< Encryption required
+#define E_DEVICE_DISCONNECTED -32006 //!< Device disconnected
 #define E_NETWORK_DISABLED 500 //!< Server does not implement network communication (for future use)
 #define E_VERSION_FORBIDDEN 501 //!< Server is not compatible with the client version
 #define E_NO_EXTERNAL_CONNECTIONS 502 //!< Server does not allow external connections
@@ -49,6 +48,7 @@
 #define E_CLIENT_TYPE_FORBIDDEN 504 //!< A specified client role is explicitly forbidden
 #define E_VERSION_UNREADABLE 505 //!< Version unreadable
 #define E_PASSWORD_INVALID 506 //!< Password invalid
+#define E_TARGET_INVALID 507 //!< Target invalid
 #define E_PATH_NONEXISTENT 200 //!< Path does not exist
 #define E_SETTING_NONEXISTENT 120 //!< Setting does not exist
 #define E_SETTING_CONVERT 121 //!< Setting could not be converted to target type

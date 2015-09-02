@@ -42,6 +42,9 @@ class RemDev : public QObject
 {
 	Q_OBJECT
 public:
+#ifndef QT_DEBUG
+	friend class TestDev;
+#endif
 	
 	typedef int LocalId;
 	
@@ -133,30 +136,53 @@ public:
 	
 	class Request {
 	public:
-		Request(rapidjson::Value *method, rapidjson::Value *params, rapidjson::Document *doc,
+		friend class RemDev;
+		Request(const char *method, rapidjson::Value *params, rapidjson::Document *doc,
 				rapidjson::Value *id) {
 			this->method = method;
 			this->params = params;
 			this->id = id;
 			this->doc = doc;
+			this->outDoc = 0;
 		}
 		~Request() {
 			delete doc;
+			if (outDoc) delete outDoc;
 		}
 		
-		//! Method (guaranteed to be a string)
-		rapidjson::Value *method;
+		/*!
+		 * \brief Retrieve the allocator for outgoing RapidJSON 
+		 * \return Reference to the allocator
+		 */
+		rapidjson::MemoryPoolAllocator<> &a() {
+			if ( ! outDoc) outDoc = new rapidjson::Document;
+			return outDoc->GetAllocator();
+		}
+		
+		/*!
+		 * \brief Whether this is a notification or request
+		 * \return True if notification
+		 */
+		bool isNotif() const {
+			return ! id;
+		}
+		
+		//! Method name
+		const char *method;
 		
 		//! The contents of the params element (may be 0)
 		rapidjson::Value *params;
 		
+	private:
+		
 		//! ID value (will be 0 if this is a notification)
 		rapidjson::Value *id;
 		
-	private:
-		
 		//! Root document pointer
 		rapidjson::Document *doc;
+		
+		//! Response document for use with the direct-response versions of RemDev::sendRequest and RemDev::sendError
+		rapidjson::Document *outDoc;
 	};
 	
 	explicit RemDev(DevMgr *dm, bool inbound);
@@ -188,6 +214,15 @@ public:
 	void sendResponse(rapidjson::Value &id, rapidjson::Document *doc = 0, rapidjson::Value *result = 0);
 	
 	/*!
+	 * \brief Send a successful response directly to a Request
+	 * \param req The Request object (will be **deleted**)
+	 * \param result The result (0 -> true, will be **nullified, not deleted**)
+	 * 
+	 * If #req is a notification, #req will still be deleted but no response will be sent.
+	 */
+	void sendResponse(Request *req, rapidjson::Value *result = 0);
+	
+	/*!
 	 * \brief Send an error response
 	 * \param id Pointer to remote-generated transaction ID, (0 -> null, will be **nullified, not deleted**)
 	 * \param code The integer error code
@@ -197,6 +232,32 @@ public:
 	 */
 	void sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc = 0,
 				   rapidjson::Value *data = 0) noexcept;
+	
+	/*!
+	 * \brief Send an error response directly to a Request
+	 * \param req The Request object (will be **deleted**)
+	 * \param code The integer error code
+	 * \param msg The error message
+	 * \param data Pointer to any data (0 to omit, will be **nullified, not deleted**)
+	 * 
+	 * If #req is a notification, #req will still be deleted but no response will be sent.
+	 */
+	void sendError(Request *req, int code, const QString &msg, rapidjson::Value *data = 0) noexcept;
+	
+	/*!
+	 * \brief Send an error response directly to a Request by code alone
+	 * \param req The Request object (will be **deleted**)
+	 * \param code The integer error code
+	 * 
+	 * Supports:
+	 * - E_JSON_INTERNAL ("Internal error")
+	 * - E_ACCESS_DENIED ("Access denied")
+	 * - E_NOT_SUPPORTED ("Not supported")
+	 * - E_JSON_PARAMS ("Invalid params")
+	 * 
+	 * If #req is a notification, #req will still be deleted but no response will be sent.
+	 */
+	void sendError(Request *req, int code = E_JSON_INTERNAL) noexcept;
 	
 	/*!
 	 * \brief Send a notification

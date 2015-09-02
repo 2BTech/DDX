@@ -120,17 +120,15 @@ All errors explicitly specified by the JSON-RPC 2.0 specification can be used by
 the DDX.  Some of these errors, such as parse error and invalid params, may include
 more information in the `data` field.  The following server errors are also defined:
 
-Code|Message|Macro
+Code|Message|Macro|Data
 ---|---|---|---
--32000|Access denied: Client's roles are not sufficient for the request|E_ACCESS_DENIED
--32001|Invalid response|E_INVALID_RESPONSE
--32002|Not supported|E_NOT_SUPPORTED
--32003|An error occurred|E_RPC_GENERAL
--32004|Batch not supported|E_NO_BATCH
--32005|Request timed out|E_REQUEST_TIMEOUT
--32006|Encryption required|E_ENCRYPTION_REQUIRED
--32007|--|--
--32008|Device disconnected|E_DEVICE_DISCONNECTED
+-32000|Access denied|E_ACCESS_DENIED|
+-32001|Invalid response|E_INVALID_RESPONSE|The id of the invalid response
+-32002|Not supported|E_NOT_SUPPORTED|
+-32003|Batch not supported|E_NO_BATCH|
+-32004|Request timed out|E_REQUEST_TIMEOUT|
+-32005|Encryption required|E_ENCRYPTION_REQUIRED|
+-32006|Device disconnected|E_DEVICE_DISCONNECTED|`DisconnectReason`
 
 Note that the "Request timed out" error is reserved for sending by the DDX-RPC
 implementation on the device from which the request was sent.  When a request is
@@ -138,8 +136,7 @@ sent, the DDX-RPC implementation marks down the time.  If no corresponding respo
 received within a given time, the DDX-RPC implementation should send a simulated
 response error with the code -32005.
 
-The "Device disconnected" error will also be sent by the DDX-RPC implementation.  The
-data member of the error will contain the `DisconnectReason` value.
+The "Device disconnected" error will also be sent by the DDX-RPC implementation.
 
 ## Registration & Disconnection
 Registration is a required handshake that allows connecting devices to understand
