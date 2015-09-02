@@ -310,14 +310,11 @@ void RemDev::handleRequest_Notif(rapidjson::Document *doc) {
 		break;
 	}
 	if (methodVal) {  // If this is likely a valid request...
-		if (req.valid(0)) {  // If the request (still) exists...
-			// Log errors
-			if ( ! wasSuccessful) logError(mainVal, req.method);
-			// Call handler
-			Response *res = new Response(wasSuccessful, id, req.method, doc, mainVal);
-			metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
-									   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
-		}
+		Request *req = new Request(methodVal->GetString(), paramsVal, doc, idVal);
+		//TODO:  This needs to do some serious id wrangling?  Particularly handling the sending of null errors may need to be handled pre-request
+		// Work on sendError(req...) to handle that right.  Maybe make private_sendError(req...) to handle errors differently depending on whether it needs to be
+		// sent as a null request or not
+		dispatchRequest_Notif(req);
 	}
 	else {
 		// TODO
@@ -327,6 +324,12 @@ void RemDev::handleRequest_Notif(rapidjson::Document *doc) {
 		sendError(0, E_JSON_PARSE, tr("Invalid JSON"), doc);
 	}
 	// TODO:  Should try very hard to stick the correct id into errors
+}
+
+void RemDev::dispatchRequest_Notif(Request *req) {
+	log("Unhandled dispatch");
+	delete req;
+	// TODO
 }
 
 void RemDev::handleResponse(rapidjson::Document *doc) {

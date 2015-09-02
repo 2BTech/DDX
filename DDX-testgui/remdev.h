@@ -137,6 +137,7 @@ public:
 	class Request {
 	public:
 		friend class RemDev;
+		friend class TestDev;  // TODO:  Remove
 		Request(const char *method, rapidjson::Value *params, rapidjson::Document *doc,
 				rapidjson::Value *id) {
 			this->method = method;
@@ -206,6 +207,17 @@ public:
 					rapidjson::Value *params = 0, qint64 timeout = DEFAULT_REQUEST_TIMEOUT);
 	
 	/*!
+	 * \brief Send a successful response directly to a Request
+	 * \param req The Request object (will be **deleted**)
+	 * \param result The result (0 -> true, will be **nullified, not deleted**)
+	 * 
+	 * If \a req is a notification, \a req will still be deleted but no response will be sent.
+	 * 
+	 * This is an overloaded function.
+	 */
+	void sendResponse(Request *req, rapidjson::Value *result = 0);
+	
+	/*!
 	 * \brief Send a successful response
 	 * \param id The remote-generated transaction ID (will be **nullified, not deleted**)
 	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
@@ -214,33 +226,15 @@ public:
 	void sendResponse(rapidjson::Value &id, rapidjson::Document *doc = 0, rapidjson::Value *result = 0);
 	
 	/*!
-	 * \brief Send a successful response directly to a Request
-	 * \param req The Request object (will be **deleted**)
-	 * \param result The result (0 -> true, will be **nullified, not deleted**)
-	 * 
-	 * If #req is a notification, #req will still be deleted but no response will be sent.
-	 */
-	void sendResponse(Request *req, rapidjson::Value *result = 0);
-	
-	/*!
-	 * \brief Send an error response
-	 * \param id Pointer to remote-generated transaction ID, (0 -> null, will be **nullified, not deleted**)
-	 * \param code The integer error code
-	 * \param msg The error message
-	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
-	 * \param data Pointer to any data (0 to omit, will be **nullified, not deleted**)
-	 */
-	void sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc = 0,
-				   rapidjson::Value *data = 0) noexcept;
-	
-	/*!
 	 * \brief Send an error response directly to a Request
 	 * \param req The Request object (will be **deleted**)
 	 * \param code The integer error code
 	 * \param msg The error message
 	 * \param data Pointer to any data (0 to omit, will be **nullified, not deleted**)
 	 * 
-	 * If #req is a notification, #req will still be deleted but no response will be sent.
+	 * If \a req is a notification, \a req will still be deleted but no response will be sent.
+	 * 
+	 * This is an overloaded function.
 	 */
 	void sendError(Request *req, int code, const QString &msg, rapidjson::Value *data = 0) noexcept;
 	
@@ -255,9 +249,22 @@ public:
 	 * - E_NOT_SUPPORTED ("Not supported")
 	 * - E_JSON_PARAMS ("Invalid params")
 	 * 
-	 * If #req is a notification, #req will still be deleted but no response will be sent.
+	 * If \a req is a notification, \a req will still be deleted but no response will be sent.
+	 * 
+	 * This is an overloaded function.
 	 */
 	void sendError(Request *req, int code = E_JSON_INTERNAL) noexcept;
+	
+	/*!
+	 * \brief Send an error response
+	 * \param id Pointer to remote-generated transaction ID, (0 -> null, will be **nullified, not deleted**)
+	 * \param code The integer error code
+	 * \param msg The error message
+	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
+	 * \param data Pointer to any data (0 to omit, will be **nullified, not deleted**)
+	 */
+	void sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc = 0,
+				   rapidjson::Value *data = 0) noexcept;
 	
 	/*!
 	 * \brief Send a notification
@@ -438,7 +445,7 @@ private:
 	
 	void handleRequest_Notif(rapidjson::Document *doc);
 	
-	void dispatchRequest_Notif();
+	void dispatchRequest_Notif(Request *req);
 	
 	void handleResponse(rapidjson::Document *doc);
 	
