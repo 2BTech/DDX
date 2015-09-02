@@ -85,17 +85,15 @@ public:
 	class Response {
 	public:
 		Response(bool successful, int id, const char *method, rapidjson::Document *doc,
-				 char *buffer = 0, rapidjson::Value *mainVal = 0) {
+				 rapidjson::Value *mainVal = 0) {
 			this->successful = successful;
 			this->id = id;
 			this->method = method;
 			this->mainVal = mainVal;
 			this->doc = doc;
-			this->buffer = buffer;
 		}
 		~Response() {
 			delete doc;
-			if (buffer) delete buffer;
 		}
 		
 		//! True if the response was a response, false if there was an error
@@ -113,9 +111,6 @@ public:
 	private:
 		//! Root document pointer (may be equivalent to #mainVal)
 		rapidjson::Document *doc;
-		
-		//! Buffer pointer (may be 0)
-		char *buffer;
 	};
 	
 	/*class RequestHandler {
@@ -139,16 +134,14 @@ public:
 	class Request {
 	public:
 		Request(rapidjson::Value *method, rapidjson::Value *params, rapidjson::Document *doc,
-				rapidjson::Value *id, char *buffer = 0) {
+				rapidjson::Value *id) {
 			this->method = method;
 			this->params = params;
 			this->id = id;
 			this->doc = doc;
-			this->buffer = buffer;
 		}
 		~Request() {
 			delete doc;
-			if (buffer) delete buffer;
 		}
 		
 		//! Method (guaranteed to be a string)
@@ -164,9 +157,6 @@ public:
 		
 		//! Root document pointer
 		rapidjson::Document *doc;
-		
-		//! Buffer pointer (may be 0)
-		char *buffer;
 	};
 	
 	explicit RemDev(DevMgr *dm, bool inbound);
@@ -299,9 +289,9 @@ protected:
 	
 	/*!
 	 * \brief Handle a single, complete incoming item
-	 * \param data A mutable copy of the raw data; will be freed automatically
+	 * \param data The raw data to use
 	 */
-	void handleItem(char *data) noexcept;
+	void handleItem(const char *data) noexcept;
 	
 	/*!
 	 * \brief Send a log line tagged with the cid
@@ -387,15 +377,15 @@ private:
 	
 	void handleObject(const QJsonObject &obj);
 	
-	void handleRequest_Notif(rapidjson::Document *doc, char *buffer);
+	void handleRequest_Notif(rapidjson::Document *doc);
 	
-	void handleResponse(rapidjson::Document *doc, char *buffer);
+	void handleResponse(rapidjson::Document *doc);
 	
 	void handleNotification(const QJsonObject &obj);
 	
-	void handleRegistration(rapidjson::Document *doc, char *buffer);
+	void handleRegistration(rapidjson::Document *doc);
 	
-	void handleDisconnect(rapidjson::Document *doc, char *buffer);
+	void handleDisconnect(rapidjson::Document *doc);
 	
 	void simulateError(int id, const RequestRef &req, int code, const QString &msg);
 	
