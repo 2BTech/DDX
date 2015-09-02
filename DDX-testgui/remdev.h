@@ -177,14 +177,14 @@ public:
 	 * \brief Send a new request
 	 * \param self The object on which the handler will be called
 	 * \param handler The name of the handler function to call
-	 * \param method The method name (UTF8, must live through handling)
+	 * \param method The method name (UTF-8, must live through handling)
 	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
 	 * \param params Any parameters (0 to omit, will be **nullified, not deleted**)
 	 * \param timeout Request timeout in msecs
 	 * \return The integer ID which will also be in the corresponding Response object
 	 * 
-	 * Note that if this is called immediately before termination, it will return 0
-	 * and so request will be sent.
+	 * Note that if this is called immediately before termination, it will return -1
+	 * and no request will be sent.
 	 */
 	int sendRequest(QObject *self, const char *handler, const char *method, rapidjson::Document *doc = 0,
 					rapidjson::Value *params = 0, qint64 timeout = DEFAULT_REQUEST_TIMEOUT);

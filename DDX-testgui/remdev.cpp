@@ -83,8 +83,6 @@ int RemDev::sendRequest(QObject *self, const char *handler, const char *method, 
 	doc->AddMember("id", Value(id), a);
 	if (params) doc->AddMember("params", *params, a);
 	sendDocument(doc);
-	// DEBUG
-	printReqs();
 	return id;
 }
 
@@ -258,6 +256,8 @@ void RemDev::sendDocument(rapidjson::Document *doc) {
 void RemDev::handleRequest_Notif(rapidjson::Document *doc, char *buffer) {
 	//Document *doc;
 	//if (doc->HasMember())
+	delete doc;
+	delete buffer;
 }
 
 void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
@@ -289,9 +289,11 @@ void RemDev::handleResponse(rapidjson::Document *doc, char *buffer) {
 			if (strcmp("error", name) == 0) {
 				// Verify that the error object meets basic requirements
 				if ( ! value.IsObject()) break;
-				if ( ! value.FindMember("code")->value.IsInt() ||
-					 ! value.FindMember("message")->value.IsString())
-					break;
+				Value::ConstMemberIterator eIt = value.FindMember("code");
+				if (eIt == value.MemberEnd() || ! eIt->value.IsInt()) break;
+				eIt = value.FindMember("message");
+				if (eIt == value.MemberEnd() || ! eIt->value.IsString()) break;
+				// Save error
 				mainVal = &value;
 				wasSuccessful = false;
 				continue;
@@ -400,7 +402,7 @@ void RemDev::logError(const Value *errorVal, const char *method) const {
 	if (method)
 		logStr = tr("Request to '%1' failed with error %2: %3").arg(QString::fromUtf8(method));
 	else
-		logStr = tr("Received null response %2: %3");
+		logStr = tr("Received null error %2: %3");
 	const Value &code = errorVal->FindMember("code")->value;
 	const Value &message = errorVal->FindMember("message")->value;
 	log(logStr.arg(QString::number(code.GetInt()), QString::fromUtf8(message.GetString())));
@@ -452,12 +454,4 @@ QByteArray RemDev::serializeValue(const rapidjson::Value &v) {
 	Q_ASSERT(buffer.GetSize() == (uint) array.size());
 	return array;
 }
-#endif
-
-
-
-
-
-
-
-
+#endif  // QT_DEBUG

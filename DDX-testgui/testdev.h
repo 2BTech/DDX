@@ -34,9 +34,15 @@ public:
 	
 	~TestDev();
 	
-	Q_INVOKABLE void responseHandler(RemDev::Response *r) const;
+	Q_INVOKABLE void responseHandler(RemDev::Response *r);
 	
 	Q_INVOKABLE void requestHandler(RemDev::Request *r);
+	
+	// These are defined in RemDev if QT_DEBUG is defined
+#ifndef QT_DEBUG
+	void printReqs() const;
+	static QByteArray serializeValue(const rapidjson::Value &v);
+#endif
 	
 protected:
 	
@@ -57,6 +63,10 @@ private:
 	int eventCt = 0;
 	
 	QList<int> validResponses;
+	
+	int lastInvalidId;
+	
+	int getInvalidId();
 };
 
 #endif // TESTDEV_H

@@ -24,16 +24,19 @@
 
 TestDev::TestDev(DevMgr *dm, bool inbound) : RemDev(dm, inbound) {
 	eventCt = 0;
+	lastInvalidId = 999;
 }
 
 TestDev::~TestDev() {
 	
 }
 
-void TestDev::responseHandler(RemDev::Response *r) const {
+void TestDev::responseHandler(RemDev::Response *r) {
+	validResponses.removeAll(r->id);
 	QString str("TD response to %1 (%4): %2 with %3");
 	str = str.arg(r->id);
 	str = str.arg(r->successful ? "success" : "error");
+	// DEBUG
 	str = str.arg(QString(serializeValue(*r->mainVal)));
 	str = str.arg(QString(r->method));
 	log(str);
@@ -56,7 +59,7 @@ void TestDev::requestHandler(RemDev::Request *r) {
 void TestDev::sub_init() noexcept {
 	QTimer *timer = new QTimer(this);
 	timer->setTimerType(Qt::CoarseTimer);
-	timer->setInterval(500);
+	timer->setInterval(1000);
 	connect(timer, &QTimer::timeout, this, &TestDev::timeout);
 	timer->start();  // Start immediately for registration timeout
 }
@@ -78,61 +81,158 @@ void TestDev::timeout() {
 	char *data = new char[1000];
 	
 	if (eventCt == 1) {
-		log(tr("TD emitting bad data"));
-		strcpy(data, "this means nothing\n");
-		handleItem(data);
+		delete data;
+		log(tr("RD sending three valid requests"));
+		validResponses.append(sendRequest(this, "responseHandler", "validMethod"));
+		validResponses.append(sendRequest(this, "responseHandler", "validMethod"));
+		validResponses.append(sendRequest(this, "responseHandler", "validMethod"));
 	}
 	else if (eventCt == 2) {
-		log(tr("TD emitting a valid request"));
-		strcpy(data, "{\"jsonrpc\":\"2.0\",\"method\":\"register\"}\n");
+		log(tr("TD emitting successful response"));
+		QString out("{\"jsonrpc\":\"2.0\",\"id\":%1,\"result\":true}");
+		QByteArray buff = out.arg(validResponses.takeFirst()).toUtf8();
+		strcpy(data, buff.constData());
 		handleItem(data);
 	}
-	else if (eventCt == 3) {
-		delete data;
-		log(tr("RD sending a valid request"));
-		validResponses.append(sendRequest(this, "responseHandler", "method-name", 0, 0, 11000));
+	else if (eventCt == 4) {
+		log(tr("TD emitting response with bad member"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"result\":true,\"jsonrpc33\":\"2.33\"}");
+		handleItem(data);
 	}
 	else if (eventCt == 4) {
-		delete data;
-		log(tr("RD sending a valid request with params"));
-		Document *doc = new Document;
-		Value v(kObjectType);
-		v.SetObject();
-		v.AddMember("Onething", Value(3829), doc->GetAllocator());
-		v.AddMember("Twothing", Value(rapidjson::kTrueType), doc->GetAllocator());
-		v.AddMember("final", Value((long long) 3892837592836592835), doc->GetAllocator());
-		validResponses.append(sendRequest(this, "responseHandler", "Params!!!", doc, &v));
+		log(tr("TD emitting response with string id"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":\"213\",\"result\":true}\n");
+		handleItem(data);
 	}
 	else if (eventCt == 5) {
-		delete data;
-		log(tr("RD sending a valid notification"));
-		sendNotification("notif.method");
+		log(tr("TD emitting response with no id"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"result\":true}\n");
+		handleItem(data);
 	}
 	else if (eventCt == 6) {
-		delete data;
-		log(tr("RD sending a valid notification with params"));
-		Document *doc = new Document;
-		Value v(kObjectType);
-		v.SetObject();
-		v.AddMember("Onething", Value(3829), doc->GetAllocator());
-		v.AddMember("Twothing", Value(rapidjson::kTrueType), doc->GetAllocator());
-		v.AddMember("final", Value((long long) 3892837592836592835), doc->GetAllocator());
-		sendNotification("notif.methodPARAMS", doc, &v);
+		log(tr("TD emitting response with two ids"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"id\":4567,\"result\":true}\n");
+		handleItem(data);
 	}
 	else if (eventCt == 7) {
-		if ( ! validResponses.size()) return;
-		log(tr("TD emitting a successful response"));
-		QString out = "{\"jsonrpc\":\"2.0\",\"id\":%1,\"result\":27}";
-		out = out.arg(validResponses.takeLast());
-		strcpy(data, out.toUtf8().constData());
+		log(tr("TD emitting response with no mainVal"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213}\n");
 		handleItem(data);
 	}
 	else if (eventCt == 8) {
+		log(tr("TD emitting response with result and error"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"result\":true,\"error\":{\"code\":564,\"message\":\"This is an error\"}}\n");
+		handleItem(data);
+	}
+	else if (eventCt == 9) {
+		log(tr("TD emitting response with non-object error"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"error\":true}\n");
+		handleItem(data);
+	}
+	else if (eventCt == 10) {
+		log(tr("TD emitting response with no error code"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"error\":{\"message\":\"This is an error\"}}\n");
+		handleItem(data);
+	}
+	else if (eventCt == 11) {
+		log(tr("TD emitting response with non-int error code"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"error\":{\"code\":18446744073709551615,\"message\":\"This is an error\"}}\n");
+		handleItem(data);
+	}
+	else if (eventCt == 12) {
+		log(tr("TD emitting response with no error message"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"error\":{\"code\":564,\"data\":\"This is an error\"}}\n");
+		handleItem(data);
+	}
+	else if (eventCt == 13) {
+		log(tr("TD emitting response with non-string error message"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"error\":{\"code\":564,\"message\":null}}\n");
+		handleItem(data);
+	}
+	else if (eventCt == 14) {
+		log(tr("TD emitting successful null-id response"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":null,\"result\":{\"code\":564,\"message\":null}}\n");
+		handleItem(data);
+	}
+	else if (eventCt == 15) {
+		log(tr("TD emitting null-id error"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":564,\"message\":\"This is an error\"}}\n");
+		handleItem(data);
+	}
+	else if (eventCt == 16) {
+		log(tr("TD emitting null-id error"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":564,\"message\":\"This is an error\"}}\n");
+		handleItem(data);
+	}
+	else if (eventCt == 17) {
+		log(tr("TD emitting unrequested response"));
+		QString out("{\"jsonrpc\":\"2.0\",\"id\":%1,\"result\":true}");
+		QByteArray buff = out.arg(getInvalidId()).toUtf8();
+		strcpy(data, buff.constData());
+		handleItem(data);
+	}
+	else if (eventCt == 18) {
+		log(tr("TD emitting valid error"));
+		QString out("{\"jsonrpc\":\"2.0\",\"id\":%1,\"error\":{\"code\":564,\"message\":\"This is an error\",\"data\":[49,402,403]}}");
+		QByteArray buff = out.arg(validResponses.takeFirst()).toUtf8();
+		strcpy(data, buff.constData());
+		handleItem(data);
+	}
+	else if (eventCt == 19) {
 		delete data;
 		//log(tr("TD closing"));
-		//close(RemDev::ConnectionTerminated);
-		eventCt = 2;
+		close(RemDev::ConnectionTerminated);
+		eventCt = 0;
 		//log(tr("TD RESETTING-------------------------------------------------"));
 	}
 	else delete data;
 }
+
+int TestDev::getInvalidId() {
+	do lastInvalidId++;
+	while (validResponses.contains(lastInvalidId));
+	return lastInvalidId;
+}
+
+#ifndef QT_DEBUG
+void RemDev::printReqs() const {
+	Document doc;
+	rapidjson::MemoryPoolAllocator<> &a = doc.GetAllocator();
+	doc.SetArray();
+	req_id_lock.lock();
+	for (RequestHash::ConstIterator it = reqs.constBegin(); it != reqs.constEnd(); ++it) {
+		Value v(kArrayType);
+		v.PushBack(Value(it.key()), a);
+		QByteArray time = QDateTime::fromMSecsSinceEpoch(it->timeout_time).toString("HH:mm:ss.zzz").toUtf8();
+		Value s;
+		s.SetString(time.constData(), a);
+		v.PushBack(s, a);
+		s.SetString(rapidjson::StringRef(it->handlerFn));
+		v.PushBack(s, a);
+		if (it->valid(0)) {
+			const char *name = it->handlerObj->metaObject()->className();
+			s.SetString(rapidjson::StringRef(name));
+			v.PushBack(s, a);
+			v.PushBack(Value(rapidjson::kTrueType), a);
+		}
+		else v.PushBack(Value(rapidjson::kFalseType), a);
+		doc.PushBack(v, a);
+	}
+	StringBuffer buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+	log(buffer.GetString());
+	req_id_lock.unlock();
+}
+
+QByteArray RemDev::serializeValue(const rapidjson::Value &v) {
+	Document doc;
+	doc.CopyFrom(v, doc.GetAllocator());
+	StringBuffer buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+	QByteArray array(buffer.GetString());
+	Q_ASSERT(buffer.GetSize() == (uint) array.size());
+	return array;
+}
+#endif  // QT_DEBUG
