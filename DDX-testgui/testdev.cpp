@@ -78,10 +78,9 @@ void TestDev::writeItem(rapidjson::StringBuffer *buffer) noexcept {
 
 void TestDev::timeout() {
 	eventCt++;
-	char *data = new char[1000];
+	char data[1000];
 	
 	if (eventCt == 1) {
-		delete data;
 		log(tr("RD sending three valid requests"));
 		validResponses.append(sendRequest(this, "responseHandler", "validMethod"));
 		validResponses.append(sendRequest(this, "responseHandler", "validMethod"));
@@ -179,13 +178,11 @@ void TestDev::timeout() {
 		handleItem(data);
 	}
 	else if (eventCt == 19) {
-		delete data;
 		//log(tr("TD closing"));
 		close(RemDev::ConnectionTerminated);
 		eventCt = 0;
 		//log(tr("TD RESETTING-------------------------------------------------"));
 	}
-	else delete data;
 }
 
 int TestDev::getInvalidId() {

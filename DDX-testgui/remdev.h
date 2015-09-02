@@ -375,13 +375,11 @@ private:
 	
 	void sendDocument(rapidjson::Document *doc);
 	
-	void handleObject(const QJsonObject &obj);
-	
 	void handleRequest_Notif(rapidjson::Document *doc);
 	
-	void handleResponse(rapidjson::Document *doc);
+	void dispatchRequest_Notif();
 	
-	void handleNotification(const QJsonObject &obj);
+	void handleResponse(rapidjson::Document *doc);
 	
 	void handleRegistration(rapidjson::Document *doc);
 	
