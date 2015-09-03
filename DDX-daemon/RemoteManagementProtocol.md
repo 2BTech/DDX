@@ -143,19 +143,19 @@ before messages will be passed.
 
 #### Requester vs. Target, Inbound vs. Outbound
 Within the context of registration, a "requester" is the device that builds a connection to
-a "target".  Connections are known to the target as "inbound" and to the requester as
+a "target".  Connections are known to their target as "inbound" and to their requester as
 "outbound".
 
 ### TCP Devices & TLS
-It is highly recommended that TCP implementations of the DDX-RPC utilize TLSv1.2 to encrypt
-their connection.  Note that TLS is used only to encrypt the connection and identity verification
+It is highly recommended that TCP implementations of the DDX-RPC encrypt their connection.  Encryption
+is accomplished with TLS v1.2.  Note that TLS is used only to encrypt the connection; identity verification
 through TLS is currently not supported.  Encryption status must be determined before any incoming
 data will be delivered to the JSON parser.  Each device can determine encryption status per connection
 at the time the connection is made.  Each TCP device must then establish encryption status
 by sending the phrase `encryption:[status]` followed by a line break character (ASCII 10).
 `status` can be one of the following:
 
-`status`|Meaning
+Status|Meaning
 ---|---
 `disabled`|The device does not support encryption
 `enabled`|The device allows encryption but is not requesting it
@@ -170,8 +170,7 @@ is used, the requester will then begin sending TLS handshakes until successful a
 wait until a handshake succeeds.  Both devices will start accepting JSON immediately after a
 handshake succeeds.
 
-By default, encryption is required on external connections but
-optional on connections through localhost.
+By default, encryption is `required` on external connections but `enabled` on connections through localhost.
 
 ### Passwords
 DDX-RPC implementations can require a distinct password for each individual role in addition

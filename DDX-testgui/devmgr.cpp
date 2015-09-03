@@ -55,6 +55,7 @@ void DevMgr::addHandler(QObject *handlerObj, const char *handlerFn, const char *
 	hLock.lockForWrite();
 	handlers.insert(key, RequestHandler(handlerObj, handlerFn));
 	hLock.unlock();
+	// TODO: remove
 	log(tr("Registered handler"));
 }
 
@@ -63,6 +64,7 @@ void DevMgr::removeHandler(const char *method) const {
 	hLock.lockForWrite();
 	handlers.remove(key);
 	hLock.unlock();
+	// TODO: remove
 	log(tr("Removed handler"));
 }
 
