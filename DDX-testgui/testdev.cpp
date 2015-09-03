@@ -45,10 +45,10 @@ void TestDev::responseHandler(RemDev::Response *r) {
 
 void TestDev::requestHandler(RemDev::Request *r) {
 	QString str("TD %1 to %3 with %2");
-	if (r->isNotif())
-		str = str.arg("notification");
-	else
+	if (r->isRequest())
 		str = str.arg(QString("request [ID %1]").arg(r->id->GetInt()));
+	else
+	str = str.arg("notification");
 	if (r->params) str = str.arg(QString(serializeValue(*r->params)));
 	else str = str.arg("no params");
 	str = str.arg(QString(r->method));

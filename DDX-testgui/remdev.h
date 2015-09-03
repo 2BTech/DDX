@@ -26,7 +26,6 @@
 #include <QTimeZone>
 #include <QFlags>
 #include <QMutex>
-#include <QMutexLocker>
 #include <QThread>
 #include <QByteArray>
 #include <QPointer>
@@ -56,6 +55,7 @@ public:
 		GlobalRole = 0x80  //!< A pseudo-role which indicates role-less information
 	};
 	
+	//! Enumerates various disconnection reasons
 	enum DisconnectReason {
 		UnknownReason,  //!< Unknown disconnection
 		ShuttingDown,  //!< The disconnecting member is shutting down by request
@@ -68,33 +68,102 @@ public:
 	};
 	
 	/*!
-	 * \brief Response class
+	 * \brief Represents an incoming RPC request or notification
 	 * 
-	 * This class represents a response to a request.  Note that the JSON data they contain
-	 * will also be deleted when the Response is deleted, so if a copy of the #response_data
-	 * is required, that copy must be built with one of RapidJSON's deep copy operations, such
-	 * as Value::CopyFrom.
+	 * Note that the JSON data will also be deleted when the Response is deleted, so if a copy
+	 * of the #mainVal is required, that copy must be built with one of RapidJSON's deep copy
+	 * operations, such as Value::CopyFrom.  Handlers **must** eventually delete the Request
+	 * object they are passed.
+	 * 
+	 * ## Responding to Requests
+	 * Incoming DDX-RPC requests and notifications are passed to their handlers with the
+	 * Request class.  This class and RemDev provide a convenient API for using RapidJSON
+	 * to produce and send a corresponding response or error response.  The simplest way to
+	 * respond to requests is using the overloads of RemDev::sendRequest and  RemDev::sendError
+	 * which take in a pointer to a Request.  If you need a reference to a RapidJSON allocator
+	 * when building supplemental information (as is often necessary), #alloc will return the
+	 * same allocator used to produce the final response object.
+	 * 
+	 */
+	class Request {
+	public:
+		friend class RemDev;
+		friend class TestDev;  // TODO:  Remove
+		
+		~Request() {
+			delete doc;
+			if (outDoc) delete outDoc;
+		}
+		
+		/*!
+		 * \brief Retrieve the allocator for outgoing RapidJSON 
+		 * \return Reference to the allocator
+		 */
+		rapidjson::MemoryPoolAllocator<> &alloc() {
+			if ( ! outDoc) outDoc = new rapidjson::Document;
+			return outDoc->GetAllocator();
+		}
+		
+		/*!
+		 * \brief Whether this is a notification or request
+		 * \return True if notification
+		 */
+		bool isRequest() const {
+			return (bool) id;
+		}
+		
+		//! Method name
+		const char *method;
+		
+		//! The contents of the params element (may be 0, otherwise guaranteed to be an object)
+		rapidjson::Value *params;
+		
+		//! The device which sent the request
+		RemDev *device;
+		
+	private:
+		//! Internal constructor for RemDev
+		Request(const char *method, rapidjson::Value *params, rapidjson::Document *doc,
+				RemDev *device, rapidjson::Value *id) {
+			this->method = method;
+			this->params = params;
+			this->device = device;
+			this->id = id;
+			this->doc = doc;
+			this->outDoc = 0;
+		}
+		
+		//! ID value (will be 0 if this is a notification)
+		rapidjson::Value *id;
+		
+		//! Root document pointer
+		rapidjson::Document *doc;
+		
+		//! Response document for use with the direct-response versions of RemDev::sendRequest and RemDev::sendError
+		rapidjson::Document *outDoc;
+	};
+	
+	/*!
+	 * \brief Represents a response to an RPC request
+	 * 
+	 * Note that the JSON data will also be deleted when the Response is deleted, so if a copy
+	 * of the #mainVal is required, that copy must be built with one of RapidJSON's deep copy
+	 * operations, such as Value::CopyFrom.
 	 * 
 	 * Response handlers must have the prototype "void fn(Response *)" and will be called with
 	 * queued connections (and thus will be executed by the receiving event loop). They **must**
 	 * eventually delete the Response they are passed.  The also must either be declared as
 	 * slots or with the `Q_INVOKABLE` macro.
 	 * 
-	 * If #successful is false, #mainVal is guaranteed to be a "verified" error object.  This
-	 * means that it has a "code" member for which IsInt() returns true and a "message" member for
-	 * which IsString() returns true.  The only guarantee made if #successful is true is that
-	 * #mainVal is set.
+	 * The only guarantee made if #successful is true is that #mainVal is set.  If #successful is
+	 * false, #mainVal is guaranteed to be a "verified" error object.  This means that it has a
+	 * "code" member for which IsInt() returns true and a "message" member for which IsString()
+	 * returns true.  
 	 */
 	class Response {
 	public:
-		Response(bool successful, int id, const char *method, rapidjson::Document *doc,
-				 rapidjson::Value *mainVal = 0) {
-			this->successful = successful;
-			this->id = id;
-			this->method = method;
-			this->mainVal = mainVal;
-			this->doc = doc;
-		}
+		friend class RemDev;
+		
 		~Response() {
 			delete doc;
 		}
@@ -111,79 +180,23 @@ public:
 		//!The method name which was passed to sendRequest
 		const char *method;
 		
+		//! The device which received the response
+		RemDev *device;
+		
 	private:
+		//! Internal constructor for RemDev
+		Response(bool successful, int id, const char *method, rapidjson::Document *doc,
+				 RemDev *device, rapidjson::Value *mainVal = 0) {
+			this->successful = successful;
+			this->id = id;
+			this->method = method;
+			this->mainVal = mainVal;
+			this->device = device;
+			this->doc = doc;
+		}
+		
 		//! Root document pointer (may be equivalent to #mainVal)
 		rapidjson::Document *doc;
-	};
-	
-	/*class RequestHandler {
-	public:
-		RequestHandler(QObject *handlerObj, const char *handlerFn, const char *method,
-					   HandleFlag handleFlags, DeviceRoles requiredRoles) {
-			
-			this->handlerObj = handlerObj;
-			this->handlerFn = handleFn;
-			this->handleFlags = handleFlags;
-			this->reqRoles = requiredRoles;
-		}
-	private:
-		QPointer<QObject> handlerObj;
-		const char *handlerFn;
-		HandleFlag handleFlags;
-		DeviceRoles reqRoles;
-	};
-	friend class RequestHandler;*/
-	
-	class Request {
-	public:
-		friend class RemDev;
-		friend class TestDev;  // TODO:  Remove
-		Request(const char *method, rapidjson::Value *params, rapidjson::Document *doc,
-				rapidjson::Value *id) {
-			this->method = method;
-			this->params = params;
-			this->id = id;
-			this->doc = doc;
-			this->outDoc = 0;
-		}
-		~Request() {
-			delete doc;
-			if (outDoc) delete outDoc;
-		}
-		
-		/*!
-		 * \brief Retrieve the allocator for outgoing RapidJSON 
-		 * \return Reference to the allocator
-		 */
-		rapidjson::MemoryPoolAllocator<> &a() {
-			if ( ! outDoc) outDoc = new rapidjson::Document;
-			return outDoc->GetAllocator();
-		}
-		
-		/*!
-		 * \brief Whether this is a notification or request
-		 * \return True if notification
-		 */
-		bool isNotif() const {
-			return ! id;
-		}
-		
-		//! Method name
-		const char *method;
-		
-		//! The contents of the params element (may be 0)
-		rapidjson::Value *params;
-		
-	private:
-		
-		//! ID value (will be 0 if this is a notification)
-		rapidjson::Value *id;
-		
-		//! Root document pointer
-		rapidjson::Document *doc;
-		
-		//! Response document for use with the direct-response versions of RemDev::sendRequest and RemDev::sendError
-		rapidjson::Document *outDoc;
 	};
 	
 	explicit RemDev(DevMgr *dm, bool inbound);
@@ -195,23 +208,25 @@ public:
 	 * \param self The object on which the handler will be called
 	 * \param handler The name of the handler function to call
 	 * \param method The method name (UTF-8, must live through handling)
-	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
 	 * \param params Any parameters (0 to omit, will be **nullified, not deleted**)
-	 * \param timeout Request timeout in msecs
+	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
+	 * \param timeout Request timeout in msecs (0 to disable timeout, not recommended)
 	 * \return The integer ID which will also be in the corresponding Response object
+	 * 
+	 * See the Response class for information on handling the resulting response.
 	 * 
 	 * Note that if this is called immediately before termination, it will return -1
 	 * and no request will be sent.
 	 */
-	int sendRequest(QObject *self, const char *handler, const char *method, rapidjson::Document *doc = 0,
-					rapidjson::Value *params = 0, qint64 timeout = DEFAULT_REQUEST_TIMEOUT);
+	int sendRequest(QObject *self, const char *handler, const char *method, rapidjson::Value *params = 0,
+					rapidjson::Document *doc = 0, qint64 timeout = DEFAULT_REQUEST_TIMEOUT);
 	
 	/*!
 	 * \brief Send a successful response directly to a Request
 	 * \param req The Request object (will be **deleted**)
 	 * \param result The result (0 -> true, will be **nullified, not deleted**)
 	 * 
-	 * If \a req is a notification, \a req will still be deleted but no response will be sent.
+	 * If \a req is a notification, it will still be deleted but no response will be sent.
 	 * 
 	 * This is an overloaded function.
 	 */
@@ -232,7 +247,7 @@ public:
 	 * \param msg The error message
 	 * \param data Pointer to any data (0 to omit, will be **nullified, not deleted**)
 	 * 
-	 * If \a req is a notification, \a req will still be deleted but no response will be sent.
+	 * If \a req is a notification, it will still be deleted but no response will be sent.
 	 * 
 	 * This is an overloaded function.
 	 */
@@ -249,7 +264,7 @@ public:
 	 * - E_NOT_SUPPORTED ("Not supported")
 	 * - E_JSON_PARAMS ("Invalid params")
 	 * 
-	 * If \a req is a notification, \a req will still be deleted but no response will be sent.
+	 * If \a req is a notification, it will still be deleted but no response will be sent.
 	 * 
 	 * This is an overloaded function.
 	 */
@@ -259,12 +274,12 @@ public:
 	 * \brief Send an error response
 	 * \param id Pointer to remote-generated transaction ID, (0 -> null, will be **nullified, not deleted**)
 	 * \param code The integer error code
-	 * \param msg The error message
 	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
+	 * \param msg The error message
 	 * \param data Pointer to any data (0 to omit, will be **nullified, not deleted**)
 	 */
-	void sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc = 0,
-				   rapidjson::Value *data = 0) noexcept;
+	void sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Value *data = 0,
+				   rapidjson::Document *doc = 0) noexcept;
 	
 	/*!
 	 * \brief Send a notification
@@ -314,8 +329,7 @@ public slots:
 	 * be disabled and are meant to inhibit non-DDX connections from sitting
 	 * unregistered forever.  Registration timeouts cause disconnection.
 	 * 
-	 * This function is called regularly by the #timeoutPoller QTimer.  This timer
-	 * is automatically started and stopped as needed.
+	 * This function is called regularly by the DevMgr::timeouPoller QTimer.
 	 */
 	void timeoutPoll() noexcept;
 	
@@ -376,7 +390,7 @@ protected:
 	
 	/*!
 	 * \brief Write a single RPC item
-	 * \param data The data to be written (**must** be manually freed)
+	 * \param buffer The data to be written (**must** be manually freed)
 	 * 
 	 * This function should quickly write to a buffer and then return.
 	 * 
@@ -388,6 +402,9 @@ protected:
 	
 private:
 	
+	/*!
+	 * \brief Maintains handling information about an outgoing RPC request
+	 */
 	struct RequestRef {
 		RequestRef(QObject *handlerObj, const char *handlerFn, const char *method, qint64 timeout) {
 			time = QDateTime::currentMSecsSinceEpoch();
@@ -424,12 +441,6 @@ private:
 	//! Manages all open outgoing requests to direct responses appropriately
 	RequestHash reqs;
 	
-	/*typedef QHash<QByteArray, RequestHandler> HandlerHash;
-	
-	HandlerHash handlers;
-	
-	QReadWriteMutex hLock;*/
-	
 	//! Locks the request hash and lastId variable
 	mutable QMutex req_id_lock;
 	
@@ -441,18 +452,43 @@ private:
 	
 	bool registered;
 	
+	/*!
+	 * \brief Stringify and deliver a complete JSON document
+	 * \param doc Root document (will be **deleted)
+	 */
 	void sendDocument(rapidjson::Document *doc);
 	
-	void handleRequest_Notif(rapidjson::Document *doc);
+	/*!
+	 * \brief Verify and prepare an incoming request
+	 * \param doc Root document (will be **deleted**)
+	 */
+	void handleRequest(rapidjson::Document *doc);
 	
-	void dispatchRequest_Notif(Request *req);
-	
+	/*!
+	 * \brief Verify and prepare an incoming response
+	 * \param doc Root document (will be **deleted**)
+	 */
 	void handleResponse(rapidjson::Document *doc);
 	
+	/*!
+	 * \brief TODO
+	 * \param doc Root document (will be **deleted**)
+	 */
 	void handleRegistration(rapidjson::Document *doc);
 	
+	/*!
+	 * \brief TODO
+	 * \param doc Root document (will be **deleted**)
+	 */
 	void handleDisconnect(rapidjson::Document *doc);
 	
+	/*!
+	 * \brief Build and deliver a simulated error to an outgoing request
+	 * \param id The integer ID of the request
+	 * \param req The RequestRef object corresponding to the request
+	 * \param code The integer error code
+	 * \param msg The error message
+	 */
 	void simulateError(int id, const RequestRef &req, int code, const QString &msg);
 	
 	/*!
@@ -462,6 +498,11 @@ private:
 	 */
 	void logError(const rapidjson::Value *errorVal, const char *method = 0) const;
 	
+	/*!
+	 * \brief Set up an existing RapidJSON document for delivery
+	 * \param doc The document to prepare
+	 * \param a Convenience reference to \a doc's allocator
+	 */
 	static inline void prepareDocument(rapidjson::Document *doc, rapidjson::MemoryPoolAllocator<> &a);
 };
 

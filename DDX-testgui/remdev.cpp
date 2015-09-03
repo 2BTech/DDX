@@ -53,8 +53,8 @@ RemDev::~RemDev() {
 	if ( ! closed) close(UnknownReason);
 }
 
-int RemDev::sendRequest(QObject *self, const char *handler, const char *method, rapidjson::Document *doc,
-						rapidjson::Value *params, qint64 timeout) {
+int RemDev::sendRequest(QObject *self, const char *handler, const char *method,
+						rapidjson::Value *params, rapidjson::Document *doc, qint64 timeout) {
 	LocalId id;
 	RequestRef ref(self, handler, method, timeout);
 	req_id_lock.lock();
@@ -108,7 +108,7 @@ void RemDev::sendResponse(Request *req, rapidjson::Value *result) {
 	delete req;
 }
 
-void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Document *doc, rapidjson::Value *data) noexcept {
+void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Value *data, rapidjson::Document *doc) noexcept {
 	if (closed) {
 		if (doc) delete doc;
 		return;
@@ -133,7 +133,7 @@ void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapid
 
 void RemDev::sendError(Request *req, int code, const QString &msg, rapidjson::Value *data) noexcept {
 	if (req->id) {
-		sendError(req->id, code, msg, req->outDoc, data);
+		sendError(req->id, code, msg, data, req->outDoc);
 		req->outDoc = 0;
 	}
 	delete req;
@@ -214,11 +214,7 @@ void RemDev::handleItem(const char *data) noexcept {
 	if (registered) {  // Parsing procedure is more lenient with registered connections
 		doc->Parse(data);
 		if (doc->HasParseError()) {
-			// TODO
-			// Does this leave doc hanging?  We're overwriting a previously parsed doc...
-			// It might be a memory leak.  Also of note is that we delete the data in which
-			// this document was parsed before we overwrite the doc.
-			sendError(0, E_JSON_PARSE, tr("Parse error"), doc);
+			sendError(0, E_JSON_PARSE, tr("Parse error"), 0, doc);
 			return;
 		}
 	}
@@ -235,23 +231,15 @@ void RemDev::handleItem(const char *data) noexcept {
 		return;
 	}
 	if (doc->IsArray()) {
-		// TODO
-		// Does this leave doc hanging?  We're overwriting a previously parsed doc...
-		// It might be a memory leak.  Also of note is that we delete the data in which
-		// this document was parsed before we overwrite the doc.
-		sendError(0, E_NO_BATCH, tr("Batch not supported"), doc);
+		sendError(0, E_NO_BATCH, tr("Batch not supported"), 0, doc);
 		return;
 	}
 	if ( ! doc->IsObject()) {
-		// TODO
-		// Does this leave doc hanging?  We're overwriting a previously parsed doc...
-		// It might be a memory leak.  Also of note is that we delete the data in which
-		// this document was parsed before we overwrite the doc.
-		sendError(0, E_JSON_PARSE, tr("Invalid JSON"), doc);
+		sendError(0, E_JSON_PARSE, tr("Invalid JSON"), 0, doc);
 		return;
 	}
 	if (doc->HasMember("method")) {
-		handleRequest_Notif(doc);
+		handleRequest(doc);
 		return;
 	}
 	if (doc->HasMember("id")) {
@@ -276,7 +264,7 @@ void RemDev::sendDocument(rapidjson::Document *doc) {
 	writeItem(buffer);
 }
 
-void RemDev::handleRequest_Notif(rapidjson::Document *doc) {
+void RemDev::handleRequest(rapidjson::Document *doc) {
 	// Find and type-check all elements efficiently
 	Value *idVal = 0, *paramsVal = 0, *methodVal = 0;
 	// Breaking out of this loop while methodVal is 0 constitutes an error,
@@ -310,26 +298,17 @@ void RemDev::handleRequest_Notif(rapidjson::Document *doc) {
 		break;
 	}
 	if (methodVal) {  // If this is likely a valid request...
-		Request *req = new Request(methodVal->GetString(), paramsVal, doc, idVal);
+		Request *req = new Request(methodVal->GetString(), paramsVal, doc, this, idVal);
 		//TODO:  This needs to do some serious id wrangling?  Particularly handling the sending of null errors may need to be handled pre-request
 		// Work on sendError(req...) to handle that right.  Maybe make private_sendError(req...) to handle errors differently depending on whether it needs to be
 		// sent as a null request or not
-		dispatchRequest_Notif(req);
+		if ( ! dm->dispatchRequest(req))
+			sendError(req, E_JSON_METHOD, tr("Method not found"), 0);
 	}
 	else {
-		// TODO
-		// Does this leave doc hanging?  We're overwriting a previously parsed doc...
-		// It might be a memory leak.  Also of note is that we delete the data in which
-		// this document was parsed before we overwrite the doc.
-		sendError(0, E_JSON_PARSE, tr("Invalid JSON"), doc);
+		// TODO:  Should try very hard to stick the correct id into errors
+		sendError(0, E_JSON_PARSE, tr("Invalid JSON"), 0, doc);
 	}
-	// TODO:  Should try very hard to stick the correct id into errors
-}
-
-void RemDev::dispatchRequest_Notif(Request *req) {
-	log("Unhandled dispatch");
-	delete req;
-	// TODO
 }
 
 void RemDev::handleResponse(rapidjson::Document *doc) {
@@ -392,26 +371,15 @@ void RemDev::handleResponse(rapidjson::Document *doc) {
 			// Log errors
 			if ( ! wasSuccessful) logError(mainVal, req.method);
 			// Call handler
-			Response *res = new Response(wasSuccessful, id, req.method, doc, mainVal);
+			Response *res = new Response(wasSuccessful, id, req.method, doc, this, mainVal);
 			metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
 									   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
 		}
-		else {  // If the request does not exist...
-			// TODO
-			// Does this leave doc hanging?  We're overwriting a previously parsed doc...
-			// It might be a memory leak.  Also of note is that we delete the data in which
-			// this document was parsed before we overwrite the doc.
-			sendError(0, E_INVALID_RESPONSE, tr("Invalid response"), doc, idVal);
-			// TODO:  also check that idVal is deleted when doc is deleted
-		}
+		// If the request does not exist..
+		else sendError(0, E_INVALID_RESPONSE, tr("Invalid response"), idVal, doc);
+		// TODO:  also check that idVal is deleted when doc is deleted ^
 	}
-	else {
-		// TODO
-		// Does this leave doc hanging?  We're overwriting a previously parsed doc...
-		// It might be a memory leak.  Also of note is that we delete the data in which
-		// this document was parsed before we overwrite the doc.
-		sendError(0, E_JSON_PARSE, tr("Invalid JSON"), doc);
-	}
+	else sendError(0, E_JSON_PARSE, tr("Invalid JSON"), 0, doc);
 }
 
 void RemDev::handleRegistration(rapidjson::Document *doc) {
@@ -462,7 +430,7 @@ void RemDev::simulateError(int id, const RequestRef &req, int code, const QStrin
 		doc->AddMember("message", v, a);
 	}
 	logError(doc, req.method);
-	Response *res = new Response(false, id, req.method, doc, doc);
+	Response *res = new Response(false, id, req.method, doc, this, doc);
 	metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
 							   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
 }

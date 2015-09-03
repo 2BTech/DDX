@@ -49,6 +49,29 @@ void DevMgr::closeAll(RemDev::DisconnectReason reason) {
 	closing = false;
 }
 
+void DevMgr::addHandler(QObject *handlerObj, const char *handlerFn, const char *method) {
+	QByteArray key(method);
+	RequestHandler entry(handlerObj, handlerFn);
+	hLock.lockForWrite();
+	handlers.insert(key, entry);
+	hLock.unlock();
+}
+
+void DevMgr::removeHandler(const char *method) const {
+	QByteArray key(method);
+	hLock.lockForWrite();
+	handlers.remove(key);
+	hLock.unlock();
+}
+
+void DevMgr::setHandlerEnabled(const char *method, bool enabled) {
+	QByteArray key(method);
+	hLock.lockForWrite();
+	HandlerHash::Iterator it = handlers.find(key);
+	if (it != handlers.end()) it->enabled = enabled;
+	hLock.unlock();
+}
+
 QByteArray DevMgr::addDevice(RemDev *dev) {
 	connect(dev, &RemDev::postToLogArea, mw->getLogArea(), &QPlainTextEdit::appendPlainText);
 	connect(timeoutPoller, &QTimer::timeout, dev, &RemDev::timeoutPoll);
@@ -64,4 +87,31 @@ void DevMgr::removeDevice(RemDev *dev) {
 	dLock.lock();
 	devices.removeOne(dev);
 	dLock.unlock();
+}
+
+bool DevMgr::dispatchRequest(RemDev::Request *req) const {
+	QByteArray method(req->method);
+	
+	// Custom dispatching rules here
+	
+	hLock.lockForRead();
+	HandlerHash::ConstIterator it = handlers.find(method);
+	if (it == handlers.constEnd()) {
+		hLock.unlock();
+		return false;
+	}
+	// Ensure the handler object still exists
+	if (it->handlerObj.isNull()) {
+		hLock.unlock();
+		removeHandler(req->method);  // Remove it if not
+		return false;
+	}
+	if ( ! it->enabled) {
+		hLock.unlock();
+		return false;
+	}
+	metaObject()->invokeMethod(it->handlerObj, it->handlerFn,
+							   Qt::QueuedConnection, Q_ARG(RemDev::Request*, req));
+	hLock.unlock();
+	return true;
 }

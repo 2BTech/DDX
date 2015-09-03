@@ -26,6 +26,7 @@
 #include <QMutex>
 #include <QPlainTextEdit>
 #include <QTimer>
+#include <QReadWriteLock>
 #include "remdev.h"
 
 class MainWindow;
@@ -46,17 +47,52 @@ public:
 	
 	void closeAll(RemDev::DisconnectReason reason = RemDev::ShuttingDown);
 	
+	/*!
+	 * \brief Register a request handler
+	 * \param handlerObj The object which will handle the request
+	 * \param handlerFn The function of \a handlerObj to handle the request
+	 * \param method The name of the method (must not be deleted)
+	 * 
+	 * This function will replace any existing handler for \a method.  If \a handlerObj
+	 * is deleted, the handler will automatically be removed at the next request.
+	 * 
+	 * TODO discuss how handlers work
+	 */
+	void addHandler(QObject *handlerObj, const char *handlerFn, const char *method);
+	
+	void removeHandler(const char *method) const;
+	
+	void setHandlerEnabled(const char *method, bool enabled);
+	
 signals:
 	
 public slots:
 	
 private:
 	
+	class RequestHandler {
+	public:
+		RequestHandler(QObject *handlerObj, const char *handlerFn) {
+			this->handlerObj = handlerObj;
+			this->handlerFn = handlerFn;
+			enabled = true;
+		}
+		QPointer<QObject> handlerObj;
+		const char *handlerFn;
+		bool enabled;
+	};
+	
 	MainWindow *mw;
 	
 	DeviceList devices;
 	
-	QMutex dLock;
+	mutable QMutex dLock;
+	
+	typedef QHash<QByteArray, RequestHandler> HandlerHash;
+	
+	mutable HandlerHash handlers;
+	
+	mutable QReadWriteLock hLock;
 	
 	QTimer *timeoutPoller;
 	
@@ -67,6 +103,8 @@ private:
 	QByteArray addDevice(RemDev *dev);
 	
 	void removeDevice(RemDev *dev);
+	
+	bool dispatchRequest(RemDev::Request *req) const;
 	
 };
 
