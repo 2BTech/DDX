@@ -115,6 +115,10 @@ void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapid
 	}
 	if ( ! doc) doc = new Document;
 	rapidjson::MemoryPoolAllocator<> &a = doc->GetAllocator();
+	prepareDocument(doc, a);
+	if (id) doc->AddMember("id", *id, a);
+	else doc->AddMember("id", Value(rapidjson::kNullType), a);  // Add null if no id present
+	// Build error object
 	Value e(kObjectType);
 	{
 		Value v(code);
@@ -124,10 +128,7 @@ void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapid
 		e.AddMember("message", v, a);
 	}
 	if (data) e.AddMember("data", *data, a);
-	prepareDocument(doc, a);
 	doc->AddMember("error", e, a);
-	if (id) doc->AddMember("id", *id, a);
-	else doc->AddMember("id", Value(rapidjson::kNullType), a);  // Add null if no id present
 	sendDocument(doc);
 }
 
@@ -162,6 +163,17 @@ void RemDev::sendNotification(const char *method, rapidjson::Document *doc, rapi
 	doc->AddMember("method", Value().SetString(rapidjson::StringRef(method)), a);
 	if (params) doc->AddMember("params", *params, a);
 	sendDocument(doc);
+}
+
+QByteArray RemDev::serializeValue(const rapidjson::Value &v) {
+	Document doc;
+	doc.CopyFrom(v, doc.GetAllocator());
+	StringBuffer buffer;
+	Writer<StringBuffer> writer(buffer);
+	doc.Accept(writer);
+	QByteArray array(buffer.GetString());
+	Q_ASSERT(buffer.GetSize() == (uint) array.size());
+	return array;
 }
 
 void RemDev::close(DisconnectReason reason, bool fromRemote) noexcept {
@@ -302,8 +314,10 @@ void RemDev::handleRequest(rapidjson::Document *doc) {
 		//TODO:  This needs to do some serious id wrangling?  Particularly handling the sending of null errors may need to be handled pre-request
 		// Work on sendError(req...) to handle that right.  Maybe make private_sendError(req...) to handle errors differently depending on whether it needs to be
 		// sent as a null request or not
-		if ( ! dm->dispatchRequest(req))
+		if ( ! dm->dispatchRequest(req)) {  // Will return false if no method was found
+			
 			sendError(req, E_JSON_METHOD, tr("Method not found"), 0);
+		}
 	}
 	else {
 		// TODO:  Should try very hard to stick the correct id into errors
@@ -480,16 +494,5 @@ void RemDev::printReqs() const {
 	doc.Accept(writer);
 	log(buffer.GetString());
 	req_id_lock.unlock();
-}
-
-QByteArray RemDev::serializeValue(const rapidjson::Value &v) {
-	Document doc;
-	doc.CopyFrom(v, doc.GetAllocator());
-	StringBuffer buffer;
-	Writer<StringBuffer> writer(buffer);
-	doc.Accept(writer);
-	QByteArray array(buffer.GetString());
-	Q_ASSERT(buffer.GetSize() == (uint) array.size());
-	return array;
 }
 #endif  // QT_DEBUG

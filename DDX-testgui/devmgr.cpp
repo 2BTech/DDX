@@ -23,6 +23,7 @@ DevMgr::DevMgr(MainWindow *parent) : QObject(parent) {
 	mw = parent;
 	unregCt = 0;
 	closing = false;
+	connect(this, &DevMgr::postToLogArea, mw->getLogArea(), &QPlainTextEdit::appendPlainText);
 	// Enable invocation of handler functions
 	qRegisterMetaType<RemDev::Response*>("RemDev::Response*");
 	qRegisterMetaType<RemDev::Request*>("RemDev::Request*");
@@ -51,10 +52,10 @@ void DevMgr::closeAll(RemDev::DisconnectReason reason) {
 
 void DevMgr::addHandler(QObject *handlerObj, const char *handlerFn, const char *method) {
 	QByteArray key(method);
-	RequestHandler entry(handlerObj, handlerFn);
 	hLock.lockForWrite();
-	handlers.insert(key, entry);
+	handlers.insert(key, RequestHandler(handlerObj, handlerFn));
 	hLock.unlock();
+	log(tr("Registered handler"));
 }
 
 void DevMgr::removeHandler(const char *method) const {
@@ -62,6 +63,7 @@ void DevMgr::removeHandler(const char *method) const {
 	hLock.lockForWrite();
 	handlers.remove(key);
 	hLock.unlock();
+	log(tr("Removed handler"));
 }
 
 void DevMgr::setHandlerEnabled(const char *method, bool enabled) {
@@ -94,24 +96,24 @@ bool DevMgr::dispatchRequest(RemDev::Request *req) const {
 	
 	// Custom dispatching rules here
 	
-	hLock.lockForRead();
+	QReadLocker l(&hLock);
 	HandlerHash::ConstIterator it = handlers.find(method);
-	if (it == handlers.constEnd()) {
-		hLock.unlock();
-		return false;
-	}
+	if (it == handlers.constEnd()) return false;
 	// Ensure the handler object still exists
 	if (it->handlerObj.isNull()) {
-		hLock.unlock();
+		l.unlock();
 		removeHandler(req->method);  // Remove it if not
 		return false;
 	}
-	if ( ! it->enabled) {
-		hLock.unlock();
-		return false;
-	}
+	if ( ! it->enabled) return false;
 	metaObject()->invokeMethod(it->handlerObj, it->handlerFn,
 							   Qt::QueuedConnection, Q_ARG(RemDev::Request*, req));
-	hLock.unlock();
 	return true;
+}
+
+void DevMgr::log(const QString &msg, bool isAlert) const {
+	(void) isAlert;
+	QString out("DevMgr: ");
+	out.append(msg);
+	emit postToLogArea(out);
 }

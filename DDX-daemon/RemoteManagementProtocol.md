@@ -20,24 +20,26 @@
 
 # DDX Remote Management Protocol (DDX-RPC)
 DDX-RPC uses strictly-compliant [JSON-RPC 2.0](http://www.jsonrpc.org/specification).
-All text must be encoded in UTF-8.  All DDX-RPC objects from a particular client will
-be ignored until a corresponding `register` request is accepted by the server.  The
-only exceptions to the JSON-RPC protocol are as follows:
+The only exceptions to the JSON-RPC protocol are as follows:
 
 - Batch requests are not currently supported
+- The `params` element in requests must be objects
 - JSON _must_ be sent in compacted form because line feed characters (ASCII 10) are
 prohibited within RPC items
 
-## Link Agnosticism
-For the most part, DDX-RPC can be implemented on any persistent bidirectional data
-transmission system.  So far, the DDX daemon only implements a network link.
+All text must be encoded in UTF-8.  All DDX-RPC objects from a particular client will
+be ignored until a corresponding `register` request is accepted by the server.
 
-### Network Link
+## Link Agnosticism
+For the most part, DDX-RPC can be implemented on any reliable and persistent bidirectional
+data transmission system.  So far, the DDX daemon only implements a TCP/SSL link.  An
+HTTP/HTTPS link may eventually replace it to help with firewall issues.
+
+### TCP/SSL Link
 At the low level, each DDX daemon opens a TCP server, by default on port 4388, to
-which GUIs, other DDX daemons, and other data sources or sinks can connect.  SSL
-support is planned but not currently in development.  Every RPC object transmitted
-must be separated by exactly one line feed (ASCII 10); line feeds are not allowed
-in the objects themselves (JSON data must be compacted).
+which GUIs, other DDX daemons, and other data sources or sinks can connect.  Every
+RPC object transmitted must be separated by exactly one line feed (ASCII 10).  SSL
+is applied to connections according to certain rules.
 
 
 <!--[TOC]-->
@@ -138,6 +140,10 @@ response error with the code -32005.
 
 The "Device disconnected" error will also be sent by the DDX-RPC implementation.
 
+If the requested/notified method is unavailable, the "Method not found" error will be sent
+with the requested method name in the `data` element.  Requests will use the original ID
+and notifications will use null.
+
 ## Registration & Disconnection
 Registration is a required handshake that allows connecting devices to understand
 each other's environment, capabilities, identity, and reason for connecting.  Both devices
@@ -165,7 +171,7 @@ for it to succeed.
 ### Server request: `register`
 Every connection must be registered before its requests will be honored.  Any requests or
 notifications sent prior to successful registration will be ignored without error.  _Note:_
-`register` requests can **NOT** be a part of a JSON-RPC bulk request.
+`register` requests can **NOT** be a part of a JSON-RPC batch request.
 
 Params:
 

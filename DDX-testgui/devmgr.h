@@ -27,6 +27,7 @@
 #include <QPlainTextEdit>
 #include <QTimer>
 #include <QReadWriteLock>
+#include <QReadLocker>
 #include "remdev.h"
 
 class MainWindow;
@@ -65,6 +66,8 @@ public:
 	void setHandlerEnabled(const char *method, bool enabled);
 	
 signals:
+	
+	void postToLogArea(const QString &msg) const;
 	
 public slots:
 	
@@ -105,6 +108,8 @@ private:
 	void removeDevice(RemDev *dev);
 	
 	bool dispatchRequest(RemDev::Request *req) const;
+	
+	void log(const QString &msg, bool isAlert = false) const;
 	
 };
 

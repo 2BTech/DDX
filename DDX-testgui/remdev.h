@@ -133,7 +133,7 @@ public:
 			this->outDoc = 0;
 		}
 		
-		//! ID value (will be 0 if this is a notification)
+		//! ID value (no type checking, will be 0 if this is a notification)
 		rapidjson::Value *id;
 		
 		//! Root document pointer
@@ -259,10 +259,10 @@ public:
 	 * \param code The integer error code
 	 * 
 	 * Supports:
-	 * - E_JSON_INTERNAL ("Internal error")
-	 * - E_ACCESS_DENIED ("Access denied")
-	 * - E_NOT_SUPPORTED ("Not supported")
-	 * - E_JSON_PARAMS ("Invalid params")
+	 * - `E_JSON_INTERNAL` ("Internal error")
+	 * - `E_ACCESS_DENIED` ("Access denied")
+	 * - `E_NOT_SUPPORTED` ("Not supported")
+	 * - `E_JSON_PARAMS` ("Invalid params")
 	 * 
 	 * If \a req is a notification, it will still be deleted but no response will be sent.
 	 * 
@@ -290,6 +290,8 @@ public:
 	void sendNotification(const char *method, rapidjson::Document *doc = 0,
 						  rapidjson::Value *params = 0) noexcept;
 	
+	static QByteArray serializeValue(const rapidjson::Value &v);
+	
 	// TODO
 	bool sendRegistration(const QStringList &passwords) noexcept;
 	
@@ -297,7 +299,6 @@ public:
 	
 #ifdef QT_DEBUG
 	void printReqs() const;
-	static QByteArray serializeValue(const rapidjson::Value &v);
 #endif
 	
 public slots:
@@ -329,7 +330,7 @@ public slots:
 	 * be disabled and are meant to inhibit non-DDX connections from sitting
 	 * unregistered forever.  Registration timeouts cause disconnection.
 	 * 
-	 * This function is called regularly by the DevMgr::timeouPoller QTimer.
+	 * This function is called regularly by the DevMgr::timeoutPoller QTimer.
 	 */
 	void timeoutPoll() noexcept;
 	
@@ -415,6 +416,7 @@ private:
 			this->method = method;
 		}
 		RequestRef() {handlerObj = 0;}  // Mark invalid
+		
 		/*!
 		 * \brief Determine request validity
 		 * \param checkTime Current time or 0 to disable timeout check

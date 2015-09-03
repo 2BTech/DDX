@@ -21,6 +21,7 @@
 
 #include <QObject>
 #include <QTimer>
+#include <random>
 #include "remdev.h"
 
 class DevMgr;
@@ -41,7 +42,6 @@ public:
 	// These are defined in RemDev if QT_DEBUG is defined
 #ifndef QT_DEBUG
 	void printReqs() const;
-	static QByteArray serializeValue(const rapidjson::Value &v);
 #endif
 	
 protected:
@@ -64,9 +64,16 @@ private:
 	
 	QList<int> validResponses;
 	
+	int lastValidId;
+	
 	int lastInvalidId;
 	
+	bool failNextRequest;
+	
+	std::mt19937 mt;
+	
 	int getInvalidId();
+	
 };
 
 #endif // TESTDEV_H
