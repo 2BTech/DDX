@@ -32,13 +32,13 @@ be ignored until a corresponding `register` request is accepted by the server.
 
 ## Link Agnosticism
 For the most part, DDX-RPC can be implemented on any reliable and persistent bidirectional
-data transmission system.  So far, the DDX daemon only implements a TCP/SSL link.  An
+data transmission system.  So far, the DDX daemon only implements a TCP/TLS link.  An
 HTTP/HTTPS link may eventually replace it to help with firewall issues.
 
-### TCP/SSL Link
+### TCP/TLS Link
 At the low level, each DDX daemon opens a TCP server, by default on port 4388, to
 which GUIs, other DDX daemons, and other data sources or sinks can connect.  Every
-RPC object transmitted must be separated by exactly one line feed (ASCII 10).  SSL
+RPC object transmitted must be separated by exactly one line feed (ASCII 10).  TLS
 is applied to connections according to certain rules.
 
 
@@ -146,10 +146,10 @@ Within the context of registration, a "requester" is the device that builds a co
 a "target".  Connections are known to the target as "inbound" and to the requester as
 "outbound".
 
-### TCP Devices & SSL/TLS
-It is highly recommended that TCP implementations of the DDX-RPC utilize SSLv3/TLS to encrypt
-their connection.  Note that SSL is used only to encrypt the connection and identity verification
-through SSL is currently not supported.  Encryption status must be determined before any incoming
+### TCP Devices & TLS
+It is highly recommended that TCP implementations of the DDX-RPC utilize TLSv1.2 to encrypt
+their connection.  Note that TLS is used only to encrypt the connection and identity verification
+through TLS is currently not supported.  Encryption status must be determined before any incoming
 data will be delivered to the JSON parser.  Each device can determine encryption status per connection
 at the time the connection is made.  Each TCP device must then establish encryption status
 by sending the phrase `encryption:[status]` followed by a line break character (ASCII 10).
@@ -159,14 +159,14 @@ by sending the phrase `encryption:[status]` followed by a line break character (
 ---|---
 `disabled`|The device does not support encryption
 `enabled`|The device allows encryption but is not requesting it
-`requested`|The device allows encryption and is requesting it but does not require it
+`requested`|The device allows encryption and is requesting it, but does not require it
 `required`|The device allows and requires encryption
 
 Whether encryption is to be used on the connection is then chosen based on the strictest possible
 level of the two devices.  If one device requires encryption but the other does not support it,
 the device which requires it will disconnect with `EncryptionRequired`.  If encryption is not used,
 both devices will then immediately start accepting JSON and registration can begin.  If encryption
-is used, the requester will then begin sending SSL handshakes until successful and the target will
+is used, the requester will then begin sending TLS handshakes until successful and the target will
 wait until a handshake succeeds.  Both devices will start accepting JSON immediately after a
 handshake succeeds.
 
