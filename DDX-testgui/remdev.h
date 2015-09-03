@@ -64,7 +64,8 @@ public:
 		ConnectionTerminated,  //!< The connection was explicitly terminated
 		RegistrationTimeout,  //!< The connection was alive too long without registering
 		BufferOverflow,  //!< The connection sent an object too long to be handled
-		StreamClosed  //!< The stream was closed by its low-level handler
+		StreamClosed,  //!< The stream was closed by its low-level handler
+		EncryptionRequired  //!< Encryption is required on this connection
 	};
 	
 	/*!

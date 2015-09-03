@@ -23,7 +23,7 @@ DDX-RPC uses strictly-compliant [JSON-RPC 2.0](http://www.jsonrpc.org/specificat
 The only exceptions to the JSON-RPC protocol are as follows:
 
 - Batch requests are not currently supported
-- The `params` element in requests must be objects
+- The `params` element in requests must be an object
 - JSON _must_ be sent in compacted form because line feed characters (ASCII 10) are
 prohibited within RPC items
 
@@ -65,15 +65,6 @@ See the "Global Errors" section for infomation on global errors and the error
 handling of notifications.  The `jsonrpc` and `id` members of objects are implied.
 Messages are written in English in this document, but may be translated.  See the
 "Internationalization" section.
-
-### Receiver Types
-In addition to any member of the ClientType enumeration, the following receivers are
-defined for use in this document:
-
-Name|Info
----|---
-Server|A device which received a `register` request (this should be the device which built a TCP server)
-Client|A device which made a connection by sending a `register` request (this should be the device which connected to an existing TCP server)
 
 ## Defined Types
 
@@ -150,23 +141,42 @@ each other's environment, capabilities, identity, and reason for connecting.  Bo
 must send a `register` request to the other, both of which need to complete successfully
 before messages will be passed.
 
-### Network Devices & SSL
-It is highly recommended that network implementations of the DDX-RPC utilize SSL to encrypt
-their connection.  By default, encryption is required on external connections but
-optional on connections through localhost.  Clients connecting to non-local servers
-should begin by attempting an SSL handshake.  If it fails and is not required, the client
-should assume that SSL is not implemented (SSL can be completely removed from the DDX
-daemon to deal with US export regulations).  If a client tries to send anything over an
-unencrypted connection when the server requires encryption, the server will respond with
-an "Encryption required" error.  Certificate verification is currently not implemented in
-the DDX daemon, but may be in the future.
+#### Requester vs. Target, Inbound vs. Outbound
+Within the context of registration, a "requester" is the device that builds a connection to
+a "target".  Connections are known to the target as "inbound" and to the requester as
+"outbound".
+
+### TCP Devices & SSL/TLS
+It is highly recommended that TCP implementations of the DDX-RPC utilize SSLv3/TLS to encrypt
+their connection.  Note that SSL is used only to encrypt the connection and identity verification
+through SSL is currently not supported.  Encryption status must be determined before any incoming
+data will be delivered to the JSON parser.  Each device can determine encryption status per connection
+at the time the connection is made.  Each TCP device must then establish encryption status
+by sending the phrase `encryption:[status]` followed by a line break character (ASCII 10).
+`status` can be one of the following:
+
+`status`|Meaning
+---|---
+`disabled`|The device does not support encryption
+`enabled`|The device allows encryption but is not requesting it
+`requested`|The device allows encryption and is requesting it but does not require it
+`required`|The device allows and requires encryption
+
+Whether encryption is to be used on the connection is then chosen based on the strictest possible
+level of the two devices.  If one device requires encryption but the other does not support it,
+the device which requires it will disconnect with `EncryptionRequired`.  If encryption is not used,
+both devices will then immediately start accepting JSON and registration can begin.  If encryption
+is used, the requester will then begin sending SSL handshakes until successful and the target will
+wait until a handshake succeeds.  Both devices will start accepting JSON immediately after a
+handshake succeeds.
+
+By default, encryption is required on external connections but
+optional on connections through localhost.
 
 ### Passwords
 DDX-RPC implementations can require a distinct password for each individual role in addition
 to a global password.  Every required password must be listed in the `register` request
 for it to succeed.
-
-### 
 
 ### Server request: `register`
 Every connection must be registered before its requests will be honored.  Any requests or
@@ -181,9 +191,9 @@ Name|Info|Type
 `DDX_author`|The client's DDX author|string
 `CID`|The client-given, server-taken connection ID; see "Connection IDs"|string
 `Roles`|The roles which this client fills|`DeviceRole`
-`Requestor`|The requestor ID|string
+`Requester`|The requester ID|string
 `Target`|The target ID|string
-`RequestorInfo`|Information about the requestor which the target can use to determine whether to accept the connection or not (null if coming from the client)|any
+`RequesterInfo`|Information about the requester which the target can use to determine whether to accept the connection or not (null if coming from the client)|any
 `Passwords`|An array of strings containing any passwords that are required|array\<string>
 `Name`|The client's (usually) self-designated name|string
 `Timezone`|The client's timezone|`Timezone`
@@ -236,7 +246,7 @@ Name|Value|Description
 `RegistrationTimeout`|5|The connection was alive too long without registering
 `BufferOverflow`|6|The connection sent an object too long to be handled
 `StreamClosed`|7|The stream was closed by its low-level handler
-`PasswordInvalid`|8|The passwords sent in response to registration were invalid
+`EncryptionRequired`|8|Encryption is required on this connection
 
 ## Path Management
 
