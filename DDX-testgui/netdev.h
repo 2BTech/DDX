@@ -47,6 +47,23 @@ protected:
 	
 private:
 	
+	enum EncryptionStatus {
+		RemoteDisabled = 0x0,
+		RemoteEnabled = 0x1,
+		RemoteRequested = 0x2,
+		RemoteRequired = 0x3,
+		RemoteFilter = 0x3,
+		
+		LocalDisabled = 0x0,
+		LocalEnabled = 0x4,
+		LocalRequested = 0x8,
+		LocalRequired = 0xC,
+		LocalFilter = 0xC,
+		
+		RemoteReceived = 0x10,
+		
+	};
+	
 };
 
 #endif // NETDEV_H
