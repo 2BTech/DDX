@@ -225,7 +225,7 @@ void RemDev::handleItem(char *data) noexcept {
 	registered = true;  // TODO:  Remove this
 	if (registered) {  // Parsing procedure is more lenient with registered connections
 		doc->Parse(data);
-		delete data;
+		free(data);
 		if (doc->HasParseError()) {
 			sendError(0, E_JSON_PARSE, tr("Parse error"), 0, doc);
 			return;
@@ -235,7 +235,7 @@ void RemDev::handleItem(char *data) noexcept {
 		doc->Parse<rapidjson::kParseValidateEncodingFlag |
 				   rapidjson::kParseIterativeFlag>
 				(data);
-		delete data;
+		free(data);
 		// Assume this is a fake connection; return nothing if there's a parse error
 		if (doc->HasParseError()) {
 			delete doc;

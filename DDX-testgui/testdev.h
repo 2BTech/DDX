@@ -54,6 +54,8 @@ protected:
 	
 	const char *getType() const noexcept override {return "Test";}
 	
+	bool isEncrypted() const noexcept override {return false;}
+	
 public slots:
 	
 	void timeout();

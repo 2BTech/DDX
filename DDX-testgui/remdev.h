@@ -311,6 +311,8 @@ public:
 	
 	bool valid() const noexcept {return registered;}
 	
+	virtual bool isEncrypted() const noexcept =0;
+	
 #ifdef QT_DEBUG
 	void printReqs() const;
 #endif
@@ -353,6 +355,8 @@ signals:
 	void postToLogArea(const QString &msg) const;
 	
 	void deviceDisconnected(RemDev *dev, DisconnectReason reason, bool fromRemote) const;
+	
+	void readyForRegistration() const;
 	
 private slots:
 	

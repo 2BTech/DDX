@@ -33,7 +33,8 @@ be ignored until a corresponding `register` request is accepted by the server.
 ## Link Agnosticism
 For the most part, DDX-RPC can be implemented on any reliable and persistent bidirectional
 data transmission system.  So far, the DDX daemon only implements a TCP/TLS link.  An
-HTTP/HTTPS link may eventually replace it to help with firewall issues.
+HTTP/HTTPS link may eventually replace it to help with firewall issues.  Furthermore,
+SCTP may provide a more reliable (although less available) solution than TCP.
 
 ### TCP/TLS Link
 At the low level, each DDX daemon opens a TCP server, by default on port 4388, to
