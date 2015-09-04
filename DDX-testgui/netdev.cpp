@@ -34,11 +34,11 @@ void NetDev::sub_init() noexcept {
 	bool local;
 	QByteArray encryptionPhrase("encryption:");
 	if (local) {
-		status = LocalEnabled | RemoteUnknown;
+		status = LocalEnabled | RemoteUnknown | DeterminingState;
 		encryptionPhrase.append("enabled");
 	}
 	else {
-		status = LocalRequired | RemoteUnknown;
+		status = LocalRequired | RemoteUnknown | DeterminingState;
 		encryptionPhrase.append("required");
 	}
 	ues->write(encryptionPhrase.append("\n"));
@@ -93,8 +93,8 @@ void NetDev::handleEncryptionPhrase() {
 	
 	es = new QSslSocket(this);
 	if ( ! es->setSocketDescriptor(socketDescriptor)) {
-		connect(serverSocket, SIGNAL(encrypted()), this, SLOT(ready()));
-		serverSocket->startServerEncryption();
+		connect(es, &QSslSocket::encrypted, this, &NetDev::handleEncryptionPhrase);
+		es->startServerEncryption();
 	} else {
 		delete serverSocket;
 	}
