@@ -304,7 +304,7 @@ void RemDev::handleItem(char *data) noexcept {
 		// "Verify" error objects (see Response docs)
 		if (type == ErrorT) {
 		    if ( ! mainVal->IsObject())
-				type = ParamsT;  // Setting type to ParamsT indicates an error at this point
+				type = ParamsT;  // Setting type to ParamsT indicates a bad response at this point
 			else {
 				Value::ConstMemberIterator eIt = mainVal->FindMember("code");
 				if (eIt == mainVal->MemberEnd() || ! eIt->value.IsInt())
@@ -316,9 +316,7 @@ void RemDev::handleItem(char *data) noexcept {
 	    }
 		// Handle null-ID errors
 		if (idVal->IsNull()) {
-			// TODO:  We can probably remove this log message
-			if (type != ErrorT) log(tr("Received null object; ignoring"));
-			else logError(mainVal);
+			if (type == ErrorT) logError(mainVal);
 			delete doc;
 			return;
 		}
@@ -341,14 +339,20 @@ void RemDev::handleItem(char *data) noexcept {
 			}
 		}
 	}
-	// Handle an invalid object
+	// If we get here without returning, there was an error
 	if (idVal && methodVal)
 		sendError(idVal, E_JSON_REQUEST, tr("Invalid request"), 0, doc);
 	else if (idVal && mainVal)
 		sendError(0, E_INVALID_RESPONSE, tr("Invalid response"), idVal, doc);
 	// TODO:  Make sure that this both makes it and is deleted   ^^^^^
+	// Update:  I've since verified this, but I'm not sure where it's deleted or what deletes it
 	else
 		sendError(0, E_JSON_PARSE, tr("Invalid JSON"), 0, doc);
+}
+
+void RemDev::connectionReady() noexcept {
+	// TODO
+	log(tr("Connection ready"));
 }
 
 void RemDev::log(const QString &msg, bool isAlert) const noexcept {
@@ -364,126 +368,6 @@ void RemDev::sendDocument(rapidjson::Document *doc) {
 	doc->Accept(writer);
 	delete doc;
 	writeItem(buffer);
-}
-
-void RemDev::handleRequest(rapidjson::Document *doc) {
-	// Find and type-check all elements efficiently
-	Value *idVal = 0, *paramsVal = 0, *methodVal = 0;
-	// Breaking out of this loop while methodVal is 0 constitutes an error,
-	// whereas finishing with both pointers set allows proper handling
-	for (Value::ConstMemberIterator it = doc->MemberBegin(); it != doc->MemberEnd(); ++it) {
-		const char *name = it->name.GetString();
-		Value &value = (Value &) it->value;
-		if (strcmp("jsonrpc", name) == 0) continue;
-		if (strcmp("id", name) == 0) {
-			idVal = &value;
-			continue;
-		}
-		if (strcmp("method", name) == 0) {
-			if ( ! value.IsString()) {
-				methodVal = 0;
-				break;
-			}
-			methodVal = &value;
-			continue;
-		}
-		if (strcmp("params", name) == 0) {
-			if ( ! value.IsObject()) {
-				methodVal = 0;
-				break;
-			}
-			paramsVal = &value;
-			continue;
-		}
-		// There was an unknown member
-		methodVal = 0;
-		break;
-	}
-	if (methodVal) {  // If this is likely a valid request...
-		Request *req = new Request(methodVal->GetString(), paramsVal, doc, this, idVal);
-		//TODO:  This needs to do some serious id wrangling?  Particularly handling the sending of null errors may need to be handled pre-request
-		// Work on sendError(req...) to handle that right.  Maybe make private_sendError(req...) to handle errors differently depending on whether it needs to be
-		// sent as a null request or not
-		if ( ! dm->dispatchRequest(req)) {  // Will return false if no method was found
-			
-			sendError(req, E_JSON_METHOD, tr("Method not found"), 0);
-		}
-	}
-	else {
-		// TODO:  Should try very hard to stick the correct id into errors
-		sendError(0, E_JSON_PARSE, tr("Invalid JSON"), 0, doc);
-	}
-}
-
-void RemDev::handleResponse(rapidjson::Document *doc) {
-	// Find and type-check all elements efficiently
-	Value *idVal = 0, *mainVal = 0;
-	bool wasSuccessful;
-	// Breaking out of this loop while idVal or mainVal is 0 constitutes an error,
-	// whereas finishing with both pointers set allows proper handling
-	for (Value::ConstMemberIterator it = doc->MemberBegin(); it != doc->MemberEnd(); ++it) {
-		const char *name = it->name.GetString();
-		Value &value = (Value &) it->value;
-		if (strcmp("jsonrpc", name) == 0) continue;
-		if (strcmp("id", name) == 0) {
-			if ( ! (value.IsInt() || value.IsNull())) {
-				idVal = 0;  // Force an error (possible attack with two ID values otherwise)
-				break;
-			}
-			idVal = &value;
-			continue;
-		}
-		if ( ! mainVal) {
-			// Check for successful result
-			if (strcmp("result", name) == 0) {
-				mainVal = &value;
-				wasSuccessful = true;
-				continue;
-			}
-			// Check for error
-			if (strcmp("error", name) == 0) {
-				// Verify that the error object meets basic requirements
-				if ( ! value.IsObject()) break;
-				Value::ConstMemberIterator eIt = value.FindMember("code");
-				if (eIt == value.MemberEnd() || ! eIt->value.IsInt()) break;
-				eIt = value.FindMember("message");
-				if (eIt == value.MemberEnd() || ! eIt->value.IsString()) break;
-				// Save error
-				mainVal = &value;
-				wasSuccessful = false;
-				continue;
-			}
-		}
-		// There was an unknown member
-		mainVal = 0;
-		break;
-	}
-	if (idVal && mainVal) {  // If everything was found successfully...
-		// Handle null errors
-		if (idVal->IsNull()) {
-			if (wasSuccessful) log(tr("Received successful null-ID response; ignoring"));
-			else logError(mainVal);
-			delete doc;
-			return;
-		}
-		// Handle normal response
-		int id = idVal->GetInt();
-		req_id_lock.lock();
-		RequestRef &&req = reqs.take(id);  // Will be invalid if the id does not exist
-		req_id_lock.unlock();
-		if (req.valid(0)) {  // If the request (still) exists...
-			// Log errors
-			if ( ! wasSuccessful) logError(mainVal, req.method);
-			// Call handler
-			Response *res = new Response(wasSuccessful, id, req.method, doc, this, mainVal);
-			metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
-									   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
-		}
-		// If the request does not exist..
-		else sendError(0, E_INVALID_RESPONSE, tr("Invalid response"), idVal, doc);
-		// TODO:  also check that idVal is deleted when doc is deleted ^
-	}
-	else sendError(0, E_JSON_PARSE, tr("Invalid JSON"), 0, doc);
 }
 
 void RemDev::handleRegistration(rapidjson::Document *doc) {

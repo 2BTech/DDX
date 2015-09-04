@@ -20,7 +20,6 @@
 #define NETDEV_H
 
 #include <QObject>
-#include <QTcpSocket>
 #include <QSslSocket>
 #include <QAbstractSocket>
 #include "remdev.h"
@@ -63,6 +62,7 @@ private:
 		LocalEnabled = 0x1,
 		LocalRequested = 0x2,
 		LocalRequired = 0x3,
+		LocalSelectFlag = 0x2,
 		LocalFilter = 0x3,
 		
 		RemoteUnknown = 0x0,
@@ -71,6 +71,7 @@ private:
 		RemoteEnabled = 0x14,
 		RemoteRequested = 0x18,
 		RemoteRequired = 0x1C,
+		RemoteSelectFlag = 0x8,
 		RemoteFilter = 0xC,
 		
 		DeterminingState = 0x0,
@@ -87,11 +88,9 @@ private:
 	
 	uint_fast8_t status;
 	
-	QTcpSocket *ues;
+	QSslSocket *s;
 	
-	QSslSocket *es;
-	
-	inline QTcpSocket *s();
+	inline bool determineEncryption();
 	
 };
 

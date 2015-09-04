@@ -213,6 +213,12 @@ public:
 		rapidjson::Document *doc;
 	};
 	
+	struct Registration {
+		QByteArray target;
+		QByteArray requester;
+		QStringList passwords;
+	};
+	
 	explicit RemDev(DevMgr *dm, bool inbound);
 	
 	~RemDev();
@@ -306,9 +312,6 @@ public:
 	
 	static QByteArray serializeValue(const rapidjson::Value &v);
 	
-	// TODO
-	bool sendRegistration(const QStringList &passwords) noexcept;
-	
 	bool valid() const noexcept {return registered;}
 	
 	virtual bool isEncrypted() const noexcept =0;
@@ -386,13 +389,20 @@ protected:
 	
 	RegistrationState regState;
 	
-	bool closed;
+	volatile bool closed;
 	
 	/*!
 	 * \brief Handle a single, complete incoming item
 	 * \param data The raw data to use (will be deleted)
 	 */
 	void handleItem(char *data) noexcept;
+	
+	/*!
+	 * \brief Mark the connection as ready
+	 * 
+	 * Must be called by subclasses as soon as the connection is ready for transmission
+	 */
+	void connectionReady() noexcept;
 	
 	/*!
 	 * \brief Send a log line tagged with the cid
@@ -483,18 +493,6 @@ private:
 	 * \param doc Root document (will be **deleted)
 	 */
 	void sendDocument(rapidjson::Document *doc);
-	
-	/*!
-	 * \brief Verify and prepare an incoming request
-	 * \param doc Root document (will be **deleted**)
-	 */
-	void handleRequest(rapidjson::Document *doc);
-	
-	/*!
-	 * \brief Verify and prepare an incoming response
-	 * \param doc Root document (will be **deleted**)
-	 */
-	void handleResponse(rapidjson::Document *doc);
 	
 	/*!
 	 * \brief TODO

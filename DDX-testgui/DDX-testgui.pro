@@ -37,7 +37,9 @@ SOURCES += main.cpp\
     remdev.cpp \
     devmgr.cpp \
     netdev.cpp \
-    testdev.cpp
+    testdev.cpp \
+	network.cpp \
+    netconserver.cpp
 
 HEADERS  += mainwindow.h \
     remdev.h \
@@ -45,7 +47,9 @@ HEADERS  += mainwindow.h \
     devmgr.h \
     rapidjson_using.h \
     netdev.h \
-    testdev.h
+    testdev.h \
+	network.h \
+    netconserver.h
 
 DISTFILES +=
 

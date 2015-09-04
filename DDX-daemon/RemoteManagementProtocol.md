@@ -169,7 +169,7 @@ the device which requires it will disconnect with `EncryptionRequired`.  If encr
 both devices will then immediately start accepting JSON and registration can begin.  If encryption
 is used, the requester will then begin sending TLS handshakes until successful and the target will
 wait until a handshake succeeds.  Both devices will start accepting JSON immediately after a
-handshake succeeds.
+handshake succeeds.  N
 
 By default, encryption is `required` on external connections but `enabled` on connections through localhost.
 
