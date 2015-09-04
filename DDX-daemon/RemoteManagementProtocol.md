@@ -36,11 +36,13 @@ data transmission system.  So far, the DDX daemon only implements a TCP/TLS link
 HTTP/HTTPS link may eventually replace it to help with firewall issues.  Furthermore,
 SCTP may provide a more reliable (although less available) solution than TCP.
 
-### TCP/TLS Link
-At the low level, each DDX daemon opens a TCP server, by default on port 4388, to
-which GUIs, other DDX daemons, and other data sources or sinks can connect.  Every
-RPC object transmitted must be separated by exactly one line feed (ASCII 10).  TLS
-is applied to connections according to certain rules.
+### TCP Link
+At the low level, each DDX daemon opens a TCP server (or two) to which GUIs, other DDX
+daemons, and other data sources or sinks can connect.  Every RPC object transmitted must
+be separated by exactly one line feed (ASCII 10).  The use of encryption depends on the
+port in use.  By default, port 4384 requires encryption with TLS v1.2 and port 4388 does
+not require encryption.  Most daemons required encryption for external connections but not
+for connections through localhost.
 
 
 <!--[TOC]-->
@@ -169,7 +171,7 @@ the device which requires it will disconnect with `EncryptionRequired`.  If encr
 both devices will then immediately start accepting JSON and registration can begin.  If encryption
 is used, the requester will then begin sending TLS handshakes until successful and the target will
 wait until a handshake succeeds.  Both devices will start accepting JSON immediately after a
-handshake succeeds.  N
+handshake succeeds.
 
 By default, encryption is `required` on external connections but `enabled` on connections through localhost.
 

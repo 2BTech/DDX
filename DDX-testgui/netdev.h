@@ -47,50 +47,20 @@ protected:
 	
 	const char *getType() const noexcept override {return "Network";}
 	
-	bool isEncrypted() const noexcept override {return (status & StateFilter) == ReadyEncryptedState;}
+	// TODO
+	bool isEncrypted() const noexcept override {return false;}
 	
 private slots:
 	
 	void handleData();
 	
-	void handleEncryptionPhrase();
-	
 private:
 	
-	enum EncryptionStatus {
-		LocalDisabled = 0x0,
-		LocalEnabled = 0x1,
-		LocalRequested = 0x2,
-		LocalRequired = 0x3,
-		LocalSelectFlag = 0x2,
-		LocalFilter = 0x3,
-		
-		RemoteUnknown = 0x0,
-		RemoteKnownFlag = 0x10,
-		RemoteDisabled = 0x10,
-		RemoteEnabled = 0x14,
-		RemoteRequested = 0x18,
-		RemoteRequired = 0x1C,
-		RemoteSelectFlag = 0x8,
-		RemoteFilter = 0xC,
-		
-		DeterminingState = 0x0,
-		UsingEncryption = 0x20,
-		WaitingForHandshakeState = UsingEncryption,
-		HandshakeSuccess = 0x60,
-		ReadyFlag = 0x80,
-		ReadyEncryptedState = UsingEncryption | HandshakeSuccess | ReadyFlag,
-		ReadyUnencryptedState = ReadyFlag,
-		StateFilter = 0xE0,
-		
-		DefaultEncryptionStatus = LocalRequired | RemoteUnknown | DeterminingState
-	};
+	QTcpSocket *s;
 	
-	uint_fast8_t status;
+	void handleDisconnection();
 	
-	QSslSocket *s;
-	
-	inline bool determineEncryption();
+	void handleNetworkError(QAbstractSocket::SocketError error);
 	
 };
 

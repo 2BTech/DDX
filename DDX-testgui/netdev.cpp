@@ -19,7 +19,6 @@
 #include "netdev.h"
 
 NetDev::NetDev(DevMgr *dm, QTcpSocket *socket) : RemDev(dm, true) {
-	status = DefaultEncryptionStatus;
 	s = socket;
 }
 
@@ -28,18 +27,17 @@ NetDev::~NetDev() {
 }
 
 void NetDev::sub_init() noexcept {
-/*	ues->setParent(this);
-	bool local;
-	QByteArray encryptionPhrase("encryption:");
-	if (local) {
-		status = LocalEnabled | RemoteUnknown | DeterminingState;
-		encryptionPhrase.append("enabled");
-	}
-	else {
-		status = LocalRequired | RemoteUnknown | DeterminingState;
-		encryptionPhrase.append("required");
-	}
-	ues->write(encryptionPhrase.append("\n"));*/
+	s->setParent(this);
+	
+	s->setSocketOption(QAbstractSocket::LowDelayOption, 1);  // Disable Nagel's algorithm
+	//if ( ! isLocal) s->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
+	
+	// QTcpServer::error is overloaded, so we need to use this nasty thing
+	connect(s, static_cast<void(QTcpSocket::*)(QAbstractSocket::SocketError)>(&QTcpSocket::error),
+			this, &NetDev::handleNetworkError);
+	connect(s, &QTcpSocket::disconnected, this, &NetDev::handleDisconnection);
+	connect(s, &QTcpSocket::readyRead, this, &NetDev::handleData);
+	connectionReady();
 }
 
 void NetDev::terminate(DisconnectReason reason, bool fromRemote) noexcept {
@@ -54,64 +52,25 @@ void NetDev::writeItem(rapidjson::StringBuffer *buffer) noexcept {
 }
 
 void NetDev::handleData() {
-	
-}
-
-void NetDev::handleEncryptionPhrase() {
-	if (status & RemoteKnownFlag) return;
-	if (s->canReadLine()) {
-		// Get remote encryption status
-		if ( ! determineEncryption())
-			close(EncryptionRequired);
-		return;
-	}
-	// If it's just spewing data at us, this is probably not a DDX device
-	else if (s->bytesAvailable() > 24) {
-		status = (EncryptionStatus) 0;
-		s->abort();
-		close(BufferOverflow);
+	while (s->canReadLine()) {
+		qint64 size = s->bytesAvailable() + 1;
+		char *buffer = new char[size];
+		qint64 amount = s->readLine(buffer, size);
+		if (amount > 0) handleItem(buffer);
+		else delete buffer;
 	}
 }
 
-inline bool NetDev::determineEncryption() {
-	// This function does not currently support disabling encryption
-	Q_ASSERT((status & LocalFilter) != LocalDisabled);
-	uint_fast8_t local = status & LocalFilter;
-	uint_fast8_t remote = 0;
-	{
-		QByteArray phrase = s->readLine();
-		if (phrase.contains("required")) remote = RemoteRequired;
-		else if (phrase.contains("requested")) remote = RemoteRequested;
-		else if (phrase.contains("enabled")) remote = RemoteEnabled;
-		else if (phrase.contains("disabled")) remote = RemoteDisabled;
-		else return false;
-	}
-	status |= remote;
-	// Disconnect if connection unsafe
-	if (local == LocalRequired && remote == RemoteDisabled) return false;
-	// Use no encryption
-	if (local == LocalEnabled && (remote == RemoteEnabled || remote == RemoteDisabled)) {
-		status |= ReadyFlag;
-		connectionReady();
-		return true;
-	}
-	// Use encryption
-	qintptr socketDescriptor = s->socketDescriptor();
-	s->disconnect();  // Prevent any error signals from escaping
-	s->setSocketDescriptor(0, QAbstractSocket::UnconnectedState);
+void NetDev::handleDisconnection() {
+	log("Remote disconnected");
+	close(UnknownReason, true);
+}
+
+void NetDev::handleNetworkError(QAbstractSocket::SocketError error) {
+	// TODO
 	
-	disconnect(this, &NetDev::handleEncryptionPhrase, 0, 0);
+	// RemoteClosedError is emitted even on normal disconnections
+	if (error == QAbstractSocket::RemoteHostClosedError) return;
 	
-	s = new QSslSocket(this);
-	s->setProtocol(QSsl::TlsV1_2);
-	if (s->protocol() != QSsl::TlsV1_2) return false;
-	if ( ! s->setSocketDescriptor(socketDescriptor)) {
-		connect(s, &QSslSocket::encrypted, this, &NetDev::handleEncryptionPhrase);
-		s->startServerEncryption();
-	} else {
-		delete s;
-		s->deleteLater();
-		s = 0;
-	}
-	return true;
+	log(QString("DDX bug: Unhandled network error (QAbstractSocket): '%1'").arg(error));
 }

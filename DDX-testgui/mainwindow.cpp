@@ -19,6 +19,7 @@
 #include "mainwindow.h"
 #include "devmgr.h"
 #include "testdev.h"
+#include "network.h"
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
@@ -44,7 +45,6 @@ MainWindow::MainWindow(QWidget *parent)
 	// Initializations
 	setWindowTitle(tr("DDX Test GUI"));
 	resize(1000,500);
-	td = 0;
 	logArea->appendPlainText(tr("Instantiating DevMgr"));
 	dm = new DevMgr(this);
 }
@@ -63,13 +63,11 @@ void MainWindow::newTestDevice(bool checked) {
 	(void) checked;
 	//newTestDeviceAct->setEnabled(false);
 	logArea->appendPlainText("Starting test device");
-	if ( ! td) td = new TestDev(dm, true);
-	else new TestDev(dm, true);
+	new TestDev(dm, true);
 }
 
 void MainWindow::closeAllDevices(bool checked) {
 	(void) checked;
 	dm->closeAll();
-	td = 0;
 	newTestDeviceAct->setEnabled(true);
 }

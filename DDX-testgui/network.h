@@ -20,18 +20,22 @@
 #define NETWORK_H
 
 #include <QObject>
-#include <QNetworkAccessManager>
+#include <QTcpServer>
+#include <QSslSocket>
+#include <QtAlgorithms>
 #include "constants.h"
+#include "mainwindow.h"
 
-class NetConServer;
+class EncryptedServer;
 class NetDev;
 
 class Network : public QObject
 {
 	Q_OBJECT
 public:
+	friend class EncryptedServer;
 	
-	explicit Network(QObject *parent);
+	explicit Network(MainWindow *parent);
 	
 	~Network();
 	
@@ -39,40 +43,55 @@ public:
 	
 signals:
 	
+	void postToLogArea(const QString &msg) const;
+	
 public slots:
 	
-	/*!
-	 * \brief Install a TCP server on the appropriate port
-	 * 
-	 * Note that this function may quit the application on failure.  Callers
-	 * Callers should be prepared to do so cleanly if necessary.
-	 */
 	void init();
 	
 private slots:
 	
-	void handleData();
-	
-	void handleConnection();
-	
-	void handleDisconnection();
+	void handleUnencryptedConnection();
 	
 	void handleNetworkError(QAbstractSocket::SocketError error);
 	
+	void handleSocketNowEncrypted();
+	
+	void handleEncryptionErrors(const QList<QSslError> & errors);
+	
 private:
-	Daemon *d;  //!< Convenience pointer to Daemon instance
-	Logger *lg;  //!< Convenience pointer to Logger instance
-	Settings *sg;  //!< Convenience pointer to Settings instance
 	
-	QHash<QTcpSocket*, NetDev*> cons;
+	MainWindow *mw;
 	
-	QTcpServer *server;
+	QList<QSslSocket*> pendingSockets;
 	
-	void log(const QString msg) const;
+	EncryptedServer *encrypted;
 	
-	QByteArray generateCid(const QByteArray &base) const;
+	QTcpServer *unencrypted;
 	
-	QNetworkAccessManager nam;
+	void handleConnection(QTcpSocket *socket);
+	
+	void handleEncryptedSocket(qintptr sd);
+	
+	void log(const QString msg, bool isAlert = false) const;
+	
+};
+
+class EncryptedServer : public QTcpServer
+{
+	Q_OBJECT
+public:
+	friend class Network;
+	
+	~EncryptedServer();
+	
+private:
+	
+	EncryptedServer(Network *parent);
+	
+	void incomingConnection(qintptr socketDescriptor) override;
+	
+	Network *n;
 	
 };
 

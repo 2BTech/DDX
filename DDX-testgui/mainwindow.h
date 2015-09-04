@@ -30,6 +30,7 @@
 
 class DevMgr;
 class TestDev;
+class Network;
 
 class MainWindow : public QMainWindow
 {
@@ -43,6 +44,8 @@ public:
 	QPlainTextEdit *getLogArea() const {return logArea;}
 	
 	void closeEvent(QCloseEvent *event) override;
+	
+	DevMgr *dm;
 	
 private slots:
 	
@@ -58,9 +61,7 @@ private:
 	
 	QAction *closeAllDevicesAct;
 	
-	DevMgr *dm;
-	
-	TestDev *td;
+	Network *n;
 	
 };
 

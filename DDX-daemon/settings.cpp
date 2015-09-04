@@ -192,15 +192,17 @@ QList<Settings::SetEnt> Settings::registerSettings() const {
 		  false, QMetaType::Bool);
 	
 	b.enterGroup(SG_NETWORK);
-	b.add("GUIPort", tr("The network port used by the GUI to manage the daemon"),
+	b.add("EncryptedPort", tr("The port for encrypted connections"),
+		  4384, QMetaType::Int);
+	b.add("UnencryptedPort", tr("The port for unencrypted connections (0 to disable)"),
 		  4388, QMetaType::Int);
 	b.add("UseIPv6Localhost", tr("Whether to use IPv6 localhost rather than IPv4"),
 		  false, QMetaType::Bool);
 	b.add("AllowExternal", tr("Whether to allow foreign devices to connect"),
 		  false, QMetaType::Bool);
-	b.add("RequireSslExternal", tr("Whether to require SSL encryption on external connections"),
+	b.add("RequireEncryptionExternal", tr("Whether to require TLS encryption on external connections"),
 		  true, QMetaType::Bool);
-	b.add("RequireSslLocal", tr("Whether to require SSL encryption on local connections"),
+	b.add("RequireEncryptionLocal", tr("Whether to require TLS encryption on local connections"),
 		  false, QMetaType::Bool);
 	
 	return b.list;

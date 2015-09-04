@@ -59,7 +59,7 @@ void Network::init() {
 	// TODO: add a QNetworkAccessManager and related stuff so Modules can use the high-level APIs
 	// Connections
 	connect(server, &QTcpServer::acceptError, this, &Network::handleNetworkError);
-	connect(server, &QTcpServer::newConnection, this, &Network::handleConnection);
+	//connect(server, &QTcpServer::newConnection, this, &Network::handleConnection);
 	int port = sg->v("GUIPort", SG_NETWORK).toInt();
 	// Filter listening addresses
 	QHostAddress a;
@@ -112,7 +112,7 @@ void Network::handleData() {
 	// Ignore consecutive newlines
 }
 
-void Network::handleConnection() {
+void Network::handleConnection(QTcpSocket *socket) {
 	QTcpSocket *s;
 	while ((s = server->nextPendingConnection())) {
 		if (s->state() != QAbstractSocket::ConnectedState) {
@@ -138,40 +138,6 @@ void Network::handleConnection() {
 		s->setSocketOption(QAbstractSocket::LowDelayOption, 1);  // Disable Nagel's algorithm
 		if ( ! isLocal) s->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
 	}
-}
-
-void Network::handleDisconnection() {
-	QHash<QTcpSocket*, NetDev*>::iterator it = cons.begin();
-	QTcpSocket *s;
-	while (it != cons.end()) {
-		if ((*it)->socket()->state() == QAbstractSocket::UnconnectedState) {
-			s = (*it)->socket();
-			it = cons.erase(it);
-			s->deleteLater();
-		}
-		else ++it;
-	}
-	/*for (int i = 0; i < ur_sockets.size();) {
-		if (ur_sockets.at(i)->state() == QAbstractSocket::UnconnectedState ) {
-			s = ur_sockets.at(i);
-			ur_sockets.removeAt(i);
-			s->deleteLater();
-		}
-		else i++;
-	}*/
-	log(QString("Disconnected; there are %1 active connections").arg(QString::number(cons.size())));
-	//log("Disconnect");
-	// This should loop through all active RPC requests and return an error
-	// for any that relied on the connection that failed
-}
-
-void Network::handleNetworkError(QAbstractSocket::SocketError error) {
-	// TODO
-	
-	// RemoteClosedError is emitted even on normal disconnections
-	if (error == QAbstractSocket::RemoteHostClosedError) return;
-	
-	log(QString("DDX bug: Unhandled network error (QAbstractSocket): '%1'").arg(error));
 }
 
 void Network::log(const QString msg) const {
