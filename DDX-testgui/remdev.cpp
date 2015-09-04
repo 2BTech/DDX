@@ -147,7 +147,7 @@ void RemDev::sendError(Request *req, int code) noexcept {
 	case E_ACCESS_DENIED: msg = tr("Access denied"); break;
 	case E_NOT_SUPPORTED: msg = tr("Not supported"); break;
 	case E_JSON_PARAMS: msg = tr("Invalid params"); break;
-	default: msg = tr("Unknown error");
+	default: msg = tr("Unknown error"); Q_ASSERT(false);
 	}
 	sendError(req, code, msg);
 }
@@ -219,12 +219,13 @@ void RemDev::init() noexcept {
 	sub_init();
 }
 
-void RemDev::handleItem(const char *data) noexcept {
+void RemDev::handleItem(char *data) noexcept {
 	// Parse document
 	Document *doc = new Document;
 	registered = true;  // TODO:  Remove this
 	if (registered) {  // Parsing procedure is more lenient with registered connections
 		doc->Parse(data);
+		delete data;
 		if (doc->HasParseError()) {
 			sendError(0, E_JSON_PARSE, tr("Parse error"), 0, doc);
 			return;
@@ -234,6 +235,7 @@ void RemDev::handleItem(const char *data) noexcept {
 		doc->Parse<rapidjson::kParseValidateEncodingFlag |
 				   rapidjson::kParseIterativeFlag>
 				(data);
+		delete data;
 		// Assume this is a fake connection; return nothing if there's a parse error
 		if (doc->HasParseError()) {
 			delete doc;
@@ -250,15 +252,103 @@ void RemDev::handleItem(const char *data) noexcept {
 		sendError(0, E_JSON_PARSE, tr("Invalid JSON"), 0, doc);
 		return;
 	}
-	if (doc->HasMember("method")) {
-		handleRequest(doc);
-		return;
+	
+	// Find members
+	Value *methodVal = 0, *idVal = 0, *mainVal = 0;
+	MainValType type = ParamsT;  // Assume params until proven otherwise
+	for (Value::ConstMemberIterator it = doc->MemberBegin(); it != doc->MemberEnd(); ++it) {
+		const char *name = it->name.GetString();
+		Value &value = (Value &) it->value;
+		if (strcmp("jsonrpc", name) == 0) continue;
+		if (strcmp("id", name) == 0) {
+			idVal = &value;
+			continue;
+		}
+		if (strcmp("method", name) == 0) {
+			methodVal = &value;
+			continue;
+		}
+		if ( ! mainVal) {
+			if (strcmp("params", name) == 0) {
+				mainVal = &value;
+				continue;
+			}
+			if (strcmp("result", name) == 0) {
+				mainVal = &value;
+				type = ResultT;
+				continue;
+			}
+			if (strcmp("error", name) == 0) {
+				mainVal = &value;
+				type = ErrorT;
+				continue;
+			}
+		}
+		// There was an unknown member, force error
+		methodVal = 0;
+		idVal = 0;
+		break;
 	}
-	if (doc->HasMember("id")) {
-		handleResponse(doc);
-		return;
+	// Handle a request or notification
+	if (methodVal && type == ParamsT) {
+		// Type-check method and params
+		if (methodVal->IsString() && (mainVal ? mainVal->IsObject() : true)) {
+			Request *req = new Request(methodVal->GetString(), mainVal, doc, this, idVal);
+			if ( ! dm->dispatchRequest(req))  // Will return false if no method was found
+				sendError(req, E_JSON_METHOD, tr("Method not found"), 0);
+			return;
+		}
 	}
-	delete doc;
+	// Handle a response
+	if (idVal && mainVal) {
+		// "Verify" error objects (see Response docs)
+		if (type == ErrorT) {
+		    if ( ! mainVal->IsObject())
+				type = ParamsT;  // Setting type to ParamsT indicates an error at this point
+			else {
+				Value::ConstMemberIterator eIt = mainVal->FindMember("code");
+				if (eIt == mainVal->MemberEnd() || ! eIt->value.IsInt())
+					type = ParamsT;
+				eIt = mainVal->FindMember("message");
+				if (eIt == mainVal->MemberEnd() || ! eIt->value.IsString())
+					type = ParamsT;
+			}
+	    }
+		// Handle null-ID errors
+		if (idVal->IsNull()) {
+			// TODO:  We can probably remove this log message
+			if (type != ErrorT) log(tr("Received null object; ignoring"));
+			else logError(mainVal);
+			delete doc;
+			return;
+		}
+		if (type != ParamsT && idVal->IsInt()) {  // If all types line up...
+			int id = idVal->GetInt();
+			req_id_lock.lock();
+			RequestRef &&req = reqs.take(id);  // Will be invalid if the id does not exist
+			req_id_lock.unlock();
+			if (req.valid(0)) {  // If the request (still) exists...
+				bool successful;
+				if (type == ErrorT) {
+					successful = false;
+					logError(mainVal, req.method);  // Log errors
+				}
+				else successful = true;
+				Response *res = new Response(successful, id, req.method, doc, this, mainVal);
+				metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
+										   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
+				return;
+			}
+		}
+	}
+	// Handle an invalid object
+	if (idVal && methodVal)
+		sendError(idVal, E_JSON_REQUEST, tr("Invalid request"), 0, doc);
+	else if (idVal && mainVal)
+		sendError(0, E_INVALID_RESPONSE, tr("Invalid response"), idVal, doc);
+	// TODO:  Make sure that this both makes it and is deleted   ^^^^^
+	else
+		sendError(0, E_JSON_PARSE, tr("Invalid JSON"), 0, doc);
 }
 
 void RemDev::log(const QString &msg, bool isAlert) const noexcept {

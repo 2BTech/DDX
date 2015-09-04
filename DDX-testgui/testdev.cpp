@@ -102,39 +102,142 @@ void TestDev::timeout() {
 		log(tr("TD emitting valid request with params"));
 		QString out("{\"jsonrpc\":\"2.0\",\"id\":%1,\"method\":\"testMethod\",\"params\":{\"n\":3245}}");
 		QByteArray buff = out.arg(++lastValidId).toUtf8();
-		strcpy(data, buff.constData());
-		handleItem(data);
+		handleItem(strdup(buff.constData()));
 	}
 	else if (eventCt == 2) {
 		log(tr("TD emitting valid request with params (respond with error)"));
 		failNextRequest = true;
 		QString out("{\"jsonrpc\":\"2.0\",\"id\":%1,\"method\":\"testMethod\",\"params\":{\"n\":3245}}");
 		QByteArray buff = out.arg(++lastValidId).toUtf8();
-		strcpy(data, buff.constData());
-		handleItem(data);
+		handleItem(strdup(buff.constData()));
 	}
 	else if (eventCt == 3) {
 		log(tr("TD emitting valid request with no params"));
 		QString out("{\"jsonrpc\":\"2.0\",\"id\":%1,\"method\":\"testMethod\"}");
 		QByteArray buff = out.arg(++lastValidId).toUtf8();
-		strcpy(data, buff.constData());
-		handleItem(data);
+		handleItem(strdup(buff.constData()));
 	}
 	else if (eventCt == 4) {
 		log(tr("TD emitting valid request with string id"));
 		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":\"ntoehu\",\"method\":\"testMethod\"}");
-		handleItem(data);
+		handleItem(strdup(data));
 	}
 	else if (eventCt == 5) {
 		log(tr("TD emitting valid notification"));
 		strcpy(data, "{\"jsonrpc\":\"2.0\",\"method\":\"testMethod\"}");
-		handleItem(data);
-		eventCt = 0;
+		handleItem(strdup(data));
 	}
+	else if (eventCt == 6) {
+		log(tr("RD sending three valid requests"));
+		validResponses.append(sendRequest(this, "responseHandler", "validMethod"));
+		validResponses.append(sendRequest(this, "responseHandler", "validMethod"));
+		validResponses.append(sendRequest(this, "responseHandler", "validMethod"));
+	}
+	else if (eventCt == 7) {
+		log(tr("TD emitting successful response"));
+		QString out("{\"jsonrpc\":\"2.0\",\"id\":%1,\"result\":true}");
+		QByteArray buff = out.arg(validResponses.takeFirst()).toUtf8();
+		handleItem(strdup(buff.constData()));
+	}
+	else if (eventCt == 8) {
+		log(tr("TD emitting response with bad member"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"result\":true,\"jsonrpc33\":\"2.33\"}");
+		handleItem(strdup(data));
+	}
+	else if (eventCt == 9) {
+		log(tr("TD emitting response with string id"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":\"213\",\"result\":true}\n");
+		handleItem(strdup(data));
+	}
+	else if (eventCt == 10) {
+		log(tr("TD emitting response with no id"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"result\":true}\n");
+		handleItem(strdup(data));
+	}
+	else if (eventCt == 11) {
+		log(tr("TD emitting response with two ids"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"id\":4567,\"result\":true}\n");
+		handleItem(strdup(data));
+	}
+	else if (eventCt == 12) {
+		log(tr("TD emitting response with no mainVal"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213}\n");
+		handleItem(strdup(data));
+	}
+	else if (eventCt == 13) {
+		log(tr("TD emitting response with result and error"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"result\":true,\"error\":{\"code\":564,\"message\":\"This is an error\"}}\n");
+		handleItem(strdup(data));
+	}
+	else if (eventCt == 14) {
+		log(tr("TD emitting response with non-object error"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"error\":true}\n");
+		handleItem(strdup(data));
+	}
+	else if (eventCt == 15) {
+		log(tr("TD emitting response with no error code"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"error\":{\"message\":\"This is an error\"}}\n");
+		handleItem(strdup(data));
+	}
+	else if (eventCt == 16) {
+		log(tr("TD emitting response with non-int error code"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"error\":{\"code\":18446744073709551615,\"message\":\"This is an error\"}}\n");
+		handleItem(strdup(data));
+	}
+	else if (eventCt == 17) {
+		log(tr("TD emitting response with no error message"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"error\":{\"code\":564,\"data\":\"This is an error\"}}\n");
+		handleItem(strdup(data));
+	}
+	else if (eventCt == 18) {
+		log(tr("TD emitting response with non-string error message"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"error\":{\"code\":564,\"message\":null}}\n");
+		handleItem(strdup(data));
+	}
+	else if (eventCt == 19) {
+		log(tr("TD emitting successful null-id response"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":null,\"result\":{\"code\":564,\"message\":null}}\n");
+		handleItem(strdup(data));
+	}
+	else if (eventCt == 20) {
+		log(tr("TD emitting null-id error"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":564,\"message\":\"This is an error\"}}\n");
+		handleItem(strdup(data));
+	}
+	else if (eventCt == 21) {
+		log(tr("TD attempting poorly allocated idVal"));
+		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":\"asontehusnotaehusnteusauntoeutaosntaoetuhsaotehnoehsteuaoeu\",\"error\":[]}");
+		handleItem(strdup(data));
+	}
+	else if (eventCt == 22) {
+		log(tr("TD emitting unrequested response"));
+		QString out("{\"jsonrpc\":\"2.0\",\"id\":%1,\"result\":true}");
+		QByteArray buff = out.arg(getInvalidId()).toUtf8();
+		handleItem(strdup(buff.constData()));
+	}
+	else if (eventCt == 23) {
+		log(tr("TD emitting valid error"));
+		QString out("{\"jsonrpc\":\"2.0\",\"id\":%1,\"error\":{\"code\":564,\"message\":\"This is an error\",\"data\":[49,402,403]}}");
+		QByteArray buff = out.arg(validResponses.takeFirst()).toUtf8();
+		handleItem(strdup(buff.constData()));
+	}
+	else if (eventCt == 24) {
+		//log(tr("TD closing"));
+		close(RemDev::ConnectionTerminated);
+		eventCt = 0;
+		//log(tr("TD RESETTING-------------------------------------------------"));
+	}
+	
+	
+	
+	
+	
+	
+	
 	else if (eventCt == 6) {
 		log(tr("TD emitting response with two ids"));
 		strcpy(data, "{\"jsonrpc\":\"2.0\",\"id\":213,\"id\":4567,\"result\":true}\n");
-		handleItem(data);
+		handleItem(strdup(data));
 	}
 	else if (eventCt == 7) {
 		log(tr("TD emitting response with no mainVal"));

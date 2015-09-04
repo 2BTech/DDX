@@ -37,6 +37,19 @@
 
 class DevMgr;
 
+/*!
+ * \brief DDX-RPC remote device base class
+ * 
+ * ### %Request & %Response Document Privacy
+ * The root documents produced by the incoming object handler are hidden by design so as
+ * to prevent any mistyping attacks with double members.  While the JSON specification
+ * disallows key duplication in objects, RapidJSON does not signal the phenomenon as a
+ * parse error for efficiency reasons.  Furthermore, such JSON data may actually be useful
+ * for certain cases (such as the DDX-RPC `Settings` type) if the standard is ever changed.
+ * However, when unexpected, an attacker can theoretically use duplicates to bypass the
+ * type restrictions made prior to Request and Response delivery.  Always use the pointers
+ * provided by these two classes rather than using Value::FindMember on the root document.
+ */
 class RemDev : public QObject
 {
 	Q_OBJECT
@@ -373,9 +386,9 @@ protected:
 	
 	/*!
 	 * \brief Handle a single, complete incoming item
-	 * \param data The raw data to use
+	 * \param data The raw data to use (will be deleted)
 	 */
-	void handleItem(const char *data) noexcept;
+	void handleItem(char *data) noexcept;
 	
 	/*!
 	 * \brief Send a log line tagged with the cid
@@ -436,6 +449,12 @@ private:
 		const char *method;
 		qint64 time;
 		qint64 timeout_time;
+	};
+	
+	enum MainValType {
+		ParamsT,
+		ResultT,
+		ErrorT
 	};
 	
 	//! A hash for maintaing lists of outgoing requests
