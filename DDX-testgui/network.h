@@ -22,6 +22,7 @@
 #include <QObject>
 #include <QTcpServer>
 #include <QSslSocket>
+#include <QAbstractSocket>
 #include <QtAlgorithms>
 #include "constants.h"
 #include "mainwindow.h"
@@ -39,7 +40,8 @@ public:
 	
 	~Network();
 	
-	void connectDevice();
+	void connectDevice(const QString &hostName, quint16 port, bool encrypted = true,
+					   QAbstractSocket::NetworkLayerProtocol protocol = AnyIPProtocol);
 	
 	void shutdown();
 	
@@ -75,6 +77,8 @@ private:
 	
 	void handleEncryptedSocket(qintptr sd);
 	
+	static void conditionSocket(QTcpSocket *s);
+	
 	void log(const QString msg, bool isAlert = false) const;
 	
 };
@@ -92,6 +96,8 @@ private:
 	void incomingConnection(qintptr socketDescriptor) override;
 	
 	Network *n;
+	
+	// ENCRYPTED SERVER
 	
 };
 

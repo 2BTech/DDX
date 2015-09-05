@@ -44,6 +44,19 @@ Network::~Network() {
 	qDeleteAll(pendingSockets);
 }
 
+void Network::connectDevice(const QString &hostName, quint16 port, bool encrypted,
+							QAbstractSocket::NetworkLayerProtocol protocol) {
+	if (encrypted) {
+		QSslSocket *s = new QSslSocket(0);
+		s->setProtocol(QSsl::TlsV1_2);
+		if (s->protocol() != QSsl::TlsV1_2) {
+			s->deleteLater();
+			return;
+		}
+		
+	}
+}
+
 void Network::init() {
 	// TODO: add a QNetworkAccessManager and related stuff so Modules can use the high-level APIs
 	
@@ -180,6 +193,10 @@ void Network::handleEncryptedSocket(qintptr sd) {
 			this, &Network::handleEncryptionErrors);
 	connect(s, &QSslSocket::encrypted, this, &Network::handleSocketNowEncrypted);
 	s->startServerEncryption();
+}
+
+void Network::conditionSocket(QTcpSocket *s) {
+	
 }
 
 void Network::log(const QString msg, bool isAlert) const {

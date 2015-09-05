@@ -89,11 +89,19 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::newNetDevice(bool checked) {
 	(void) checked;
+	if (n) {
+		logArea->appendPlainText(tr("This is a server!"));
+		return;
+	}
 	logArea->appendPlainText(tr("Network device NOT started"));
 }
 
 void MainWindow::newUnencryptedNetDevice(bool checked) {
 	(void) checked;
+	if (n) {
+		logArea->appendPlainText(tr("This is a server!"));
+		return;
+	}
 	logArea->appendPlainText(tr("Unencrypted network device NOT started"));
 }
 
@@ -110,6 +118,7 @@ void MainWindow::closeAllDevices(bool checked) {
 
 void MainWindow::startServer(bool checked) {
 	(void) checked;
+	if ( ! n.isNull()) return;
 	logArea->appendPlainText(tr("Starting server"));
 	n = new Network(this);
 }
