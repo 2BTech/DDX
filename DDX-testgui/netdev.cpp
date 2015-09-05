@@ -63,6 +63,7 @@ void NetDev::handleData() {
 
 void NetDev::handleDisconnection() {
 	log("Remote disconnected");
+	// TODO
 	close(UnknownReason, true);
 }
 

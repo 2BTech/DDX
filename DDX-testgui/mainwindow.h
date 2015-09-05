@@ -26,6 +26,7 @@
 #include <QMenuBar>
 #include <QAction>
 #include <QCloseEvent>
+#include <QPointer>
 #include <QMutex>
 
 class DevMgr;
@@ -49,19 +50,37 @@ public:
 	
 private slots:
 	
+	void newNetDevice(bool checked = false);
+	
+	void newUnencryptedNetDevice(bool checked = false);
+	
 	void newTestDevice(bool checked = false);
 	
 	void closeAllDevices(bool checked = false);
+	
+	void startServer(bool checked = false);
+	
+	void stopServer(bool checked = false);
+	
+	void updateServerStatus();
 	
 private:
 	
 	QPlainTextEdit *logArea;
 	
+	QAction *newNetDeviceAct;
+	
+	QAction *newUnencryptedNetDeviceAct;
+	
 	QAction *newTestDeviceAct;
 	
 	QAction *closeAllDevicesAct;
 	
-	Network *n;
+	QAction *startServerAct;
+	
+	QAction *stopServerAct;
+	
+	QPointer<Network> n;
 	
 };
 

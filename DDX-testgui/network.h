@@ -39,6 +39,8 @@ public:
 	
 	~Network();
 	
+	void connectDevice()
+	
 	void shutdown();
 	
 signals:
@@ -82,8 +84,6 @@ class EncryptedServer : public QTcpServer
 	Q_OBJECT
 public:
 	friend class Network;
-	
-	~EncryptedServer();
 	
 private:
 	

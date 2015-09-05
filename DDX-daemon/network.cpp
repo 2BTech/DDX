@@ -58,7 +58,7 @@ void Network::init() {
 	server = new QTcpServer(this);
 	// TODO: add a QNetworkAccessManager and related stuff so Modules can use the high-level APIs
 	// Connections
-	connect(server, &QTcpServer::acceptError, this, &Network::handleNetworkError);
+	//connect(server, &QTcpServer::acceptError, this, &Network::handleNetworkError);
 	//connect(server, &QTcpServer::newConnection, this, &Network::handleConnection);
 	int port = sg->v("GUIPort", SG_NETWORK).toInt();
 	// Filter listening addresses
@@ -128,9 +128,9 @@ void Network::handleConnection(QTcpSocket *socket) {
 		//QTimer::singleShot(REGISTRATION_TIMEOUT_TIMER, Qt::VeryCoarseTimer, this, &RemDev::registerTimeout);
 		
 		// QTcpServer::error is overloaded, so we need to use this nasty thing
-		connect(s, static_cast<void(QTcpSocket::*)(QAbstractSocket::SocketError)>(&QTcpSocket::error),
-				this, &Network::handleNetworkError);
-		connect(s, &QTcpSocket::disconnected, this, &Network::handleDisconnection);
+		//connect(s, static_cast<void(QTcpSocket::*)(QAbstractSocket::SocketError)>(&QTcpSocket::error),
+		//		this, &Network::handleNetworkError);
+		//connect(s, &QTcpSocket::disconnected, this, &Network::handleDisconnection);
 		connect(s, &QTcpSocket::readyRead, this, &Network::handleData);
 		NetDev *dev = new NetDev(d, true);
 		cons.insert(s, dev);
@@ -138,6 +138,14 @@ void Network::handleConnection(QTcpSocket *socket) {
 		s->setSocketOption(QAbstractSocket::LowDelayOption, 1);  // Disable Nagel's algorithm
 		if ( ! isLocal) s->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
 	}
+}
+
+void Network::handleDisconnection() {
+	// REMOVED
+}
+
+void Network::handleNetworkError(QAbstractSocket::SocketError error) {
+	// REMOVED
 }
 
 void Network::log(const QString msg) const {

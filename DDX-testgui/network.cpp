@@ -70,7 +70,7 @@ void Network::init() {
 		unencrypted = 0;
 		log("Starting unencrypted server failed");
 	}
-	else ("Started unencrypted server");
+	else log("Started unencrypted server");
 	
 	// Old code
 	/*if (sg->v("AllowExternal", SG_NETWORK).toBool())
@@ -190,10 +190,6 @@ void Network::log(const QString msg, bool isAlert) const {
 
 EncryptedServer::EncryptedServer(Network *parent) : QTcpServer(parent) {
 	n = parent;
-}
-
-EncryptedServer::~EncryptedServer() {
-	
 }
 
 void EncryptedServer::incomingConnection(qintptr socketDescriptor) {

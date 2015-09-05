@@ -24,16 +24,42 @@
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
-	// Connection menu
+	// Devices menu
 	QMenu *m = menuBar()->addMenu(tr("&Devices"));
-	newTestDeviceAct = new QAction(tr("Add new &TestDev", "Devices menu"), this);
+	// newNetDeviceAct
+	newNetDeviceAct = new QAction(tr("Add new &network device"), this);
+	newNetDeviceAct->setStatusTip(tr(""));
+	connect(newNetDeviceAct, &QAction::triggered, this, &MainWindow::newNetDevice);
+	m->addAction(newNetDeviceAct);
+	// newUnencryptedNetDeviceAct
+	newUnencryptedNetDeviceAct = new QAction(tr("Add new &unencrypted network device"), this);
+	newUnencryptedNetDeviceAct->setStatusTip(tr(""));
+	connect(newUnencryptedNetDeviceAct, &QAction::triggered, this, &MainWindow::newUnencryptedNetDevice);
+	m->addAction(newUnencryptedNetDeviceAct);
+	// newTestDeviceAct
+	newTestDeviceAct = new QAction(tr("Add new RPC &test device", "Devices menu"), this);
 	newTestDeviceAct->setStatusTip(tr("Add a new test device"));
 	connect(newTestDeviceAct, &QAction::triggered, this, &MainWindow::newTestDevice);
 	m->addAction(newTestDeviceAct);
+	// closeAllDevicesAct
 	closeAllDevicesAct = new QAction(tr("&Close all", "Devices menu"), this);
 	closeAllDevicesAct->setStatusTip(tr("Close all devices"));
 	connect(closeAllDevicesAct, &QAction::triggered, this, &MainWindow::closeAllDevices);
 	m->addAction(closeAllDevicesAct);
+	
+	// Server menu
+	m = menuBar()->addMenu(tr("&Server"));
+	connect(m, &QMenu::aboutToShow, this, &MainWindow::updateServerStatus);
+	// startServerAct
+	startServerAct = new QAction(tr("&Start server", "Server menu"), this);
+	startServerAct->setStatusTip(tr(""));
+	connect(startServerAct, &QAction::triggered, this, &MainWindow::startServer);
+	m->addAction(startServerAct);
+	// stopServerAct
+	stopServerAct = new QAction(tr("S&top server", "Server menu"), this);
+	stopServerAct->setStatusTip(tr(""));
+	connect(stopServerAct, &QAction::triggered, this, &MainWindow::stopServer);
+	m->addAction(stopServerAct);
 	
 	// Log area
 	logArea = new QPlainTextEdit();
@@ -47,6 +73,7 @@ MainWindow::MainWindow(QWidget *parent)
 	resize(1000,500);
 	logArea->appendPlainText(tr("Instantiating DevMgr"));
 	dm = new DevMgr(this);
+	n = 0;
 }
 
 MainWindow::~MainWindow()
@@ -55,13 +82,23 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
+	stopServer();
 	closeAllDevices();
 	event->accept();  // ignore() to prevent closing
 }
 
+void MainWindow::newNetDevice(bool checked) {
+	(void) checked;
+	logArea->appendPlainText(tr("Network device NOT started"));
+}
+
+void MainWindow::newUnencryptedNetDevice(bool checked) {
+	(void) checked;
+	logArea->appendPlainText(tr("Unencrypted network device NOT started"));
+}
+
 void MainWindow::newTestDevice(bool checked) {
 	(void) checked;
-	//newTestDeviceAct->setEnabled(false);
 	logArea->appendPlainText("Starting test device");
 	new TestDev(dm, true);
 }
@@ -69,5 +106,26 @@ void MainWindow::newTestDevice(bool checked) {
 void MainWindow::closeAllDevices(bool checked) {
 	(void) checked;
 	dm->closeAll();
-	newTestDeviceAct->setEnabled(true);
+}
+
+void MainWindow::startServer(bool checked) {
+	(void) checked;
+	logArea->appendPlainText(tr("Starting server"));
+	n = new Network(this);
+}
+
+void MainWindow::stopServer(bool checked) {
+	(void) checked;
+	logArea->appendPlainText("Server NOT stopped");
+}
+
+void MainWindow::updateServerStatus() {
+	if (n.isNull()) {
+		startServerAct->setEnabled(true);
+		stopServerAct->setDisabled(true);
+	}
+	else {
+		startServerAct->setDisabled(true);
+		stopServerAct->setEnabled(true);
+	}
 }
