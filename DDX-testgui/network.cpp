@@ -93,6 +93,7 @@ void Network::init() {
 void Network::shutdown() {
 	if (encrypted) encrypted->close();
 	if (unencrypted) unencrypted->close();
+	deleteLater();
 }
 
 void Network::handleUnencryptedConnection() {
@@ -110,7 +111,7 @@ void Network::handleUnencryptedConnection() {
 		
 		//QTimer::singleShot(REGISTRATION_TIMEOUT_TIMER, Qt::VeryCoarseTimer, this, &RemDev::registerTimeout);
 		
-		NetDev *dev = new NetDev(mw->dm, s);
+		new NetDev(mw->dm, s);
 	}
 }
 

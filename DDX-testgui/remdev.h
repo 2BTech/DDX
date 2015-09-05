@@ -213,12 +213,6 @@ public:
 		rapidjson::Document *doc;
 	};
 	
-	struct Registration {
-		QByteArray target;
-		QByteArray requester;
-		QStringList passwords;
-	};
-	
 	explicit RemDev(DevMgr *dm, bool inbound);
 	
 	~RemDev();
@@ -283,6 +277,7 @@ public:
 	 * - `E_ACCESS_DENIED` ("Access denied")
 	 * - `E_NOT_SUPPORTED` ("Not supported")
 	 * - `E_JSON_PARAMS` ("Invalid params")
+	 * - `E_JSON_METHOD` ("Method not found")
 	 * 
 	 * If \a req is a notification, it will still be deleted but no response will be sent.
 	 * 

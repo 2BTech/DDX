@@ -147,6 +147,7 @@ void RemDev::sendError(Request *req, int code) noexcept {
 	case E_ACCESS_DENIED: msg = tr("Access denied"); break;
 	case E_NOT_SUPPORTED: msg = tr("Not supported"); break;
 	case E_JSON_PARAMS: msg = tr("Invalid params"); break;
+	case E_JSON_METHOD: msg = tr("Method not found"); break;
 	default: msg = tr("Unknown error"); Q_ASSERT(false);
 	}
 	sendError(req, code, msg);

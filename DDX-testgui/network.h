@@ -39,7 +39,7 @@ public:
 	
 	~Network();
 	
-	void connectDevice()
+	void connectDevice();
 	
 	void shutdown();
 	

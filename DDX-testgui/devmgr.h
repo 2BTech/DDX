@@ -52,7 +52,7 @@ public:
 	 * \brief Register a request handler
 	 * \param handlerObj The object which will handle the request
 	 * \param handlerFn The function of \a handlerObj to handle the request
-	 * \param method The name of the method (must not be deleted)
+	 * \param method The name of the method
 	 * 
 	 * This function will replace any existing handler for \a method.  If \a handlerObj
 	 * is deleted, the handler will automatically be removed at the next request.
@@ -73,8 +73,7 @@ public slots:
 	
 private:
 	
-	class RequestHandler {
-	public:
+	struct RequestHandler {
 		RequestHandler(QObject *handlerObj, const char *handlerFn) {
 			this->handlerObj = handlerObj;
 			this->handlerFn = handlerFn;
