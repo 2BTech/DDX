@@ -213,7 +213,7 @@ public:
 		rapidjson::Document *doc;
 	};
 	
-	explicit RemDev(DevMgr *dm, bool inbound);
+	explicit RemDev(DevMgr *dm, QByteArray *ref = 0);
 	
 	~RemDev();
 	
@@ -482,6 +482,18 @@ private:
 	qint64 registrationTimeoutTime;
 	
 	bool registered;
+	
+	QByteArray *ref;
+	
+	/*!
+	 * \brief Master constructor
+	 * \param dm
+	 * \param inbound
+	 */
+	RemDev(DevMgr *dm, QByteArray *ref);
+	
+	//! Start this device's threads
+	void startThread();
 	
 	/*!
 	 * \brief Stringify and deliver a complete JSON document

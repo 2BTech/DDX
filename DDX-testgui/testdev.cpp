@@ -22,7 +22,7 @@
 #define RAPIDJSON_IO
 #include "rapidjson_using.h"
 
-TestDev::TestDev(DevMgr *dm, bool inbound) : RemDev(dm, inbound) {
+TestDev::TestDev(DevMgr *dm, bool inbound) : RemDev(dm) {
 	eventCt = 0;
 	lastValidId = 0;
 	lastInvalidId = 999;

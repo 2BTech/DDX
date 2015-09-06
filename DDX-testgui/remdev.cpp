@@ -22,7 +22,7 @@
 #define RAPIDJSON_IO
 #include "rapidjson_using.h"
 
-RemDev::RemDev(DevMgr *dm, bool inbound) :
+RemDev::RemDev(DevMgr *dm, QByteArray *ref) :
 		QObject(0), req_id_lock(QMutex::Recursive) {
 	// Initializations
 	connectTime = QDateTime::currentMSecsSinceEpoch();
@@ -32,7 +32,8 @@ RemDev::RemDev(DevMgr *dm, bool inbound) :
 	registered = false;
 	regState = UnregisteredState;
 	closed = false;
-	this->inbound = inbound;
+	this->ref = ref;
+	inbound = ! ref;
 	// Add to master device list and get temporary cid
 	cid = dm->addDevice(this);
 	log(tr("New unregistered device"));

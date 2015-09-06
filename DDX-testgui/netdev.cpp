@@ -18,7 +18,7 @@
 
 #include "netdev.h"
 
-NetDev::NetDev(DevMgr *dm, QTcpSocket *socket) : RemDev(dm, true) {
+NetDev::NetDev(DevMgr *dm, QTcpSocket *socket) : RemDev(dm) {
 	s = socket;
 }
 
