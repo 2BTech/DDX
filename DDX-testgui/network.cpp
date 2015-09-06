@@ -23,6 +23,7 @@ Network::Network(MainWindow *parent) : QObject(0)
 {
 	// Initialization
 	mw = parent;
+	server = 0;
 	// Connections
 	connect(this, &Network::postToLogArea, mw->getLogArea(), &QPlainTextEdit::appendPlainText);
 	// Threading
@@ -39,51 +40,35 @@ Network::Network(MainWindow *parent) : QObject(0)
 }
 
 Network::~Network() {
-	if (encrypted) delete encrypted;
-	if (unencrypted) delete unencrypted;
+	if (server) delete server;
 	qDeleteAll(pendingSockets);
 }
 
-void Network::connectDevice(const QString &hostName, quint16 port, bool encrypted,
+QByteArray Network::connectDevice(const QString &hostName, quint16 port,
 							QAbstractSocket::NetworkLayerProtocol protocol) {
-	if (encrypted) {
-		QSslSocket *s = new QSslSocket(0);
-		s->setProtocol(QSsl::TlsV1_2);
-		if (s->protocol() != QSsl::TlsV1_2) {
-			s->deleteLater();
-			return;
-		}
-		
+	QSslSocket *s = new QSslSocket(0);
+	s->setProtocol(QSsl::TlsV1_2);
+	if (s->protocol() != QSsl::TlsV1_2) {
+		s->deleteLater();
+		return QByteArray();
 	}
 }
 
 void Network::init() {
 	// TODO: add a QNetworkAccessManager and related stuff so Modules can use the high-level APIs
 	
-	// Initialize the encrypted server
-	encrypted = new EncryptedServer(this);
-	connect(encrypted, &EncryptedServer::acceptError, this, &Network::handleNetworkError);
+	// Initialize the server
+	server = new EncryptedServer(this);
+	connect(server, &EncryptedServer::acceptError, this, &Network::handleNetworkError);
 	int port = 4384;
 	QHostAddress a = QHostAddress::Any;
-	if ( ! encrypted->listen(a, port)) {
-		encrypted->deleteLater();
-		encrypted = 0;
-		log("Starting encrypted server failed");
+	if ( ! server->listen(a, port)) {
+		// TODO:  Handle this better
+		server->deleteLater();
+		server = 0;
+		log("Starting server failed");
 	}
-	else log("Started encrypted server");
-	
-	// Initialize the unencrypted server
-	unencrypted = new QTcpServer(this);
-	connect(unencrypted, &QTcpServer::acceptError, this, &Network::handleNetworkError);
-	connect(unencrypted, &QTcpServer::newConnection, this, &Network::handleUnencryptedConnection);
-	port = 4388;
-	a = QHostAddress::Any;
-	if ( ! unencrypted->listen(a, port)) {
-		unencrypted->deleteLater();
-		unencrypted = 0;
-		log("Starting unencrypted server failed");
-	}
-	else log("Started unencrypted server");
+	else log("Started server");
 	
 	// Old code
 	/*if (sg->v("AllowExternal", SG_NETWORK).toBool())
@@ -104,28 +89,8 @@ void Network::init() {
 }
 
 void Network::shutdown() {
-	if (encrypted) encrypted->close();
-	if (unencrypted) unencrypted->close();
+	if (server) server->close();
 	deleteLater();
-}
-
-void Network::handleUnencryptedConnection() {
-	QTcpSocket *s;
-	while ((s = unencrypted->nextPendingConnection())) {
-		if (s->state() != QAbstractSocket::ConnectedState) {
-			log(tr("Pending connection was invalid"));
-			s->deleteLater();
-			continue;
-		}
-		// Determine basic information about the connection itself
-		bool usingIPv6 = s->peerAddress().protocol() == QAbstractSocket::IPv6Protocol;
-		QHostAddress localhost = usingIPv6 ? QHostAddress::LocalHostIPv6 : QHostAddress::LocalHost;
-		bool isLocal = s->peerAddress() == localhost;
-		
-		//QTimer::singleShot(REGISTRATION_TIMEOUT_TIMER, Qt::VeryCoarseTimer, this, &RemDev::registerTimeout);
-		
-		new NetDev(mw->dm, s);
-	}
 }
 
 /*void Network::handleDisconnection() {
@@ -163,15 +128,22 @@ void Network::handleNetworkError(QAbstractSocket::SocketError error) {
 }
 
 void Network::handleSocketNowEncrypted() {
-	
+	for (int i = 0; i < pending.size(); i++) {
+		QSslSocket *s = pending.at(i).socket;
+		if (s->isEncrypted()) {
+			if (s->state() != QAbstractSocket::ConnectedState) {
+				log(tr("Pending connection was invalid"));
+				s->deleteLater();
+				pending.removeAt(i--);
+				continue;
+			}
+			new NetDev(mw->dm, (QSslSocket*) sender());
+		}
+	}
 }
 
 void Network::handleEncryptionErrors(const QList<QSslError> & errors) {
-	
-}
-
-void Network::handleConnection(QTcpSocket *socket) {
-	
+	// TODO
 }
 
 void Network::handleEncryptedSocket(qintptr sd) {
@@ -195,7 +167,7 @@ void Network::handleEncryptedSocket(qintptr sd) {
 	s->startServerEncryption();
 }
 
-void Network::conditionSocket(QTcpSocket *s) {
+bool Network::conditionSocket(QSslSocket *s) {
 	
 }
 

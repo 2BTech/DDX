@@ -40,8 +40,8 @@ public:
 	
 	~Network();
 	
-	void connectDevice(const QString &hostName, quint16 port, bool encrypted = true,
-					   QAbstractSocket::NetworkLayerProtocol protocol = AnyIPProtocol);
+	QByteArray connectDevice(const QString &hostName, quint16 port,
+					   QAbstractSocket::NetworkLayerProtocol protocol = QAbstractSocket::AnyIPProtocol);
 	
 	void shutdown();
 	
@@ -55,8 +55,6 @@ public slots:
 	
 private slots:
 	
-	void handleUnencryptedConnection();
-	
 	void handleNetworkError(QAbstractSocket::SocketError error);
 	
 	void handleSocketNowEncrypted();
@@ -65,19 +63,23 @@ private slots:
 	
 private:
 	
+	struct PendingConnection {
+		QSslSocket *socket;
+		QByteArray ref;
+		
+	};
+	
 	MainWindow *mw;
 	
-	QList<QSslSocket*> pendingSockets;
+	typedef QList<PendingConnection> PendingList;
 	
-	EncryptedServer *encrypted;
+	PendingList pending;
 	
-	QTcpServer *unencrypted;
-	
-	void handleConnection(QTcpSocket *socket);
+	EncryptedServer *server;
 	
 	void handleEncryptedSocket(qintptr sd);
 	
-	static void conditionSocket(QTcpSocket *s);
+	static bool conditionSocket(QSslSocket *s);
 	
 	void log(const QString msg, bool isAlert = false) const;
 	

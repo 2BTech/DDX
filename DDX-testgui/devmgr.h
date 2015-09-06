@@ -69,6 +69,8 @@ signals:
 	
 	void postToLogArea(const QString &msg) const;
 	
+	void deviceReady(const QByteArray &ref, RemDev *device, const QString &error);
+	
 public slots:
 	
 private:

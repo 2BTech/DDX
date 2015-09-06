@@ -22,6 +22,7 @@
 #include <QObject>
 #include <QSslSocket>
 #include <QAbstractSocket>
+#include <QHostAddress>
 #include "remdev.h"
 
 class DevMgr;

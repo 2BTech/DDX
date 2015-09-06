@@ -29,8 +29,14 @@ NetDev::~NetDev() {
 void NetDev::sub_init() noexcept {
 	s->setParent(this);
 	
+	
+	// Determine basic information about the connection itself
+	bool usingIPv6 = s->peerAddress().protocol() == QAbstractSocket::IPv6Protocol;
+	QHostAddress localhost = usingIPv6 ? QHostAddress::LocalHostIPv6 : QHostAddress::LocalHost;
+	bool isLocal = s->peerAddress() == localhost;
+	
 	s->setSocketOption(QAbstractSocket::LowDelayOption, 1);  // Disable Nagel's algorithm
-	//if ( ! isLocal) s->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
+	if ( ! isLocal) s->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
 	
 	// QTcpServer::error is overloaded, so we need to use this nasty thing
 	connect(s, static_cast<void(QTcpSocket::*)(QAbstractSocket::SocketError)>(&QTcpSocket::error),
