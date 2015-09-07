@@ -66,7 +66,6 @@ private:
 	struct PendingConnection {
 		QSslSocket *socket;
 		QByteArray ref;
-		
 	};
 	
 	MainWindow *mw;

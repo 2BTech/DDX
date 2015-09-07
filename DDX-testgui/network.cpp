@@ -41,7 +41,8 @@ Network::Network(MainWindow *parent) : QObject(0)
 
 Network::~Network() {
 	if (server) delete server;
-	qDeleteAll(pendingSockets);
+	for (int i = 0; i < pending.size(); i++)
+		delete pending.at(i).socket;
 }
 
 QByteArray Network::connectDevice(const QString &hostName, quint16 port,

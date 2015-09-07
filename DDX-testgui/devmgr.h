@@ -46,6 +46,8 @@ public:
 	
 	~DevMgr();
 	
+	void reportFailedConnection(const QByteArray &ref, const QString &error);
+	
 	void closeAll(RemDev::DisconnectReason reason = RemDev::ShuttingDown);
 	
 	/*!

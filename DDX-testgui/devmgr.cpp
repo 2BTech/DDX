@@ -38,6 +38,10 @@ DevMgr::~DevMgr() {
 	delete timeoutPoller;
 }
 
+void DevMgr::reportFailedConnection(const QByteArray &ref, const QString &error) {
+	emit deviceReady(ref, 0, error);
+}
+
 void DevMgr::closeAll(RemDev::DisconnectReason reason) {
 	dLock.lock();
 	closing = true;
