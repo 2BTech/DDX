@@ -22,6 +22,7 @@
 DevMgr::DevMgr(MainWindow *parent) : QObject(parent) {
 	mw = parent;
 	unregCt = 0;
+	refCt = 0;
 	closing = false;
 	connect(this, &DevMgr::postToLogArea, mw->getLogArea(), &QPlainTextEdit::appendPlainText);
 	// Enable invocation of handler functions
@@ -38,7 +39,14 @@ DevMgr::~DevMgr() {
 	delete timeoutPoller;
 }
 
-void DevMgr::reportFailedConnection(const QByteArray &ref, const QString &error) {
+int DevMgr::getRef() {
+	if (refCt.testAndSetAcquire(INT_MAX, 0))
+		log(tr("Resetting ref counter"));
+	return ++refCt;
+}
+
+void DevMgr::reportFailedConnection(int ref, const QString &error) {
+	log(tr("Target device %1 failed to start: %2").arg(QString::number(ref), error));
 	emit deviceReady(ref, 0, error);
 }
 
@@ -119,7 +127,7 @@ bool DevMgr::dispatchRequest(RemDev::Request *req) const {
 
 void DevMgr::log(const QString &msg, bool isAlert) const {
 	(void) isAlert;
-	QString out("DevMgr: ");
+	QString out("devmgr: ");
 	out.append(msg);
 	emit postToLogArea(out);
 }

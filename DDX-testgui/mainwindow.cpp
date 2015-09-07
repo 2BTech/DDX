@@ -31,11 +31,6 @@ MainWindow::MainWindow(QWidget *parent)
 	newNetDeviceAct->setStatusTip(tr(""));
 	connect(newNetDeviceAct, &QAction::triggered, this, &MainWindow::newNetDevice);
 	m->addAction(newNetDeviceAct);
-	// newUnencryptedNetDeviceAct
-	newUnencryptedNetDeviceAct = new QAction(tr("Add new &unencrypted network device"), this);
-	newUnencryptedNetDeviceAct->setStatusTip(tr(""));
-	connect(newUnencryptedNetDeviceAct, &QAction::triggered, this, &MainWindow::newUnencryptedNetDevice);
-	m->addAction(newUnencryptedNetDeviceAct);
 	// newTestDeviceAct
 	newTestDeviceAct = new QAction(tr("Add new RPC &test device", "Devices menu"), this);
 	newTestDeviceAct->setStatusTip(tr("Add a new test device"));
@@ -73,7 +68,7 @@ MainWindow::MainWindow(QWidget *parent)
 	resize(1000,500);
 	logArea->appendPlainText(tr("Instantiating DevMgr"));
 	dm = new DevMgr(this);
-	n = 0;
+	n = new Network(this);
 }
 
 MainWindow::~MainWindow()
@@ -89,24 +84,15 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::newNetDevice(bool checked) {
 	(void) checked;
-	if (n) {
-		logArea->appendPlainText(tr("This is a server!"));
-		return;
-	}
-	logArea->appendPlainText(tr("Network device NOT started"));
-}
-
-void MainWindow::newUnencryptedNetDevice(bool checked) {
-	(void) checked;
-	if (n) {
-		logArea->appendPlainText(tr("This is a server!"));
-		return;
-	}
-	logArea->appendPlainText(tr("Unencrypted network device NOT started"));
+	n->connectDevice("localhost", 4388);
 }
 
 void MainWindow::newTestDevice(bool checked) {
 	(void) checked;
+	if (n->serverRunning()) {
+		logArea->appendPlainText("This is a server!");
+		return;
+	}
 	logArea->appendPlainText("Starting test device");
 	new TestDev(dm, true);
 }
@@ -118,23 +104,21 @@ void MainWindow::closeAllDevices(bool checked) {
 
 void MainWindow::startServer(bool checked) {
 	(void) checked;
-	if ( ! n.isNull()) return;
-	logArea->appendPlainText(tr("Starting server"));
-	n = new Network(this);
+	n->startServer();
 }
 
 void MainWindow::stopServer(bool checked) {
 	(void) checked;
-	logArea->appendPlainText("Server NOT stopped");
+	n->stopServer();
 }
 
 void MainWindow::updateServerStatus() {
-	if (n.isNull()) {
-		startServerAct->setEnabled(true);
-		stopServerAct->setDisabled(true);
-	}
-	else {
+	if (n->serverRunning()) {
 		startServerAct->setDisabled(true);
 		stopServerAct->setEnabled(true);
+	}
+	else {
+		startServerAct->setEnabled(true);
+		stopServerAct->setDisabled(true);
 	}
 }

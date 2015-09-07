@@ -24,6 +24,7 @@
 #include <QList>
 #include <QHash>
 #include <QMutex>
+#include <QAtomicInt>
 #include <QPlainTextEdit>
 #include <QTimer>
 #include <QReadWriteLock>
@@ -46,7 +47,9 @@ public:
 	
 	~DevMgr();
 	
-	void reportFailedConnection(const QByteArray &ref, const QString &error);
+	int getRef();
+	
+	void reportFailedConnection(int ref, const QString &error);
 	
 	void closeAll(RemDev::DisconnectReason reason = RemDev::ShuttingDown);
 	
@@ -71,7 +74,7 @@ signals:
 	
 	void postToLogArea(const QString &msg) const;
 	
-	void deviceReady(const QByteArray &ref, RemDev *device, const QString &error);
+	void deviceReady(int ref, RemDev *device, const QString &error);
 	
 public slots:
 	
@@ -103,6 +106,8 @@ private:
 	QTimer *timeoutPoller;
 	
 	int unregCt;
+	
+	QAtomicInt refCt;
 	
 	bool closing;
 	

@@ -51,8 +51,6 @@ private slots:
 	
 	void newNetDevice(bool checked = false);
 	
-	void newUnencryptedNetDevice(bool checked = false);
-	
 	void newTestDevice(bool checked = false);
 	
 	void closeAllDevices(bool checked = false);
@@ -69,8 +67,6 @@ private:
 	
 	QAction *newNetDeviceAct;
 	
-	QAction *newUnencryptedNetDeviceAct;
-	
 	QAction *newTestDeviceAct;
 	
 	QAction *closeAllDevicesAct;
@@ -79,7 +75,7 @@ private:
 	
 	QAction *stopServerAct;
 	
-	QPointer<Network> n;
+	Network *n;
 	
 };
 

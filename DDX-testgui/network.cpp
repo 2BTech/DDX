@@ -18,6 +18,7 @@
 
 #include "network.h"
 #include "netdev.h"
+#include "devmgr.h"
 
 Network::Network(MainWindow *parent) : QObject(0)
 {
@@ -26,6 +27,7 @@ Network::Network(MainWindow *parent) : QObject(0)
 	server = 0;
 	// Connections
 	connect(this, &Network::postToLogArea, mw->getLogArea(), &QPlainTextEdit::appendPlainText);
+	connect(this, &Network::doConnectPrivate, this, &Network::connectPrivate);
 	// Threading
 #ifdef NETWORK_THREAD
 	QThread *t = new QThread(daemon);
@@ -45,23 +47,19 @@ Network::~Network() {
 		delete pending.at(i).socket;
 }
 
-QByteArray Network::connectDevice(const QString &hostName, quint16 port,
+int Network::connectDevice(const QString &hostName, quint16 port,
 							QAbstractSocket::NetworkLayerProtocol protocol) {
-	QSslSocket *s = new QSslSocket(0);
-	s->setProtocol(QSsl::TlsV1_2);
-	if (s->protocol() != QSsl::TlsV1_2) {
-		s->deleteLater();
-		return QByteArray();
-	}
+	int ref = mw->dm->getRef();
+	emit doConnectPrivate(ref, hostName, port, protocol);
+	log(tr("Connecting to target at %1 with ref %2").arg(hostName, QString::number(ref)));
+	return ref;
 }
 
-void Network::init() {
-	// TODO: add a QNetworkAccessManager and related stuff so Modules can use the high-level APIs
-	
-	// Initialize the server
+void Network::startServer() {
+	if (server) return;
 	server = new EncryptedServer(this);
 	connect(server, &EncryptedServer::acceptError, this, &Network::handleNetworkError);
-	int port = 4384;
+	int port = 4388;
 	QHostAddress a = QHostAddress::Any;
 	if ( ! server->listen(a, port)) {
 		// TODO:  Handle this better
@@ -70,6 +68,17 @@ void Network::init() {
 		log("Starting server failed");
 	}
 	else log("Started server");
+}
+
+void Network::stopServer() {
+	if ( ! server) return;
+	server->deleteLater();
+	server = 0;
+	log(tr("Stopped server"));
+}
+
+void Network::init() {
+	// TODO: add a QNetworkAccessManager and related stuff so Modules can use the high-level APIs
 	
 	// Old code
 	/*if (sg->v("AllowExternal", SG_NETWORK).toBool())
@@ -90,7 +99,8 @@ void Network::init() {
 }
 
 void Network::shutdown() {
-	if (server) server->close();
+	stopServer();
+	while (pending.size()) pendingFailed(0, tr("The network manager is shutting down"));
 	deleteLater();
 }
 
@@ -122,20 +132,24 @@ void Network::shutdown() {
 void Network::handleNetworkError(QAbstractSocket::SocketError error) {
 	// TODO
 	
-	// RemoteClosedError is emitted even on normal disconnections
-	if (error == QAbstractSocket::RemoteHostClosedError) return;
+	
+	// Note: RemoteHostClosedError is still a valid error at this point in time since
+	// we don't handle explicit disconnections while sockets are managed by Network
 	
 	log(QString("DDX bug: Unhandled network error (QAbstractSocket): '%1'").arg(error));
+	//pendingFailed()
 }
 
 void Network::handleSocketNowEncrypted() {
 	for (int i = 0; i < pending.size(); i++) {
 		QSslSocket *s = pending.at(i).socket;
 		if (s->isEncrypted()) {
+			if (s->protocol() != QSsl::TlsV1_2) {
+				pendingFailed(i--, tr("Pending connection not using TLS v1.2"));
+				continue;
+			}
 			if (s->state() != QAbstractSocket::ConnectedState) {
-				log(tr("Pending connection was invalid"));
-				s->deleteLater();
-				pending.removeAt(i--);
+				pendingFailed(i--, tr("Pending connection was invalid"));
 				continue;
 			}
 			new NetDev(mw->dm, (QSslSocket*) sender());
@@ -145,27 +159,50 @@ void Network::handleSocketNowEncrypted() {
 
 void Network::handleEncryptionErrors(const QList<QSslError> & errors) {
 	// TODO
+	log(tr("Unhandled encryption error"));
 }
 
-void Network::handleEncryptedSocket(qintptr sd) {
+void Network::connectPrivate(int ref, const QString &hostName, quint16 port,
+							  QAbstractSocket::NetworkLayerProtocol protocol) {
+	QSslSocket *s = new QSslSocket(0);
+	s->setProtocol(QSsl::TlsV1_2);
+	pending.append(PendingConnection(s, ref));
+	// The error signals are overloaded, so we need to use these nasty things
+	connect(s, static_cast<void(QSslSocket::*)(QAbstractSocket::SocketError)>(&QSslSocket::error),
+			this, &Network::handleNetworkError);
+	connect(s, static_cast<void(QSslSocket::*)(const QList<QSslError> &)>(&QSslSocket::sslErrors),
+			this, &Network::handleEncryptionErrors);
+	connect(s, &QSslSocket::encrypted, this, &Network::handleSocketNowEncrypted);
+	s->connectToHostEncrypted(hostName, port, QAbstractSocket::ReadWrite, protocol);
+}
+
+void Network::handleSocket(qintptr sd) {
 	// Build a new QSslSocket to manage this socket.
 	QSslSocket *s = new QSslSocket(0);
 	s->setProtocol(QSsl::TlsV1_2);
-	if (s->protocol() != QSsl::TlsV1_2) {
-		s->deleteLater();
-		return;
-	}
 	if ( ! s->setSocketDescriptor(sd)) {
 		s->deleteLater();
 		return;
 	}
-	pendingSockets.append(s);
-	
+	if (s->state() != QAbstractSocket::ConnectedState) {
+		s->deleteLater();
+		return;
+	}
+	pending.append(PendingConnection(s, 0));
 	// QSslServer::sslErrors is overloaded, so we need to use this nasty thing
 	connect(s, static_cast<void(QSslSocket::*)(const QList<QSslError> &)>(&QSslSocket::sslErrors),
 			this, &Network::handleEncryptionErrors);
 	connect(s, &QSslSocket::encrypted, this, &Network::handleSocketNowEncrypted);
 	s->startServerEncryption();
+	log(tr("Received new connection from %1:%2").arg(s->peerAddress().toString(), QString::number(s->peerPort())));
+}
+
+void Network::pendingFailed(int index, const QString &error) {
+	const PendingConnection &con = pending.at(index);
+	con.socket->deleteLater();
+	if (con.ref) mw->dm->reportFailedConnection(con.ref, error);
+	else log(tr("Incoming connection failed to start: %1").append(error));
+	pending.removeAt(index);
 }
 
 bool Network::conditionSocket(QSslSocket *s) {
@@ -177,12 +214,4 @@ void Network::log(const QString msg, bool isAlert) const {
 	QString out("network: ");
 	out.append(msg);
 	emit postToLogArea(out);
-}
-
-EncryptedServer::EncryptedServer(Network *parent) : QTcpServer(parent) {
-	n = parent;
-}
-
-void EncryptedServer::incomingConnection(qintptr socketDescriptor) {
-	n->handleEncryptedSocket(socketDescriptor);
 }

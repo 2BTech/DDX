@@ -40,18 +40,34 @@ public:
 	
 	~Network();
 	
-	QByteArray connectDevice(const QString &hostName, quint16 port,
+	int connectDevice(const QString &hostName, quint16 port,
 					   QAbstractSocket::NetworkLayerProtocol protocol = QAbstractSocket::AnyIPProtocol);
 	
-	void shutdown();
+	void startServer();
+	
+	void stopServer();
+	
+	bool serverRunning() {return server;}
 	
 signals:
 	
 	void postToLogArea(const QString &msg) const;
 	
+	void doConnectPrivate(int ref, const QString &hostName, quint16 port,
+				   QAbstractSocket::NetworkLayerProtocol protocol) const;
+	
 public slots:
 	
 	void init();
+	
+	/*!
+	 * \brief Shutdown signal
+	 * 
+	 * Shut down the server, terminate and report any pending connections, and delete this instance.
+	 * 
+	 * **Mactitf**: Must be called with queued connections!
+	 */
+	void shutdown();
 	
 private slots:
 	
@@ -61,11 +77,18 @@ private slots:
 	
 	void handleEncryptionErrors(const QList<QSslError> & errors);
 	
+	void connectPrivate(int ref, const QString &hostName, quint16 port,
+						 QAbstractSocket::NetworkLayerProtocol protocol);
+	
 private:
 	
 	struct PendingConnection {
+		PendingConnection(QSslSocket *socket, int ref) {
+			this->socket = socket;
+			this->ref = ref;
+		}
 		QSslSocket *socket;
-		QByteArray ref;
+		int ref;
 	};
 	
 	MainWindow *mw;
@@ -76,7 +99,14 @@ private:
 	
 	EncryptedServer *server;
 	
-	void handleEncryptedSocket(qintptr sd);
+	void handleSocket(qintptr sd);
+	
+	/*!
+	 * \brief Log/report and removed a failed pending connection
+	 * \param i The connection's index in #pending
+	 * \param error The error message
+	 */
+	void pendingFailed(int index, const QString &error);
 	
 	static bool conditionSocket(QSslSocket *s);
 	
@@ -89,14 +119,15 @@ class EncryptedServer : public QTcpServer
 	Q_OBJECT
 public:
 	friend class Network;
-	
 private:
 	
-	EncryptedServer(Network *parent);
-	
-	void incomingConnection(qintptr socketDescriptor) override;
-	
 	Network *n;
+	
+	EncryptedServer(Network *parent)
+		{n = parent;}
+	
+	void incomingConnection(qintptr socketDescriptor) override
+		{n->handleSocket(socketDescriptor);}
 	
 	// ENCRYPTED SERVER
 	

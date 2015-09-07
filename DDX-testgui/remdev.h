@@ -213,7 +213,7 @@ public:
 		rapidjson::Document *doc;
 	};
 	
-	explicit RemDev(DevMgr *dm, QByteArray *ref = 0);
+	explicit RemDev(DevMgr *dm, int ref = 0);
 	
 	~RemDev();
 	
@@ -483,14 +483,7 @@ private:
 	
 	bool registered;
 	
-	QByteArray *ref;
-	
-	/*!
-	 * \brief Master constructor
-	 * \param dm
-	 * \param inbound
-	 */
-	RemDev(DevMgr *dm, QByteArray *ref);
+	int ref;
 	
 	//! Start this device's threads
 	void startThread();

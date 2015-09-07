@@ -22,7 +22,7 @@
 #define RAPIDJSON_IO
 #include "rapidjson_using.h"
 
-RemDev::RemDev(DevMgr *dm, QByteArray *ref) :
+RemDev::RemDev(DevMgr *dm, int ref) :
 		QObject(0), req_id_lock(QMutex::Recursive) {
 	// Initializations
 	connectTime = QDateTime::currentMSecsSinceEpoch();
