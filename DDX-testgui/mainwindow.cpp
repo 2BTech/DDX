@@ -84,15 +84,15 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::newNetDevice(bool checked) {
 	(void) checked;
+	if (n->serverRunning()) {
+		logArea->appendPlainText("This is a server!");
+		return;
+	}
 	n->connectDevice("localhost", 4388);
 }
 
 void MainWindow::newTestDevice(bool checked) {
 	(void) checked;
-	if (n->serverRunning()) {
-		logArea->appendPlainText("This is a server!");
-		return;
-	}
 	logArea->appendPlainText("Starting test device");
 	new TestDev(dm, true);
 }

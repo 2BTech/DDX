@@ -18,8 +18,10 @@
 
 #include "netdev.h"
 
-NetDev::NetDev(DevMgr *dm, QTcpSocket *socket) : RemDev(dm) {
+NetDev::NetDev(DevMgr *dm, int ref, QSslSocket *socket) : RemDev(dm, ref) {
 	s = socket;
+	disconnect(s);
+	s->moveToThread(thread());
 }
 
 NetDev::~NetDev() {
@@ -40,8 +42,11 @@ void NetDev::sub_init() noexcept {
 	if ( ! isLocal) s->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
 	
 	// QTcpServer::error is overloaded, so we need to use this nasty thing
-	connect(s, static_cast<void(QTcpSocket::*)(QAbstractSocket::SocketError)>(&QTcpSocket::error),
+	// The error signals are overloaded, so we need to use these nasty things
+	connect(s, static_cast<void(QSslSocket::*)(QAbstractSocket::SocketError)>(&QSslSocket::error),
 			this, &NetDev::handleNetworkError);
+	connect(s, static_cast<void(QSslSocket::*)(const QList<QSslError> &)>(&QSslSocket::sslErrors),
+			this, &NetDev::handleEncryptionErrors);
 	connect(s, &QTcpSocket::disconnected, this, &NetDev::handleDisconnection);
 	connect(s, &QTcpSocket::readyRead, this, &NetDev::handleData);
 	connectionReady();
@@ -81,4 +86,8 @@ void NetDev::handleNetworkError(QAbstractSocket::SocketError error) {
 	if (error == QAbstractSocket::RemoteHostClosedError) return;
 	
 	log(QString("DDX bug: Unhandled network error (QAbstractSocket): '%1'").arg(error));
+}
+
+void NetDev::handleEncryptionErrors(const QList<QSslError> & errors) {
+	// TODO
 }

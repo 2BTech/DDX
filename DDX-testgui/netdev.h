@@ -32,7 +32,7 @@ class NetDev : public RemDev
 	Q_OBJECT
 public:
 	
-	explicit NetDev(DevMgr *dm, QTcpSocket *socket);
+	explicit NetDev(DevMgr *dm, int ref, QSslSocket *socket);
 	
 	~NetDev();
 	
@@ -54,13 +54,15 @@ private slots:
 	
 	void handleData();
 	
-private:
-	
-	QTcpSocket *s;
-	
 	void handleDisconnection();
 	
 	void handleNetworkError(QAbstractSocket::SocketError error);
+	
+	void handleEncryptionErrors(const QList<QSslError> & errors);
+	
+private:
+	
+	QSslSocket *s;
 	
 };
 

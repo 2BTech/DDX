@@ -22,12 +22,18 @@
 #include <QObject>
 #include <QTcpServer>
 #include <QSslSocket>
+#include <QSslConfiguration>
+#include <QSslCertificate>
+#include <QSslKey>
+#include <QSslCipher>
 #include <QAbstractSocket>
 #include <QtAlgorithms>
+#include <QSslConfiguration>
 #include "constants.h"
 #include "mainwindow.h"
 
 class EncryptedServer;
+class DevMgr;
 class NetDev;
 
 class Network : public QObject
@@ -48,6 +54,8 @@ public:
 	void stopServer();
 	
 	bool serverRunning() {return server;}
+	
+	static QString sslErrorsToString(const QList<QSslError> & errors);
 	
 signals:
 	
@@ -73,9 +81,9 @@ private slots:
 	
 	void handleNetworkError(QAbstractSocket::SocketError error);
 	
-	void handleSocketNowEncrypted();
-	
 	void handleEncryptionErrors(const QList<QSslError> & errors);
+	
+	void handleSocketNowEncrypted();
 	
 	void connectPrivate(int ref, const QString &hostName, quint16 port,
 						 QAbstractSocket::NetworkLayerProtocol protocol);
@@ -93,11 +101,15 @@ private:
 	
 	MainWindow *mw;
 	
+	DevMgr *dm;
+	
 	typedef QList<PendingConnection> PendingList;
 	
 	PendingList pending;
 	
 	EncryptedServer *server;
+	
+	QSslConfiguration sslconfig;
 	
 	void handleSocket(qintptr sd);
 	
@@ -107,8 +119,6 @@ private:
 	 * \param error The error message
 	 */
 	void pendingFailed(int index, const QString &error);
-	
-	static bool conditionSocket(QSslSocket *s);
 	
 	void log(const QString msg, bool isAlert = false) const;
 	
