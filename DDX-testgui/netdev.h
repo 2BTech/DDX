@@ -48,8 +48,7 @@ protected:
 	
 	const char *getType() const noexcept override {return "Network";}
 	
-	// TODO
-	bool isEncrypted() const noexcept override {return false;}
+	bool isEncrypted() const noexcept override {return true;}
 	
 private slots:
 	

@@ -27,6 +27,7 @@ NetDev::~NetDev() {
 }
 
 void NetDev::sub_init() noexcept {
+	// Take ownership of the socket
 	s->setParent(this);
 	
 	
