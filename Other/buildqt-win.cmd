@@ -63,16 +63,3 @@ set "ddxexitcode=0"
 :quit
 cd /d "%ddxreturndir%"
 exit /b %ddxexitcode%
-
-
-"
-exit /b 1
-
-SET _ROOT=C:\qt\qt-5
-SET PATH=%_ROOT%\qtbase\bin;%_ROOT%\gnuwin32\bin;%PATH%
-REM Uncomment the below line when using a git checkout of the source repository
-REM SET PATH=%_ROOT%\qtrepotools\bin;%PATH%
-SET QMAKESPEC=win32-msvc2013
-SET _ROOT=
-10 4
-15 6
