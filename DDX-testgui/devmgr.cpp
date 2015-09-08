@@ -23,7 +23,6 @@ DevMgr::DevMgr(MainWindow *parent) : QObject(parent) {
 	mw = parent;
 	unregCt = 0;
 	refCt = 0;
-	closing = false;
 	connect(this, &DevMgr::postToLogArea, mw->getLogArea(), &QPlainTextEdit::appendPlainText);
 	// Enable invocation of handler functions
 	qRegisterMetaType<RemDev::Response*>("RemDev::Response*");
@@ -45,21 +44,8 @@ int DevMgr::getRef() {
 	return ++refCt;
 }
 
-void DevMgr::reportFailedConnection(int ref, const QString &error) {
-	log(tr("Target device %1 failed to start: %2").arg(QString::number(ref), error));
-	emit deviceReady(ref, 0, error);
-}
-
 void DevMgr::closeAll(RemDev::DisconnectReason reason) {
-	dLock.lock();
-	closing = true;
-	for (int i = 0; i < devices.size(); i++) {
-		devices.at(i)->close(reason);
-	}
-	devices.clear();
-	closing = false;
-	dLock.unlock();
-	closing = false;
+	emit requestClose(reason, false);
 }
 
 void DevMgr::addHandler(QObject *handlerObj, const char *handlerFn, const char *method) {
@@ -99,10 +85,18 @@ QByteArray DevMgr::addDevice(RemDev *dev) {
 }
 
 void DevMgr::removeDevice(RemDev *dev) {
-	if (closing) return;
 	dLock.lock();
 	devices.removeOne(dev);
 	dLock.unlock();
+}
+
+void DevMgr::markDeviceRegistered(RemDev *dev) {
+	// TODO
+}
+
+void DevMgr::markDeviceConnectFailed(int ref, const QString &error) {
+	log(tr("Target device %1 failed to start: %2").arg(QString::number(ref), error));
+	emit deviceReady(ref, 0, error);
 }
 
 bool DevMgr::dispatchRequest(RemDev::Request *req) const {

@@ -28,15 +28,22 @@ RemDev::RemDev(DevMgr *dm, int ref) :
 	connectTime = QDateTime::currentMSecsSinceEpoch();
 	this->dm = dm;
 	lastId = 0;
-	pollerRefCount = 0;
 	registered = false;
-	regState = UnregisteredState;
-	closed = false;
+	state = InitialState;
+	open = false;
 	this->ref = ref;
-	inbound = ! ref;
-	// Add to master device list and get temporary cid
-	cid = dm->addDevice(this);
-	log(tr("New unregistered device"));
+	cid = "UnknownDev";
+	if (ref) {  // Handle outgoing connection
+		inbound = false;
+		cid = cid.append(QByteArray::number(ref));
+		log(tr("Connecting to device with ref %1").arg(ref));
+	}
+	else {  // Handle incoming connection
+		inbound = true;
+		cid = cid.append(QByteArray::number(dm->getRef()));
+		log(tr("New unregistered connection"));
+	}
+	connect(dm, &DevMgr::requestClose, this, &RemDev::close);
 	// Threading
 #ifdef REMDEV_THREADS
 	QThread *t = new QThread(dm);
@@ -60,7 +67,7 @@ int RemDev::sendRequest(QObject *self, const char *handler, const char *method,
 	RequestRef ref(self, handler, method, timeout);
 	req_id_lock.lock();
 	// Check that the connection is still open while we've got the lock
-	if (closed) {
+	if ( ! open) {
 		req_id_lock.unlock();
 		if (doc) delete doc;
 		return -1;
@@ -88,7 +95,7 @@ int RemDev::sendRequest(QObject *self, const char *handler, const char *method,
 }
 
 void RemDev::sendResponse(rapidjson::Value &id, rapidjson::Document *doc, rapidjson::Value *result) {
-	if (closed) {
+	if ( ! open) {
 		if (doc) delete doc;
 		return;
 	}
@@ -110,7 +117,7 @@ void RemDev::sendResponse(Request *req, rapidjson::Value *result) {
 }
 
 void RemDev::sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Value *data, rapidjson::Document *doc) noexcept {
-	if (closed) {
+	if ( ! open) {
 		if (doc) delete doc;
 		return;
 	}
@@ -155,7 +162,7 @@ void RemDev::sendError(Request *req, int code) noexcept {
 }
 
 void RemDev::sendNotification(const char *method, rapidjson::Document *doc, rapidjson::Value *params) noexcept {
-	if (closed) {
+	if ( ! open) {
 		if (doc) delete doc;
 		return;
 	}
@@ -181,7 +188,7 @@ QByteArray RemDev::serializeValue(const rapidjson::Value &v) {
 void RemDev::close(DisconnectReason reason, bool fromRemote) noexcept {
 	emit deviceDisconnected(this, reason, fromRemote);
 	req_id_lock.lock();
-	closed = true;
+	open = false;
 	for (RequestHash::ConstIterator it = reqs.constBegin(); it != reqs.constEnd(); ++it)
 		simulateError(it.key(), it.value(), E_DEVICE_DISCONNECTED,
 					  tr("Device disconnected"));
@@ -353,6 +360,7 @@ void RemDev::handleItem(char *data) noexcept {
 }
 
 void RemDev::connectionReady() noexcept {
+	open = true;
 	// TODO
 	log(tr("Connection ready"));
 }
@@ -374,7 +382,7 @@ void RemDev::sendDocument(rapidjson::Document *doc) {
 
 void RemDev::handleRegistration(rapidjson::Document *doc) {
 	// If this is not a register request or response, return without error
-	if ((regState & RegSentFlag) && doc->HasMember("result")) {  // This is a response to our registration
+	if ((state & RegSentFlag) && doc->HasMember("result")) {  // This is a response to our registration
 		
 	}
 	/*if (inbound && QString::compare(doc.value("method").toString(), "register")) return;

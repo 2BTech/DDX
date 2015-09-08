@@ -26,13 +26,17 @@
 #include "remdev.h"
 
 class DevMgr;
+class Network;
 
 class NetDev : public RemDev
 {
 	Q_OBJECT
 public:
 	
-	explicit NetDev(DevMgr *dm, int ref, QSslSocket *socket);
+	explicit NetDev(Network *n, DevMgr *dm, qintptr socketDescriptor);
+	
+	explicit NetDev(Network *n, DevMgr *dm, int ref, const QString &hostName, quint16 port,
+					QAbstractSocket::NetworkLayerProtocol protocol = QAbstractSocket::AnyIPProtocol);
 	
 	~NetDev();
 	
@@ -62,7 +66,17 @@ private slots:
 	
 private:
 	
+	Network *n;
+	
 	QSslSocket *s;
+	
+	qintptr descriptor;
+	
+	QString hostName;
+	
+	quint16 port;
+	
+	QAbstractSocket::NetworkLayerProtocol protocol;
 	
 };
 

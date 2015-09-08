@@ -362,14 +362,6 @@ private slots:
 	
 protected:
 	
-	enum RegistrationState {
-		UnregisteredState = 0x0,
-		RegSentFlag = 0x1,
-		RegAcceptedFlag = 0x2,
-		RemoteRegAcceptedFlag = 0x4,
-		RegisteredState = RegSentFlag|RegAcceptedFlag|RemoteRegAcceptedFlag
-	};
-	
 	DevMgr *dm;  //!< Convenience pointer to DevMgr instance
 	
 	QByteArray cid;
@@ -381,10 +373,6 @@ protected:
 	qint64 connectTime;
 	
 	bool inbound;
-	
-	RegistrationState regState;
-	
-	volatile bool closed;
 	
 	/*!
 	 * \brief Handle a single, complete incoming item
@@ -466,6 +454,17 @@ private:
 		ErrorT
 	};
 	
+	enum DeviceState {
+		InitialState = 0x0,
+		DeviceReadyFlag = 0x1,
+		RegSentFlag = 0x2,
+		RegAcceptedFlag = 0x4,
+		RemoteRegAcceptedFlag = 0x8,
+		RegisteredState = DeviceReadyFlag|RegSentFlag|RegAcceptedFlag|RemoteRegAcceptedFlag
+	};
+	
+	int_fast8_t state;
+	
 	//! A hash for maintaing lists of outgoing requests
 	typedef QHash<LocalId, RequestRef> RequestHash;
 	
@@ -475,9 +474,9 @@ private:
 	//! Locks the request hash and lastId variable
 	mutable QMutex req_id_lock;
 	
-	int pollerRefCount;
-	
 	LocalId lastId;
+	
+	volatile bool open;
 	
 	qint64 registrationTimeoutTime;
 	

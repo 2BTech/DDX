@@ -57,6 +57,8 @@ public:
 	
 	static QString sslErrorsToString(const QList<QSslError> & errors);
 	
+	const QSslConfiguration &getSslConfig() const {return sslConfig;}
+	
 signals:
 	
 	void postToLogArea(const QString &msg) const;
@@ -109,9 +111,7 @@ private:
 	
 	EncryptedServer *server;
 	
-	QSslConfiguration sslconfig;
-	
-	void handleSocket(qintptr sd);
+	QSslConfiguration sslConfig;
 	
 	/*!
 	 * \brief Log/report and removed a failed pending connection
@@ -133,11 +133,19 @@ private:
 	
 	Network *n;
 	
-	EncryptedServer(Network *parent)
-		{n = parent;}
+	/*!
+	 * \brief EncryptedServer
+	 * \param parent
+	 */
+	EncryptedServer(Network *parent) {n = parent;}
 	
-	void incomingConnection(qintptr socketDescriptor) override
-		{n->handleSocket(socketDescriptor);}
+	/*!
+	 * \brief Handle an incoming connection
+	 * \param socketDescriptor The OS socket descriptor
+	 * 
+	 * Instantiates NetDev on the socket.
+	 */
+	void incomingConnection(qintptr socketDescriptor) override;
 	
 	// ENCRYPTED SERVER
 	

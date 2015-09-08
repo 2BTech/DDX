@@ -49,8 +49,6 @@ public:
 	
 	int getRef();
 	
-	void reportFailedConnection(int ref, const QString &error);
-	
 	void closeAll(RemDev::DisconnectReason reason = RemDev::ShuttingDown);
 	
 	/*!
@@ -74,7 +72,9 @@ signals:
 	
 	void postToLogArea(const QString &msg) const;
 	
-	void deviceReady(int ref, RemDev *device, const QString &error);
+	void deviceReady(int ref, RemDev *device, const QString &error) const;
+	
+	void requestClose(RemDev::DisconnectReason reason, bool fromRemote) const;
 	
 public slots:
 	
@@ -105,15 +105,11 @@ private:
 	
 	QTimer *timeoutPoller;
 	
-	int unregCt;
-	
 	QAtomicInt refCt;
 	
-	bool closing;
+	void markDeviceRegistered(RemDev *dev);
 	
-	QByteArray addDevice(RemDev *dev);
-	
-	void removeDevice(RemDev *dev);
+	void markDeviceConnectFailed(int ref, const QString &error);
 	
 	bool dispatchRequest(RemDev::Request *req) const;
 	
