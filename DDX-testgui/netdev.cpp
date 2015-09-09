@@ -20,14 +20,14 @@
 #include "devmgr.h"
 #include "network.h"
 
-NetDev::NetDev(Network *n, DevMgr *dm, qintptr socketDescriptor) : RemDev(dm, 0) {
+NetDev::NetDev(Network *n, DevMgr *dm, qintptr socketDescriptor) : RemDev(dm, true) {
 	s = 0;
 	this->n = n;
 	descriptor = socketDescriptor;
 }
 
 NetDev::NetDev(Network *n, DevMgr *dm, int ref, const QString &hostName, quint16 port,
-			   QAbstractSocket::NetworkLayerProtocol protocol) : RemDev(dm, ref) {
+			   QAbstractSocket::NetworkLayerProtocol protocol) : RemDev(dm, false) {
 	s = 0;
 	this->n = n;
 	descriptor = 0;
@@ -41,60 +41,35 @@ NetDev::~NetDev() {
 }
 
 void NetDev::sub_init() noexcept {
-	// Build & configure socket
+	// Build, configure & connect socket
 	s = new QSslSocket(this);
 	s->setSslConfiguration(n->getSslConfig());
-	// Handle incoming connection
-	if (descriptor) {
-		if ( ! s->setSocketDescriptor(descriptor)) {
-			log(tr("Could not "))
-			deleteLater();
-			return;
-		}
-		if (s->state() != QAbstractSocket::ConnectedState) {
-			s->deleteLater();
-			return;
-		}
-		pending.append(PendingConnection(s, 0));
-		// The error signals are overloaded, so we need to use these nasty things
-		connect(s, static_cast<void(QSslSocket::*)(QAbstractSocket::SocketError)>(&QSslSocket::error),
-				this, &Network::handleNetworkError);
-		connect(s, static_cast<void(QSslSocket::*)(const QList<QSslError> &)>(&QSslSocket::sslErrors),
-				this, &Network::handleEncryptionErrors);
-		connect(s, &QSslSocket::encrypted, this, &Network::handleSocketNowEncrypted);
-		s->startServerEncryption();
-		log(tr("Received new connection from %1:%2").arg(s->peerAddress().toString(), QString::number(s->peerPort())));
-	}
-	// Create outgoing connection
-	else {
-		
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	// Determine basic information about the connection itself
-	bool usingIPv6 = s->peerAddress().protocol() == QAbstractSocket::IPv6Protocol;
-	QHostAddress localhost = usingIPv6 ? QHostAddress::LocalHostIPv6 : QHostAddress::LocalHost;
-	bool isLocal = s->peerAddress() == localhost;
-	
-	s->setSocketOption(QAbstractSocket::LowDelayOption, 1);  // Disable Nagel's algorithm
-	if ( ! isLocal) s->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
-	
-	// QTcpServer::error is overloaded, so we need to use this nasty thing
 	// The error signals are overloaded, so we need to use these nasty things
 	connect(s, static_cast<void(QSslSocket::*)(QAbstractSocket::SocketError)>(&QSslSocket::error),
 			this, &NetDev::handleNetworkError);
 	connect(s, static_cast<void(QSslSocket::*)(const QList<QSslError> &)>(&QSslSocket::sslErrors),
 			this, &NetDev::handleEncryptionErrors);
 	connect(s, &QTcpSocket::disconnected, this, &NetDev::handleDisconnection);
-	connect(s, &QTcpSocket::readyRead, this, &NetDev::handleData);
-	connectionReady();
+	connect(s, &QSslSocket::encrypted, this, &NetDev::handleNowEncrypted);
+	// Handle incoming connection
+	if (descriptor) {
+		if ( ! s->setSocketDescriptor(descriptor)) {
+			connectionError(tr("Could not ingest socket"));
+			return;
+		}
+		if (s->state() != QAbstractSocket::ConnectedState) {
+			connectionError(tr("Socket disconnected"));
+			return;
+		}
+		log(tr("Connection is from %1:%2").arg(s->peerAddress().toString(), QString::number(s->peerPort())));
+		s->startServerEncryption();
+	}
+	// Create outgoing connection
+	else {
+		log(tr("Target device is at %1:%2").arg(hostName, QString::number(port)));
+		s->connectToHostEncrypted(hostName, port, QAbstractSocket::ReadWrite, protocol);
+		hostName.clear();
+	}
 }
 
 void NetDev::terminate(DisconnectReason reason, bool fromRemote) noexcept {
@@ -106,6 +81,19 @@ void NetDev::terminate(DisconnectReason reason, bool fromRemote) noexcept {
 void NetDev::writeItem(rapidjson::StringBuffer *buffer) noexcept {
 	s->write(buffer->GetString(), buffer->GetSize());
 	delete buffer;
+}
+
+void NetDev::handleNowEncrypted() {
+	// Determine basic information about the connection itself
+	bool usingIPv6 = s->peerAddress().protocol() == QAbstractSocket::IPv6Protocol;
+	QHostAddress localhost = usingIPv6 ? QHostAddress::LocalHostIPv6 : QHostAddress::LocalHost;
+	bool isLocal = s->peerAddress() == localhost;
+	
+	s->setSocketOption(QAbstractSocket::LowDelayOption, 1);  // Disable Nagel's algorithm
+	if ( ! isLocal) s->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
+	
+	// TODO
+	// connectionReady();
 }
 
 void NetDev::handleData() {

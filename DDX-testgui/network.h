@@ -92,33 +92,13 @@ private slots:
 	
 private:
 	
-	struct PendingConnection {
-		PendingConnection(QSslSocket *socket, int ref) {
-			this->socket = socket;
-			this->ref = ref;
-		}
-		QSslSocket *socket;
-		int ref;
-	};
-	
 	MainWindow *mw;
 	
 	DevMgr *dm;
 	
-	typedef QList<PendingConnection> PendingList;
-	
-	PendingList pending;
-	
 	EncryptedServer *server;
 	
 	QSslConfiguration sslConfig;
-	
-	/*!
-	 * \brief Log/report and removed a failed pending connection
-	 * \param i The connection's index in #pending
-	 * \param error The error message
-	 */
-	void pendingFailed(int index, const QString &error);
 	
 	void log(const QString msg, bool isAlert = false) const;
 	

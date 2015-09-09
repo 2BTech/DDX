@@ -56,6 +56,8 @@ protected:
 	
 private slots:
 	
+	void handleNowEncrypted();
+	
 	void handleData();
 	
 	void handleDisconnection();

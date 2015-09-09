@@ -72,7 +72,7 @@ signals:
 	
 	void postToLogArea(const QString &msg) const;
 	
-	void deviceReady(int ref, RemDev *device, const QString &error) const;
+	void deviceRegistered(RemDev *device, QByteArray cid, bool inbound) const;
 	
 	void requestClose(RemDev::DisconnectReason reason, bool fromRemote) const;
 	
@@ -108,8 +108,6 @@ private:
 	QAtomicInt refCt;
 	
 	void markDeviceRegistered(RemDev *dev);
-	
-	void markDeviceConnectFailed(int ref, const QString &error);
 	
 	bool dispatchRequest(RemDev::Request *req) const;
 	

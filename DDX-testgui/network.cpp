@@ -28,7 +28,6 @@ Network::Network(MainWindow *parent) : QObject(0)
 	server = 0;
 	// Connections
 	connect(this, &Network::postToLogArea, mw->getLogArea(), &QPlainTextEdit::appendPlainText);
-	connect(this, &Network::doConnectPrivate, this, &Network::connectPrivate);
 	// SSL Configuration
 	sslConfig.setProtocol(QSsl::TlsV1_2);
 	// Disable remote certificate request
@@ -64,8 +63,6 @@ Network::Network(MainWindow *parent) : QObject(0)
 
 Network::~Network() {
 	if (server) delete server;
-	for (int i = 0; i < pending.size(); i++)
-		delete pending.at(i).socket;
 }
 
 int Network::connectDevice(const QString &hostName, quint16 port,
@@ -199,28 +196,6 @@ void Network::handleSocketNowEncrypted() {
 			pending.removeAt(i--);
 		}
 	}
-}
-
-void Network::connectPrivate(int ref, const QString &hostName, quint16 port,
-							  QAbstractSocket::NetworkLayerProtocol protocol) {
-	QSslSocket *s = new QSslSocket(0);
-	s->setSslConfiguration(sslConfig);
-	pending.append(PendingConnection(s, ref));
-	// The error signals are overloaded, so we need to use these nasty things
-	connect(s, static_cast<void(QSslSocket::*)(QAbstractSocket::SocketError)>(&QSslSocket::error),
-			this, &Network::handleNetworkError);
-	connect(s, static_cast<void(QSslSocket::*)(const QList<QSslError> &)>(&QSslSocket::sslErrors),
-			this, &Network::handleEncryptionErrors);
-	connect(s, &QSslSocket::encrypted, this, &Network::handleSocketNowEncrypted);
-	s->connectToHostEncrypted(hostName, port, QAbstractSocket::ReadWrite, protocol);
-}
-
-void Network::pendingFailed(int index, const QString &error) {
-	const PendingConnection &con = pending.at(index);
-	con.socket->deleteLater();
-	if (con.ref) dm->reportFailedConnection(con.ref, error);
-	else log(tr("Incoming connection failed to start: %1").append(error));
-	pending.removeAt(index);
 }
 
 void Network::log(const QString msg, bool isAlert) const {

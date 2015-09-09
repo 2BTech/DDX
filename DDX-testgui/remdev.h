@@ -213,7 +213,7 @@ public:
 		rapidjson::Document *doc;
 	};
 	
-	explicit RemDev(DevMgr *dm, int ref = 0);
+	explicit RemDev(DevMgr *dm, bool inbound = 0);
 	
 	~RemDev();
 	
@@ -354,7 +354,7 @@ signals:
 	
 	void deviceDisconnected(RemDev *dev, DisconnectReason reason, bool fromRemote) const;
 	
-	void readyForRegistration() const;
+	void connectionFailed(const QString &error) const;
 	
 private slots:
 	
@@ -386,6 +386,8 @@ protected:
 	 * Must be called by subclasses as soon as the connection is ready for transmission
 	 */
 	void connectionReady() noexcept;
+	
+	void connectionError(const QString &error) noexcept;
 	
 	/*!
 	 * \brief Send a log line tagged with the cid
@@ -481,11 +483,6 @@ private:
 	qint64 registrationTimeoutTime;
 	
 	bool registered;
-	
-	int ref;
-	
-	//! Start this device's threads
-	void startThread();
 	
 	/*!
 	 * \brief Stringify and deliver a complete JSON document

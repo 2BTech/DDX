@@ -22,7 +22,7 @@
 #define RAPIDJSON_IO
 #include "rapidjson_using.h"
 
-RemDev::RemDev(DevMgr *dm, int ref) :
+RemDev::RemDev(DevMgr *dm, bool inbound) :
 		QObject(0), req_id_lock(QMutex::Recursive) {
 	// Initializations
 	connectTime = QDateTime::currentMSecsSinceEpoch();
@@ -31,18 +31,10 @@ RemDev::RemDev(DevMgr *dm, int ref) :
 	registered = false;
 	state = InitialState;
 	open = false;
-	this->ref = ref;
-	cid = "UnknownDev";
-	if (ref) {  // Handle outgoing connection
-		inbound = false;
-		cid = cid.append(QByteArray::number(ref));
-		log(tr("Connecting to device with ref %1").arg(ref));
-	}
-	else {  // Handle incoming connection
-		inbound = true;
-		cid = cid.append(QByteArray::number(dm->getRef()));
-		log(tr("New unregistered connection"));
-	}
+	cid = QByteArray("UnknownDev").append(dm->getRef());
+	this->inbound = inbound;
+	if (inbound) log(tr("New unregistered connection"));
+	else log(tr("Connecting to remote device"));
 	connect(dm, &DevMgr::requestClose, this, &RemDev::close);
 	// Threading
 #ifdef REMDEV_THREADS
@@ -58,7 +50,7 @@ RemDev::RemDev(DevMgr *dm, int ref) :
 }
 
 RemDev::~RemDev() {
-	if ( ! closed) close(UnknownReason);
+	if (open) close(UnknownReason);
 }
 
 int RemDev::sendRequest(QObject *self, const char *handler, const char *method,
@@ -195,7 +187,6 @@ void RemDev::close(DisconnectReason reason, bool fromRemote) noexcept {
 	req_id_lock.unlock();
 	terminate(reason, fromRemote);
 	log(tr("Connection closed"));
-	dm->removeDevice(this);
 	deleteLater();
 }
 
@@ -264,7 +255,7 @@ void RemDev::handleItem(char *data) noexcept {
 	
 	// Find members
 	Value *methodVal = 0, *idVal = 0, *mainVal = 0;
-	MainValType type = ParamsT;  // Assume params until proven otherwise
+	int_fast8_t type = ParamsT;  // Assume params until proven otherwise
 	for (Value::ConstMemberIterator it = doc->MemberBegin(); it != doc->MemberEnd(); ++it) {
 		const char *name = it->name.GetString();
 		Value &value = (Value &) it->value;
@@ -362,7 +353,15 @@ void RemDev::handleItem(char *data) noexcept {
 void RemDev::connectionReady() noexcept {
 	open = true;
 	// TODO
+#ifdef QT_DEBUG
 	log(tr("Connection ready"));
+#endif
+}
+
+void RemDev::connectionError(const QString &error) noexcept {
+	log(tr("Connection failed: %1").arg(error));
+	emit connectionFailed(error);
+	deleteLater();
 }
 
 void RemDev::log(const QString &msg, bool isAlert) const noexcept {
