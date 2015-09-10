@@ -33,19 +33,19 @@ TestDev::~TestDev() {
 	
 }
 
-void TestDev::responseHandler(RemDev::Response *r) {
+void TestDev::responseHandler(Response *r) {
 	validResponses.removeAll(r->id);
 	QString str("TD response to %1 (%4): %2 with %3");
 	str = str.arg(r->id);
-	str = str.arg(r->successful ? "success" : "error");
+	str = str.arg(r->ok ? "success" : "error");
 	// DEBUG
-	str = str.arg(QString(serializeValue(*r->mainVal)));
+	str = str.arg(QString(serializeJson(*r->mainVal)));
 	str = str.arg(QString(r->method));
 	log(str);
 	delete r;
 }
 
-void TestDev::requestHandler(RemDev::Request *r) {
+void TestDev::requestHandler(Request *r) {
 	QString str("TD %1 to %3 with %2");
 	if (r->isRequest()) {
 		QString is = "request [ID %1]";
@@ -58,7 +58,7 @@ void TestDev::requestHandler(RemDev::Request *r) {
 	}
 	else str = str.arg("notification");
 	if (r->params)
-		str = str.arg(QString(serializeValue(*r->params)));
+		str = str.arg(QString(serializeJson(*r->params)));
 	else
 		str = str.arg("no params");
 	str = str.arg(QString(r->method));
@@ -81,9 +81,7 @@ void TestDev::sub_init() noexcept {
 	timer->start();
 }
 
-void TestDev::terminate(DisconnectReason reason, bool fromRemote) noexcept {
-	(void) reason;
-	(void) fromRemote;
+void TestDev::terminate() noexcept {
 }
 
 void TestDev::writeItem(rapidjson::StringBuffer *buffer) noexcept {
@@ -223,7 +221,7 @@ void TestDev::timeout() {
 	}
 	else if (eventCt == 24) {
 		//log(tr("TD closing"));
-		close(RemDev::ConnectionTerminated);
+		close(DevTerminated);
 		eventCt = 0;
 		//log(tr("TD RESETTING-------------------------------------------------"));
 	}
@@ -305,7 +303,7 @@ void TestDev::timeout() {
 	}
 	else if (eventCt == 19) {
 		//log(tr("TD closing"));
-		close(RemDev::ConnectionTerminated);
+		close(DevTerminated);
 		eventCt = 0;
 		//log(tr("TD RESETTING-------------------------------------------------"));
 	}

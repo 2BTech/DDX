@@ -23,6 +23,7 @@
 #include <QTimer>
 #include <random>
 #include "remdev.h"
+#include "ddxrpc.h"
 
 class DevMgr;
 
@@ -35,9 +36,9 @@ public:
 	
 	~TestDev();
 	
-	Q_INVOKABLE void responseHandler(RemDev::Response *r);
+	Q_INVOKABLE void responseHandler(Response *r);
 	
-	Q_INVOKABLE void requestHandler(RemDev::Request *r);
+	Q_INVOKABLE void requestHandler(Request *r);
 	
 	// These are defined in RemDev if QT_DEBUG is defined
 #ifndef QT_DEBUG
@@ -48,13 +49,11 @@ protected:
 	
 	void sub_init() noexcept override;
 	
-	void terminate(DisconnectReason reason, bool fromRemote) noexcept override;
+	void terminate() noexcept override;
 	
 	void writeItem(rapidjson::StringBuffer *buffer) noexcept override;
 	
 	const char *getType() const noexcept override {return "Test";}
-	
-	bool isEncrypted() const noexcept override {return false;}
 	
 public slots:
 	

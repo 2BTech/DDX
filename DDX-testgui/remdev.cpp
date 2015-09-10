@@ -50,12 +50,12 @@ RemDev::RemDev(DevMgr *dm, bool inbound) :
 }
 
 RemDev::~RemDev() {
-	if (open) close(UnknownReason);
+	if (open) close(DevUnknownDisconnect);
 }
 
 int RemDev::sendRequest(QObject *self, const char *handler, const char *method,
 						rapidjson::Value *params, rapidjson::Document *doc, qint64 timeout) {
-	LocalId id;
+	int id;
 	RequestRef ref(self, handler, method, timeout);
 	req_id_lock.lock();
 	// Check that the connection is still open while we've got the lock
@@ -67,7 +67,7 @@ int RemDev::sendRequest(QObject *self, const char *handler, const char *method,
 	// Obtain a server-unique ID
 	do {
 		id = ++lastId;
-		if (id == std::numeric_limits<LocalId>::max()) {
+		if (id == std::numeric_limits<int>::max()) {
 			log("ID generator overflow; resetting");
 			lastId = 0;
 		}
@@ -166,26 +166,22 @@ void RemDev::sendNotification(const char *method, rapidjson::Document *doc, rapi
 	sendDocument(doc);
 }
 
-QByteArray RemDev::serializeValue(const rapidjson::Value &v) {
-	Document doc;
-	doc.CopyFrom(v, doc.GetAllocator());
-	StringBuffer buffer;
-	Writer<StringBuffer> writer(buffer);
-	doc.Accept(writer);
-	QByteArray array(buffer.GetString());
-	Q_ASSERT(buffer.GetSize() == (uint) array.size());
-	return array;
-}
-
-void RemDev::close(DisconnectReason reason, bool fromRemote) noexcept {
+void RemDev::close(int reason, bool fromRemote) noexcept {
+	if ( ! registered) dm->markDeviceConnectionFailed(this, tr("Connection error"));
 	emit deviceDisconnected(this, reason, fromRemote);
 	req_id_lock.lock();
+	bool wasOpen = open;
 	open = false;
 	for (RequestHash::ConstIterator it = reqs.constBegin(); it != reqs.constEnd(); ++it)
 		simulateError(it.key(), it.value(), E_DEVICE_DISCONNECTED,
 					  tr("Device disconnected"));
 	req_id_lock.unlock();
-	terminate(reason, fromRemote);
+	if (wasOpen && ! fromRemote) {
+		Document *params = new Document(kObjectType);
+		params->AddMember("reason", Value(reason), params->GetAllocator());
+		sendNotification("disconnect", params, params);
+	}
+	terminate();
 	log(tr("Connection closed"));
 	deleteLater();
 }
@@ -334,7 +330,7 @@ void RemDev::handleItem(char *data) noexcept {
 				else successful = true;
 				Response *res = new Response(successful, id, req.method, doc, this, mainVal);
 				metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
-										   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
+										   Qt::QueuedConnection, Q_ARG(Response*, res));
 				return;
 			}
 		}
@@ -352,16 +348,21 @@ void RemDev::handleItem(char *data) noexcept {
 
 void RemDev::connectionReady() noexcept {
 	open = true;
-	// TODO
+	// TODO: send registration
 #ifdef QT_DEBUG
 	log(tr("Connection ready"));
 #endif
 }
 
 void RemDev::connectionError(const QString &error) noexcept {
+	open = false;
 	log(tr("Connection failed: %1").arg(error));
-	emit connectionFailed(error);
-	deleteLater();
+	if ( ! registered) {
+		dm->markDeviceConnectionFailed(this, error);
+		// Suppress resending of deviceRegistered() signal
+		registered = true;
+	}
+	close(DevStreamClosed, true);
 }
 
 void RemDev::log(const QString &msg, bool isAlert) const noexcept {
@@ -380,39 +381,13 @@ void RemDev::sendDocument(rapidjson::Document *doc) {
 }
 
 void RemDev::handleRegistration(rapidjson::Document *doc) {
-	// If this is not a register request or response, return without error
-	if ((state & RegSentFlag) && doc->HasMember("result")) {  // This is a response to our registration
-		
-	}
-	/*if (inbound && QString::compare(doc.value("method").toString(), "register")) return;
-	if ( ! inbound && ! doc.contains("result")) return;
-	QJsonValue id = doc.value("id");
-	// Check minimum version
-	QString sent = doc.value("DDX_version").toString();
-	QString check = sg->v("MinVersion", SG_RPC).toString();
-	if (QString::compare(check, "any")) {  // If check is required...
-		int vc = Daemon::versionCompare(sent, check);
-		if (vc == VERSION_COMPARE_FAILED) {
-			if (inbound) sendError(id, E_VERSION_UNREADABLE, tr("Version unreadable"));
-			return;
-		}
-		if (vc < 0) {
-			// Send error
-		}
-	}
-	// UPDATE:  I think both devices should independently send register requests to each other.  Why not, right?
-	// It would make a lot of this MUCH cleaner...
-	// A successful result response and a register request should both be required
-	
-	
-	//log(tr("Now known as %1").arg(
-	dropPoller();
-	registered = true;
-	d->registerDevice(this);*/
+	(void) doc;
+	// TODO
 }
 
-void RemDev::handleDisconnect(rapidjson::Document *doc) {
-	
+void RemDev::handleDisconnectNotification(rapidjson::Document *doc) {
+	(void) doc;
+	// TODO
 }
 
 void RemDev::simulateError(int id, const RequestRef &req, int code, const QString &msg) {
@@ -429,7 +404,7 @@ void RemDev::simulateError(int id, const RequestRef &req, int code, const QStrin
 	logError(doc, req.method);
 	Response *res = new Response(false, id, req.method, doc, this, doc);
 	metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
-							   Qt::QueuedConnection, Q_ARG(RemDev::Response*, res));
+							   Qt::QueuedConnection, Q_ARG(Response*, res));
 }
 
 void RemDev::logError(const Value *errorVal, const char *method) const {

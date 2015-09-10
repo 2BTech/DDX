@@ -28,6 +28,7 @@
 #include <QCloseEvent>
 #include <QPointer>
 #include <QMutex>
+#include "ddxrpc.h"
 
 class DevMgr;
 class TestDev;

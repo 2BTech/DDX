@@ -43,7 +43,7 @@ Network::Network(MainWindow *parent) : QObject(0)
 	else sslConfig.setPrivateKey(key);
 	// TODO:  Tailor a list of acceptable ciphers and ECs
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
-	sslconfig.setCiphers(QSslSocket::supportedCiphers());
+	sslConfig.setCiphers(QSslSocket::supportedCiphers());
 #else
 	sslConfig.setCiphers(QSslConfiguration::supportedCiphers());
 	sslConfig.setEllipticCurves(QSslConfiguration::supportedEllipticCurves());
@@ -63,14 +63,6 @@ Network::Network(MainWindow *parent) : QObject(0)
 
 Network::~Network() {
 	if (server) delete server;
-}
-
-int Network::connectDevice(const QString &hostName, quint16 port,
-							QAbstractSocket::NetworkLayerProtocol protocol) {
-	int ref = mw->dm->getRef();
-	emit doConnectPrivate(ref, hostName, port, protocol);
-	log(tr("Connecting to target at %1 with ref %2").arg(hostName, QString::number(ref)));
-	return ref;
 }
 
 void Network::startServer() {
@@ -95,7 +87,7 @@ void Network::stopServer() {
 	log(tr("Stopped server"));
 }
 
-QString Network::sslErrorsToString(const QList<QSslError> & errors) {
+QString Network::sslErrorsToString(const QList<QSslError>& errors) {
 	QString out;
 	QString sep = tr(", ", "List internal separator");
 	QString empty;
@@ -127,7 +119,6 @@ void Network::init() {
 
 void Network::shutdown() {
 	stopServer();
-	while (pending.size()) pendingFailed(0, tr("The network manager is shutting down"));
 	deleteLater();
 }
 
@@ -157,45 +148,7 @@ void Network::shutdown() {
 }*/
 
 void Network::handleNetworkError(QAbstractSocket::SocketError error) {
-	for (int i = 0; i < pending.size(); i++) {
-		const PendingConnection &con = pending.at(i);
-		if (con.socket->error() == error) {
-			if (error == QAbstractSocket::RemoteHostClosedError)
-				pendingFailed(i--, tr("Socket disconnected before registration"));
-			else
-				pendingFailed(i--, con.socket->errorString());
-		}
-	}
-}
-
-void Network::handleEncryptionErrors(const QList<QSslError> & errors) {
-	(void) errors;
-	for (int i = 0; i < pending.size(); i++) {
-		const QList<QSslError> &e = pending.at(i).socket->sslErrors();
-		if ( ! e.isEmpty())
-			pendingFailed(i--, tr("OpenSSL: %1").arg(sslErrorsToString(e)));
-	}
-}
-
-void Network::handleSocketNowEncrypted() {
-	log("here");
-	for (int i = 0; i < pending.size(); i++) {
-		const PendingConnection &con = pending.at(i);
-		QSslSocket *s = con.socket;
-		if (s->isEncrypted()) {
-			if (s->protocol() != QSsl::TlsV1_2) {
-				pendingFailed(i--, tr("Pending connection not using TLS v1.2"));
-				continue;
-			}
-			if (s->state() != QAbstractSocket::ConnectedState) {
-				pendingFailed(i--, tr("Pending connection was invalid"));
-				continue;
-			}
-			// Everything checks out; hand over the connection to the RPC
-			new NetDev(dm, con.ref, s);
-			pending.removeAt(i--);
-		}
-	}
+	// TODO:  Handle server errors
 }
 
 void Network::log(const QString msg, bool isAlert) const {

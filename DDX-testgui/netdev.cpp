@@ -26,7 +26,7 @@ NetDev::NetDev(Network *n, DevMgr *dm, qintptr socketDescriptor) : RemDev(dm, tr
 	descriptor = socketDescriptor;
 }
 
-NetDev::NetDev(Network *n, DevMgr *dm, int ref, const QString &hostName, quint16 port,
+NetDev::NetDev(Network *n, DevMgr *dm, const QString &hostName, quint16 port,
 			   QAbstractSocket::NetworkLayerProtocol protocol) : RemDev(dm, false) {
 	s = 0;
 	this->n = n;
@@ -49,7 +49,6 @@ void NetDev::sub_init() noexcept {
 			this, &NetDev::handleNetworkError);
 	connect(s, static_cast<void(QSslSocket::*)(const QList<QSslError> &)>(&QSslSocket::sslErrors),
 			this, &NetDev::handleEncryptionErrors);
-	connect(s, &QTcpSocket::disconnected, this, &NetDev::handleDisconnection);
 	connect(s, &QSslSocket::encrypted, this, &NetDev::handleNowEncrypted);
 	// Handle incoming connection
 	if (descriptor) {
@@ -72,18 +71,27 @@ void NetDev::sub_init() noexcept {
 	}
 }
 
-void NetDev::terminate(DisconnectReason reason, bool fromRemote) noexcept {
-	(void) reason;
-	(void) fromRemote;
+void NetDev::terminate() noexcept {
 	s->disconnectFromHost();
 }
 
 void NetDev::writeItem(rapidjson::StringBuffer *buffer) noexcept {
-	s->write(buffer->GetString(), buffer->GetSize());
-	delete buffer;
+	emit doWritePrivate(buffer);
 }
 
-void NetDev::handleNowEncrypted() {
+void NetDev::handleNowEncrypted() noexcept {
+	
+	
+	/*if (s->protocol() != QSsl::TlsV1_2) {
+		pendingFailed(i--, tr("Pending connection not using TLS v1.2"));
+		continue;
+	}
+	if (s->state() != QAbstractSocket::ConnectedState) {
+		pendingFailed(i--, tr("Pending connection was invalid"));
+		continue;
+	}*/
+	
+	
 	// Determine basic information about the connection itself
 	bool usingIPv6 = s->peerAddress().protocol() == QAbstractSocket::IPv6Protocol;
 	QHostAddress localhost = usingIPv6 ? QHostAddress::LocalHostIPv6 : QHostAddress::LocalHost;
@@ -93,10 +101,11 @@ void NetDev::handleNowEncrypted() {
 	if ( ! isLocal) s->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
 	
 	// TODO
-	// connectionReady();
+	connect(this, &NetDev::doWritePrivate, this, &NetDev::writePrivate);
+	connectionReady();
 }
 
-void NetDev::handleData() {
+void NetDev::handleData() noexcept {
 	if ( ! s->isEncrypted()) return;
 	while (s->canReadLine()) {
 		qint64 size = s->bytesAvailable() + 1;
@@ -107,21 +116,20 @@ void NetDev::handleData() {
 	}
 }
 
-void NetDev::handleDisconnection() {
-	log("Remote disconnected");
-	// TODO
-	close(UnknownReason, true);
-}
-
-void NetDev::handleNetworkError(QAbstractSocket::SocketError error) {
+void NetDev::handleNetworkError(QAbstractSocket::SocketError error) noexcept {
 	// TODO
 	
 	// RemoteClosedError is emitted even on normal disconnections
-	if (error == QAbstractSocket::RemoteHostClosedError) return;
+	//if (error == QAbstractSocket::RemoteHostClosedError) ...
 	
-	log(QString("DDX bug: Unhandled network error (QAbstractSocket): '%1'").arg(error));
+	connectionError(tr("Network error #%1").arg(error));
 }
 
-void NetDev::handleEncryptionErrors(const QList<QSslError> & errors) {
-	// TODO
+void NetDev::handleEncryptionErrors(const QList<QSslError> & errors) noexcept {
+	connectionError(tr("OpenSSl: %1").arg(Network::sslErrorsToString(errors)));
+}
+
+void NetDev::writePrivate(rapidjson::StringBuffer *buffer) noexcept {
+	s->write(buffer->GetString(), buffer->GetSize());
+	delete buffer;
 }

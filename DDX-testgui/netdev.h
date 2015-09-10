@@ -23,6 +23,7 @@
 #include <QSslSocket>
 #include <QAbstractSocket>
 #include <QHostAddress>
+#include "ddxrpc.h"
 #include "remdev.h"
 
 class DevMgr;
@@ -35,36 +36,36 @@ public:
 	
 	explicit NetDev(Network *n, DevMgr *dm, qintptr socketDescriptor);
 	
-	explicit NetDev(Network *n, DevMgr *dm, int ref, const QString &hostName, quint16 port,
+	explicit NetDev(Network *n, DevMgr *dm, const QString &hostName, quint16 port,
 					QAbstractSocket::NetworkLayerProtocol protocol = QAbstractSocket::AnyIPProtocol);
 	
 	~NetDev();
 	
 signals:
 	
+	void doWritePrivate(rapidjson::StringBuffer *buffer) const;
+	
 protected:
 	
 	void sub_init() noexcept override;
 	
-	void terminate(DisconnectReason reason, bool fromRemote) noexcept override;
+	void terminate() noexcept override;
 	
 	void writeItem(rapidjson::StringBuffer *buffer) noexcept override;
 	
-	const char *getType() const noexcept override {return "Network";}
-	
-	bool isEncrypted() const noexcept override {return true;}
+	const char *getType() const noexcept override {return "TCP";}
 	
 private slots:
 	
-	void handleNowEncrypted();
+	void handleNowEncrypted() noexcept;
 	
-	void handleData();
+	void handleData() noexcept;
 	
-	void handleDisconnection();
+	void handleNetworkError(QAbstractSocket::SocketError error) noexcept;
 	
-	void handleNetworkError(QAbstractSocket::SocketError error);
+	void handleEncryptionErrors(const QList<QSslError> & errors) noexcept;
 	
-	void handleEncryptionErrors(const QList<QSslError> & errors);
+	void writePrivate(rapidjson::StringBuffer *buffer) noexcept;
 	
 private:
 	

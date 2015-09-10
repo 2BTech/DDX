@@ -31,6 +31,7 @@
 #include <QSslConfiguration>
 #include "constants.h"
 #include "mainwindow.h"
+#include "ddxrpc.h"
 
 class EncryptedServer;
 class DevMgr;
@@ -46,25 +47,19 @@ public:
 	
 	~Network();
 	
-	int connectDevice(const QString &hostName, quint16 port,
-					   QAbstractSocket::NetworkLayerProtocol protocol = QAbstractSocket::AnyIPProtocol);
-	
 	void startServer();
 	
 	void stopServer();
 	
 	bool serverRunning() {return server;}
 	
-	static QString sslErrorsToString(const QList<QSslError> & errors);
+	static QString sslErrorsToString(const QList<QSslError>& errors);
 	
 	const QSslConfiguration &getSslConfig() const {return sslConfig;}
 	
 signals:
 	
 	void postToLogArea(const QString &msg) const;
-	
-	void doConnectPrivate(int ref, const QString &hostName, quint16 port,
-				   QAbstractSocket::NetworkLayerProtocol protocol) const;
 	
 public slots:
 	
@@ -82,13 +77,6 @@ public slots:
 private slots:
 	
 	void handleNetworkError(QAbstractSocket::SocketError error);
-	
-	void handleEncryptionErrors(const QList<QSslError> & errors);
-	
-	void handleSocketNowEncrypted();
-	
-	void connectPrivate(int ref, const QString &hostName, quint16 port,
-						 QAbstractSocket::NetworkLayerProtocol protocol);
 	
 private:
 	

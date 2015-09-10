@@ -20,6 +20,7 @@
 #include "devmgr.h"
 #include "testdev.h"
 #include "network.h"
+#include "netdev.h"
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
@@ -88,7 +89,7 @@ void MainWindow::newNetDevice(bool checked) {
 		logArea->appendPlainText("This is a server!");
 		return;
 	}
-	n->connectDevice("localhost", 4388);
+	new NetDev(n, dm, "localhost", 4388);
 }
 
 void MainWindow::newTestDevice(bool checked) {

@@ -34,6 +34,7 @@
 #include "../rapidjson/include/rapidjson/writer.h"
 #include "../rapidjson/include/rapidjson/reader.h"
 #include "constants.h"
+#include "ddxrpc.h"
 
 class DevMgr;
 
@@ -57,161 +58,6 @@ public:
 #ifndef QT_DEBUG
 	friend class TestDev;
 #endif
-	
-	typedef int LocalId;
-	
-	enum DeviceRoles {
-		DaemonRole = 0x1,  //!< Can execute paths
-		ManagerRole = 0x2,  //!< An interface for a device which executes paths
-		VertexRole = 0x4,  //!< A data responder or producer which does not execute paths
-		ListenerRole = 0x8,  //!< A destination for loglines and alerts
-		GlobalRole = 0x80  //!< A pseudo-role which indicates role-less information
-	};
-	
-	//! Enumerates various disconnection reasons
-	enum DisconnectReason {
-		UnknownReason,  //!< Unknown disconnection
-		ShuttingDown,  //!< The disconnecting member is shutting down by request
-		Restarting,  //!< The disconnecting member is restarting and will be back shortly
-		FatalError,  //!< The disconnecting member experienced a fatal error and is shutting down
-		ConnectionTerminated,  //!< The connection was explicitly terminated
-		RegistrationTimeout,  //!< The connection was alive too long without registering
-		BufferOverflow,  //!< The connection sent an object too long to be handled
-		StreamClosed,  //!< The stream was closed by its low-level handler
-		EncryptionRequired  //!< Encryption is required on this connection
-	};
-	
-	/*!
-	 * \brief Represents an incoming RPC request or notification
-	 * 
-	 * Note that the JSON data will also be deleted when the Response is deleted, so if a copy
-	 * of the #mainVal is required, that copy must be built with one of RapidJSON's deep copy
-	 * operations, such as Value::CopyFrom.  Handlers **must** eventually delete the Request
-	 * object they are passed.
-	 * 
-	 * ## Responding to Requests
-	 * Incoming DDX-RPC requests and notifications are passed to their handlers with the
-	 * Request class.  This class and RemDev provide a convenient API for using RapidJSON
-	 * to produce and send a corresponding response or error response.  The simplest way to
-	 * respond to requests is using the overloads of RemDev::sendRequest and  RemDev::sendError
-	 * which take in a pointer to a Request.  If you need a reference to a RapidJSON allocator
-	 * when building supplemental information (as is often necessary), #alloc will return the
-	 * same allocator used to produce the final response object.
-	 * 
-	 */
-	class Request {
-	public:
-		friend class RemDev;
-		friend class TestDev;  // TODO:  Remove
-		
-		~Request() {
-			delete doc;
-			if (outDoc) delete outDoc;
-		}
-		
-		/*!
-		 * \brief Retrieve the allocator for outgoing RapidJSON 
-		 * \return Reference to the allocator
-		 */
-		rapidjson::MemoryPoolAllocator<> &alloc() {
-			if ( ! outDoc) outDoc = new rapidjson::Document;
-			return outDoc->GetAllocator();
-		}
-		
-		/*!
-		 * \brief Whether this is a notification or request
-		 * \return True if notification
-		 */
-		bool isRequest() const {
-			return (bool) id;
-		}
-		
-		//! Method name
-		const char *method;
-		
-		//! The contents of the params element (may be 0, otherwise guaranteed to be an object)
-		rapidjson::Value *params;
-		
-		//! The device which sent the request
-		RemDev *device;
-		
-	private:
-		//! Internal constructor for RemDev
-		Request(const char *method, rapidjson::Value *params, rapidjson::Document *doc,
-				RemDev *device, rapidjson::Value *id) {
-			this->method = method;
-			this->params = params;
-			this->device = device;
-			this->id = id;
-			this->doc = doc;
-			this->outDoc = 0;
-		}
-		
-		//! ID value (no type checking, will be 0 if this is a notification)
-		rapidjson::Value *id;
-		
-		//! Root document pointer
-		rapidjson::Document *doc;
-		
-		//! Response document for use with the direct-response versions of RemDev::sendRequest and RemDev::sendError
-		rapidjson::Document *outDoc;
-	};
-	
-	/*!
-	 * \brief Represents a response to an RPC request
-	 * 
-	 * Note that the JSON data will also be deleted when the Response is deleted, so if a copy
-	 * of the #mainVal is required, that copy must be built with one of RapidJSON's deep copy
-	 * operations, such as Value::CopyFrom.
-	 * 
-	 * Response handlers must have the prototype "void fn(Response *)" and will be called with
-	 * queued connections (and thus will be executed by the receiving event loop). They **must**
-	 * eventually delete the Response they are passed.  The also must either be declared as
-	 * slots or with the `Q_INVOKABLE` macro.
-	 * 
-	 * The only guarantee made if #successful is true is that #mainVal is set.  If #successful is
-	 * false, #mainVal is guaranteed to be a "verified" error object.  This means that it has a
-	 * "code" member for which IsInt() returns true and a "message" member for which IsString()
-	 * returns true.  
-	 */
-	class Response {
-	public:
-		friend class RemDev;
-		
-		~Response() {
-			delete doc;
-		}
-		
-		//! True if the response was a response, false if there was an error
-		bool successful;
-		
-		//! The integer ID returned by the corresponding sendRequest call
-		int id;
-		
-		//! The contents of the "response" element on success or "error" on error
-		rapidjson::Value *mainVal;
-		
-		//!The method name which was passed to sendRequest
-		const char *method;
-		
-		//! The device which received the response
-		RemDev *device;
-		
-	private:
-		//! Internal constructor for RemDev
-		Response(bool successful, int id, const char *method, rapidjson::Document *doc,
-				 RemDev *device, rapidjson::Value *mainVal = 0) {
-			this->successful = successful;
-			this->id = id;
-			this->method = method;
-			this->mainVal = mainVal;
-			this->device = device;
-			this->doc = doc;
-		}
-		
-		//! Root document pointer (may be equivalent to #mainVal)
-		rapidjson::Document *doc;
-	};
 	
 	explicit RemDev(DevMgr *dm, bool inbound = 0);
 	
@@ -305,13 +151,13 @@ public:
 	void sendNotification(const char *method, rapidjson::Document *doc = 0,
 						  rapidjson::Value *params = 0) noexcept;
 	
-	static QByteArray serializeValue(const rapidjson::Value &v);
-	
+	//! Return whether this connection is ready for RPC communication
 	bool valid() const noexcept {return registered;}
 	
-	virtual bool isEncrypted() const noexcept =0;
+	bool isInbound() const noexcept {return inbound;}
 	
 #ifdef QT_DEBUG
+	//! Print a list of all current requests (debug builds only)
 	void printReqs() const;
 #endif
 	
@@ -324,7 +170,7 @@ public slots:
 	 * 
 	 * _Note:_ this will schedule the called object for deletion.
 	 */
-	void close(DisconnectReason reason = ConnectionTerminated, bool fromRemote = false) noexcept;
+	void close(int reason = DevTerminated, bool fromRemote = false) noexcept;
 	
 	/*!
 	 * \brief Poll for operations that have timed out
@@ -352,12 +198,20 @@ signals:
 	
 	void postToLogArea(const QString &msg) const;
 	
-	void deviceDisconnected(RemDev *dev, DisconnectReason reason, bool fromRemote) const;
-	
-	void connectionFailed(const QString &error) const;
+	/*!
+	 * \brief Signalled when this device is disconnected
+	 * \param dev The device which disconnected
+	 * \param reason A member of DisconnectReason
+	 * \param fromRemote Whether the remote device closed the connection
+	 * 
+	 * _Note:_ The emission of this signal indicates that the object has been scheduled
+	 * for deletion.
+	 */
+	void deviceDisconnected(RemDev *dev, int reason, bool fromRemote) const;
 	
 private slots:
 	
+	//! Initializes the device
 	void init() noexcept;
 	
 protected:
@@ -374,6 +228,12 @@ protected:
 	
 	bool inbound;
 	
+	/*! Whether the subclass connection is open for communication
+	 * 
+	 * _Note:_ Subclasses must NOT set this variable!
+	 */
+	volatile bool open;
+	
 	/*!
 	 * \brief Handle a single, complete incoming item
 	 * \param data The raw data to use (will be deleted)
@@ -383,42 +243,70 @@ protected:
 	/*!
 	 * \brief Mark the connection as ready
 	 * 
-	 * Must be called by subclasses as soon as the connection is ready for transmission
+	 * Must be called by subclasses as soon as the connection is ready for transmission.
+	 * 
+	 * _Warning:_ This function is not thread-safe and must be called from a thread-local slot.
 	 */
 	void connectionReady() noexcept;
 	
+	/*!
+	 * \brief Handle a connection error
+	 * \param error A localized error message
+	 * 
+	 * This function can be called at any point, even before connectionReady() has been called.
+	 * Prior to connectionReady(), it will simply report the error to any listeners of
+	 * DevMgr::deviceRegistered().  After connectionReady(), it will call close().  In both cases,
+	 * the error message will be logged.
+	 * 
+	 * _Note:_ This function will schedule the object for deletion.
+	 * 
+	 * _Warning:_ This function is not thread-safe and must be called from a thread-local slot.
+	 */
 	void connectionError(const QString &error) noexcept;
 	
 	/*!
 	 * \brief Send a log line tagged with the cid
 	 * \param msg The message
 	 * \param isAlert Whether it is destined for the user
-	 * 
-	 * This is an overload which converts the QString to QByteArray.
 	 */
 	void log(const QString &msg, bool isAlert = false) const noexcept;
 	
-	virtual void sub_init() noexcept {}
+	/*!
+	 * \brief Initialize the subclass
+	 * 
+	 * Will be called after the device's thread has started.
+	 */
+	virtual void sub_init() noexcept =0;
 	
-	virtual void terminate(DisconnectReason reason, bool fromRemote) noexcept =0;
+	/*!
+	 * \brief Subclasses must reimplement this to close their connection
+	 * 
+	 * This function will be called by close().  It does not have to be thread-safe.  It
+	 * will **not** be called if connectionReady() has not been called or connectionError()
+	 * has been called.
+	 */
+	virtual void terminate() noexcept =0;
 	
 	/*!
 	 * \brief Write a single RPC item
 	 * \param buffer The data to be written (**must** be manually freed)
 	 * 
-	 * This function should quickly write to a buffer and then return.
+	 * This function should quickly write to a queue and then return.  Note
+	 * that this function may be sent even after connectionError().
 	 * 
 	 * _Warning:_ This function **must** be made thread-safe!
 	 */
 	virtual void writeItem(rapidjson::StringBuffer *buffer) noexcept =0;
 	
+	/*!
+	 * \brief Return the subclass connection type string
+	 * \return E.g. "TCP" or "Bluetooth"
+	 */
 	virtual const char *getType() const noexcept =0;
 	
 private:
 	
-	/*!
-	 * \brief Maintains handling information about an outgoing RPC request
-	 */
+	//! Maintains handling information about an outgoing RPC request
 	struct RequestRef {
 		RequestRef(QObject *handlerObj, const char *handlerFn, const char *method, qint64 timeout) {
 			time = QDateTime::currentMSecsSinceEpoch();
@@ -442,7 +330,7 @@ private:
 				if (timeout_time < checkTime) return false;
 			return ! handlerObj.isNull();
 		}
-		// Note: No id is necessary because it is the key in RequestHash
+		// Note: No ID is necessary because it is the key in RequestHash
 		QPointer<QObject> handlerObj;
 		const char *handlerFn;
 		const char *method;
@@ -450,6 +338,7 @@ private:
 		qint64 timeout_time;
 	};
 	
+	//! Used by handleItem()
 	enum MainValType {
 		ParamsT,
 		ResultT,
@@ -458,17 +347,16 @@ private:
 	
 	enum DeviceState {
 		InitialState = 0x0,
-		DeviceReadyFlag = 0x1,
-		RegSentFlag = 0x2,
-		RegAcceptedFlag = 0x4,
-		RemoteRegAcceptedFlag = 0x8,
-		RegisteredState = DeviceReadyFlag|RegSentFlag|RegAcceptedFlag|RemoteRegAcceptedFlag
+		RegSentFlag = 0x1,
+		RegAcceptedFlag = 0x2,
+		RemoteRegAcceptedFlag = 0x4,
+		RegisteredState = RegSentFlag|RegAcceptedFlag|RemoteRegAcceptedFlag
 	};
 	
 	int_fast8_t state;
 	
 	//! A hash for maintaing lists of outgoing requests
-	typedef QHash<LocalId, RequestRef> RequestHash;
+	typedef QHash<int, RequestRef> RequestHash;
 	
 	//! Manages all open outgoing requests to direct responses appropriately
 	RequestHash reqs;
@@ -476,12 +364,13 @@ private:
 	//! Locks the request hash and lastId variable
 	mutable QMutex req_id_lock;
 	
-	LocalId lastId;
+	//! The previous integer ID sent out as part of a request
+	int lastId;
 	
-	volatile bool open;
-	
+	//! The time at which registration will time out
 	qint64 registrationTimeoutTime;
 	
+	//! Whether the connection has been successfully registered
 	bool registered;
 	
 	/*!
@@ -500,7 +389,7 @@ private:
 	 * \brief TODO
 	 * \param doc Root document (will be **deleted**)
 	 */
-	void handleDisconnect(rapidjson::Document *doc);
+	void handleDisconnectNotification(rapidjson::Document *doc);
 	
 	/*!
 	 * \brief Build and deliver a simulated error to an outgoing request
@@ -513,7 +402,7 @@ private:
 	
 	/*!
 	 * \brief Log an incoming or simulated error
-	 * \param errorVal The error object to log (must be verified, see Response)
+	 * \param errorVal The error object to log (must be _verified_, see Response)
 	 * \param method The method name (will be assumed to be a null error if 0)
 	 */
 	void logError(const rapidjson::Value *errorVal, const char *method = 0) const;
@@ -525,8 +414,5 @@ private:
 	 */
 	static inline void prepareDocument(rapidjson::Document *doc, rapidjson::MemoryPoolAllocator<> &a);
 };
-
-Q_DECLARE_METATYPE(RemDev::Response*)
-Q_DECLARE_METATYPE(RemDev::Request*)
 
 #endif // REMDEV_H

@@ -21,12 +21,11 @@
 
 DevMgr::DevMgr(MainWindow *parent) : QObject(parent) {
 	mw = parent;
-	unregCt = 0;
 	refCt = 0;
 	connect(this, &DevMgr::postToLogArea, mw->getLogArea(), &QPlainTextEdit::appendPlainText);
 	// Enable invocation of handler functions
-	qRegisterMetaType<RemDev::Response*>("RemDev::Response*");
-	qRegisterMetaType<RemDev::Request*>("RemDev::Request*");
+	qRegisterMetaType<Response*>("Response*");
+	qRegisterMetaType<Request*>("Request*");
 	// Set up timeout polling
 	timeoutPoller = new QTimer(this);
 	timeoutPoller->setTimerType(Qt::CoarseTimer);
@@ -44,7 +43,7 @@ int DevMgr::getRef() {
 	return ++refCt;
 }
 
-void DevMgr::closeAll(RemDev::DisconnectReason reason) {
+void DevMgr::closeAll(int reason) {
 	emit requestClose(reason, false);
 }
 
@@ -74,32 +73,17 @@ void DevMgr::setHandlerEnabled(const char *method, bool enabled) {
 	hLock.unlock();
 }
 
-QByteArray DevMgr::addDevice(RemDev *dev) {
-	connect(dev, &RemDev::postToLogArea, mw->getLogArea(), &QPlainTextEdit::appendPlainText);
-	connect(timeoutPoller, &QTimer::timeout, dev, &RemDev::timeoutPoll);
-	dLock.lock();
-	devices.append(dev);
-	dLock.unlock();
-	QString name = tr("Unknown%1").arg(++unregCt);
-	return name.toUtf8();
-}
-
-void DevMgr::removeDevice(RemDev *dev) {
-	dLock.lock();
-	devices.removeOne(dev);
-	dLock.unlock();
-}
-
 void DevMgr::markDeviceRegistered(RemDev *dev) {
 	// TODO
+	emit deviceRegistered(dev, true, QString());
 }
 
-void DevMgr::markDeviceConnectFailed(int ref, const QString &error) {
-	log(tr("Target device %1 failed to start: %2").arg(QString::number(ref), error));
-	emit deviceReady(ref, 0, error);
+void DevMgr::markDeviceConnectionFailed(RemDev *dev, const QString &error) {
+	if ( ! dev->isInbound())
+		emit deviceRegistered(dev, false, error);
 }
 
-bool DevMgr::dispatchRequest(RemDev::Request *req) const {
+bool DevMgr::dispatchRequest(Request *req) const {
 	QByteArray method(req->method);
 	
 	// Custom dispatching rules here
@@ -115,7 +99,7 @@ bool DevMgr::dispatchRequest(RemDev::Request *req) const {
 	}
 	if ( ! it->enabled) return false;
 	metaObject()->invokeMethod(it->handlerObj, it->handlerFn,
-							   Qt::QueuedConnection, Q_ARG(RemDev::Request*, req));
+							   Qt::QueuedConnection, Q_ARG(Request*, req));
 	return true;
 }
 
@@ -124,4 +108,15 @@ void DevMgr::log(const QString &msg, bool isAlert) const {
 	QString out("devmgr: ");
 	out.append(msg);
 	emit postToLogArea(out);
+}
+
+QByteArray serializeJson(const rapidjson::Value &v) {
+	rapidjson::Document doc;
+	doc.CopyFrom(v, doc.GetAllocator());
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	doc.Accept(writer);
+	QByteArray array(buffer.GetString());
+	Q_ASSERT(buffer.GetSize() == (uint) array.size());
+	return array;
 }

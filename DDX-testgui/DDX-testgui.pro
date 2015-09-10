@@ -47,7 +47,8 @@ HEADERS  += mainwindow.h \
     rapidjson_using.h \
     netdev.h \
     testdev.h \
-	network.h
+	network.h \
+    ddxrpc.h
 
 DISTFILES +=
 
