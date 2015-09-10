@@ -47,14 +47,32 @@ public:
 	
 	~Network();
 	
+	/*!
+	 * \brief Start the server
+	 * 
+	 * TODO:  Make this function thread-safe
+	 */
 	void startServer();
 	
+	/*!
+	 * \brief Stop the server
+	 * 
+	 * TODO:  Make this function thread-safe
+	 */
 	void stopServer();
 	
+	//! Return whether the server is currently running
 	bool serverRunning() {return server;}
 	
+	//! Concatenate SSL errors
 	static QString sslErrorsToString(const QList<QSslError>& errors);
 	
+	/*!
+	 * \brief getSslConfig
+	 * \return 
+	 * 
+	 * TODO:  Document the SSL (actually TLS) configuration
+	 */
 	const QSslConfiguration &getSslConfig() const {return sslConfig;}
 	
 signals:
@@ -66,11 +84,9 @@ public slots:
 	void init();
 	
 	/*!
-	 * \brief Shutdown signal
+	 * \brief Delete this instance
 	 * 
-	 * Shut down the server, terminate and report any pending connections, and delete this instance.
-	 * 
-	 * **Mactitf**: Must be called with queued connections!
+	 * TODO:  Make this function thread-safe
 	 */
 	void shutdown();
 	

@@ -53,11 +53,11 @@ void NetDev::sub_init() noexcept {
 	// Handle incoming connection
 	if (descriptor) {
 		if ( ! s->setSocketDescriptor(descriptor)) {
-			connectionError(tr("Could not ingest socket"));
+			connectionClosed(tr("Could not ingest socket"));
 			return;
 		}
 		if (s->state() != QAbstractSocket::ConnectedState) {
-			connectionError(tr("Socket disconnected"));
+			connectionClosed(tr("Socket disconnected"));
 			return;
 		}
 		log(tr("Connection is from %1:%2").arg(s->peerAddress().toString(), QString::number(s->peerPort())));
@@ -117,16 +117,17 @@ void NetDev::handleData() noexcept {
 }
 
 void NetDev::handleNetworkError(QAbstractSocket::SocketError error) noexcept {
-	// TODO
-	
 	// RemoteClosedError is emitted even on normal disconnections
-	//if (error == QAbstractSocket::RemoteHostClosedError) ...
-	
-	connectionError(tr("Network error #%1").arg(error));
+	if (error == QAbstractSocket::RemoteHostClosedError) {
+		connectionClosed(QString(), true);
+		return;
+	}
+	// TODO: Turn this into a string
+	connectionClosed(tr("Network error #%1").arg(error));
 }
 
 void NetDev::handleEncryptionErrors(const QList<QSslError> & errors) noexcept {
-	connectionError(tr("OpenSSl: %1").arg(Network::sslErrorsToString(errors)));
+	connectionClosed(tr("OpenSSl: %1").arg(Network::sslErrorsToString(errors)));
 }
 
 void NetDev::writePrivate(rapidjson::StringBuffer *buffer) noexcept {

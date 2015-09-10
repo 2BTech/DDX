@@ -50,6 +50,32 @@ class DevMgr;
  * However, when unexpected, an attacker can theoretically use duplicates to bypass the
  * type restrictions made prior to Request and Response delivery.  Always use the pointers
  * provided by these two classes rather than using Value::FindMember on the root document.
+ * 
+ * 
+ * ### State Handling
+ * This class involves some decently complex state handling rules to manage its operation.
+ * This section is useful only to developers of RemDev and subclasses.  Most of the RemDev state
+ * is stored in three variables, listed with their state at instantiation:
+ * 
+ * - #open: false
+ * - #registered: false
+ * - #state: #InitialState
+ * 
+ * #open represents the state of the low-level handler (subclass) and loosely indicates whether
+ * data can be reliably sent and received by the subclass.  It is modified by connectionReady()
+ * and connectionClosed().  It is exposed to subclasses for easy reading but **must not** be
+ * modified by them.  connectionReady() must be called only once and only when the subclass is
+ * ready for full DDX-RPC communication.  connectionClosed() can be called at any time and will
+ * schedule the RemDev instance for deletion.  Note that calling connectionClosed() does **not**
+ * guarantee that no more calls to writeItem() will be made!
+ * 
+ * #registered represents whether the device has been fully registered.  Registration begins only
+ * after connectionReady() has been called.  Registration marks a crucial point in a device's
+ * lifetime.  Prior to registration, device termination is announced through
+ * DevMgr::deviceRegistered(); afterwards it will be announced only through deviceDisconnected().
+ * 
+ * #state is set with members of #RegistrationState and is used to determine when registration has
+ * been completed successfully.
  */
 class RemDev : public QObject
 {
@@ -228,7 +254,7 @@ protected:
 	
 	bool inbound;
 	
-	/*! Whether the subclass connection is open for communication
+	/*! \brief Whether the subclass connection is open for communication
 	 * 
 	 * _Note:_ Subclasses must NOT set this variable!
 	 */
@@ -237,6 +263,8 @@ protected:
 	/*!
 	 * \brief Handle a single, complete incoming item
 	 * \param data The raw data to use (will be deleted)
+	 * 
+	 * This function is thread-safe.
 	 */
 	void handleItem(char *data) noexcept;
 	
@@ -251,18 +279,16 @@ protected:
 	
 	/*!
 	 * \brief Handle a connection error
-	 * \param error A localized error message
+	 * \param error A localized error message, ignored if \a normalDisconnection is true
+	 * \param normalDisconnection True if this disconnection is not the result of an error
 	 * 
-	 * This function can be called at any point, even before connectionReady() has been called.
-	 * Prior to connectionReady(), it will simply report the error to any listeners of
-	 * DevMgr::deviceRegistered().  After connectionReady(), it will call close().  In both cases,
-	 * the error message will be logged.
+	 * This function can be called at any point by the subclass to indicate disconnection.
 	 * 
 	 * _Note:_ This function will schedule the object for deletion.
 	 * 
 	 * _Warning:_ This function is not thread-safe and must be called from a thread-local slot.
 	 */
-	void connectionError(const QString &error) noexcept;
+	void connectionClosed(const QString &error, bool normalDisconnection = false) noexcept;
 	
 	/*!
 	 * \brief Send a log line tagged with the cid
@@ -282,7 +308,7 @@ protected:
 	 * \brief Subclasses must reimplement this to close their connection
 	 * 
 	 * This function will be called by close().  It does not have to be thread-safe.  It
-	 * will **not** be called if connectionReady() has not been called or connectionError()
+	 * will **not** be called if connectionReady() has not been called or connectionClosed()
 	 * has been called.
 	 */
 	virtual void terminate() noexcept =0;
@@ -292,7 +318,7 @@ protected:
 	 * \param buffer The data to be written (**must** be manually freed)
 	 * 
 	 * This function should quickly write to a queue and then return.  Note
-	 * that this function may be sent even after connectionError().
+	 * that this function may be sent even after connectionClosed().
 	 * 
 	 * _Warning:_ This function **must** be made thread-safe!
 	 */
@@ -345,7 +371,7 @@ private:
 		ErrorT
 	};
 	
-	enum DeviceState {
+	enum RegistrationState {
 		InitialState = 0x0,
 		RegSentFlag = 0x1,
 		RegAcceptedFlag = 0x2,

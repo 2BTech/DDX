@@ -167,20 +167,19 @@ void RemDev::sendNotification(const char *method, rapidjson::Document *doc, rapi
 }
 
 void RemDev::close(int reason, bool fromRemote) noexcept {
-	if ( ! registered) dm->markDeviceConnectionFailed(this, tr("Connection error"));
+	if ( ! registered) dm->markDeviceConnectionFailed(this, tr("Connection failed"));
 	emit deviceDisconnected(this, reason, fromRemote);
+	if ( ! fromRemote) {
+		Document *params = new Document(kObjectType);
+		params->AddMember("reason", Value(reason), params->GetAllocator());
+		sendNotification("disconnect", params, params);
+	}
 	req_id_lock.lock();
-	bool wasOpen = open;
 	open = false;
 	for (RequestHash::ConstIterator it = reqs.constBegin(); it != reqs.constEnd(); ++it)
 		simulateError(it.key(), it.value(), E_DEVICE_DISCONNECTED,
 					  tr("Device disconnected"));
 	req_id_lock.unlock();
-	if (wasOpen && ! fromRemote) {
-		Document *params = new Document(kObjectType);
-		params->AddMember("reason", Value(reason), params->GetAllocator());
-		sendNotification("disconnect", params, params);
-	}
 	terminate();
 	log(tr("Connection closed"));
 	deleteLater();
@@ -218,26 +217,12 @@ void RemDev::init() noexcept {
 void RemDev::handleItem(char *data) noexcept {
 	// Parse document
 	Document *doc = new Document;
-	registered = true;  // TODO:  Remove this
-	if (registered) {  // Parsing procedure is more lenient with registered connections
-		doc->Parse(data);
-		free(data);
-		if (doc->HasParseError()) {
-			sendError(0, E_JSON_PARSE, tr("Parse error"), 0, doc);
-			return;
-		}
-	}
-	else {  // Unregistered: strict parsing, return if errors
-		doc->Parse<rapidjson::kParseValidateEncodingFlag |
-				   rapidjson::kParseIterativeFlag>
-				(data);
-		free(data);
-		// Assume this is a fake connection; return nothing if there's a parse error
-		if (doc->HasParseError()) {
-			delete doc;
-			return;
-		}
-		handleRegistration(doc);
+	doc->Parse<rapidjson::kParseValidateEncodingFlag>(data);
+	free(data);
+	if (doc->HasParseError()) {
+		if (registered) sendError(0, E_JSON_PARSE, tr("Parse error"), 0, doc);
+		// Return nothing if unregistered
+		else delete doc;
 		return;
 	}
 	if (doc->IsArray()) {
@@ -246,6 +231,10 @@ void RemDev::handleItem(char *data) noexcept {
 	}
 	if ( ! doc->IsObject()) {
 		sendError(0, E_JSON_PARSE, tr("Invalid JSON"), 0, doc);
+		return;
+	}
+	if ( ! registered) {
+		handleRegistration(doc);
 		return;
 	}
 	
@@ -354,15 +343,15 @@ void RemDev::connectionReady() noexcept {
 #endif
 }
 
-void RemDev::connectionError(const QString &error) noexcept {
+void RemDev::connectionClosed(const QString &error, bool normalDisconnection) noexcept {
 	open = false;
-	log(tr("Connection failed: %1").arg(error));
-	if ( ! registered) {
+	if ( ! normalDisconnection) log(tr("Connection failed: %1").arg(error));
+	if (registered) close(DevStreamClosed, true);
+	else {
 		dm->markDeviceConnectionFailed(this, error);
-		// Suppress resending of deviceRegistered() signal
-		registered = true;
+		terminate();
+		deleteLater();
 	}
-	close(DevStreamClosed, true);
 }
 
 void RemDev::log(const QString &msg, bool isAlert) const noexcept {
@@ -387,6 +376,7 @@ void RemDev::handleRegistration(rapidjson::Document *doc) {
 
 void RemDev::handleDisconnectNotification(rapidjson::Document *doc) {
 	(void) doc;
+	open = false;  // Suppress sending of disconnect notification
 	// TODO
 }
 
