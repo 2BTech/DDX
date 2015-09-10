@@ -127,7 +127,8 @@ void NetDev::handleNetworkError(QAbstractSocket::SocketError error) noexcept {
 }
 
 void NetDev::handleEncryptionErrors(const QList<QSslError> & errors) noexcept {
-	connectionClosed(tr("OpenSSl: %1").arg(Network::sslErrorsToString(errors)));
+	log(tr("OpenSSL complained about the following certificate error; ignoring: %1").arg(Network::sslErrorsToString(errors)));
+	//connectionClosed(tr("OpenSSl: %1").arg(Network::sslErrorsToString(errors)));
 }
 
 void NetDev::writePrivate(rapidjson::StringBuffer *buffer) noexcept {

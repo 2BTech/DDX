@@ -18,6 +18,8 @@
 
 #include "remdev.h"
 #include "devmgr.h"
+#include "mainwindow.h"
+#include <QPlainTextEdit>
 
 #define RAPIDJSON_IO
 #include "rapidjson_using.h"
@@ -26,16 +28,17 @@ RemDev::RemDev(DevMgr *dm, bool inbound) :
 		QObject(0), req_id_lock(QMutex::Recursive) {
 	// Initializations
 	connectTime = QDateTime::currentMSecsSinceEpoch();
+	connect(dm, &DevMgr::requestClose, this, &RemDev::close);
+	connect(this, &RemDev::postToLogArea, dm->mw->getLogArea(), &QPlainTextEdit::appendPlainText);
 	this->dm = dm;
 	lastId = 0;
 	registered = false;
 	state = InitialState;
 	open = false;
-	cid = QByteArray("UnknownDev").append(dm->getRef());
+	cid = QByteArray("UnknownDev").append(QByteArray::number(dm->getRef()));
 	this->inbound = inbound;
 	if (inbound) log(tr("New unregistered connection"));
 	else log(tr("Connecting to remote device"));
-	connect(dm, &DevMgr::requestClose, this, &RemDev::close);
 	// Threading
 #ifdef REMDEV_THREADS
 	QThread *t = new QThread(dm);
