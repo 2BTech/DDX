@@ -37,12 +37,11 @@ HTTP/HTTPS link may eventually replace it to help with firewall issues.  Further
 SCTP may provide a more reliable (although less available) solution than TCP.
 
 ### TCP Link
-At the low level, each DDX daemon opens a TCP server (or two) to which GUIs, other DDX
-daemons, and other data sources or sinks can connect.  Every RPC object transmitted must
-be separated by exactly one line feed (ASCII 10).  The use of encryption depends on the
-port in use.  By default, port 4384 requires encryption with TLS v1.2 and port 4388 does
-not require encryption.  Most daemons required encryption for external connections but not
-for connections through localhost.
+At the low level, each DDX daemon opens a TCP server to which GUIs, other DDX
+daemons, and other data sources or sinks can connect.  By default, this server listens to
+port 4388.  Every RPC object transmitted must be separated by exactly one line feed
+(ASCII 10).  TCP connections require the use of TLS v1.2 for encryption.  See the "TCP
+Devices & TLS" section for more information.
 
 
 <!--[TOC]-->
@@ -150,30 +149,21 @@ a "target".  Connections are known to their target as "inbound" and to their req
 "outbound".
 
 ### TCP Devices & TLS
-It is highly recommended that TCP implementations of the DDX-RPC encrypt their connection.  Encryption
-is accomplished with TLS v1.2.  Note that TLS is used only to encrypt the connection; identity verification
-through TLS is currently not supported.  Encryption status must be determined before any incoming
-data will be delivered to the JSON parser.  Each device can determine encryption status per connection
-at the time the connection is made.  Each TCP device must then establish encryption status
-by sending the phrase `encryption:[status]` followed by a line break character (ASCII 10).
-`status` can be one of the following:
+Encryption is accomplished with TLS v1.2.  Note that TLS is used only to encrypt the connection;
+identity verification through TLS is currently not supported.  When a connection is established,
+the target device takes on the TLS server role and the requester takes on the client role.  Thus
+servers must have a valid certificate and private key (self-signed is fine).  When opening the
+server, DDX daemons first look for a certificate in "[CONFIG]/cert.pem" and a private key in
+"[CONFIG]/key.pem".  If either of these is invalid, the daemon will attempt to use the "openssl"
+shell command to generate a new certificate/key pair.  If this also fails, the server will not be
+opened.
 
-Status|Meaning
----|---
-`disabled`|The device does not support encryption
-`enabled`|The device allows encryption but is not requesting it
-`requested`|The device allows encryption and is requesting it, but does not require it
-`required`|The device allows and requires encryption
-
-Whether encryption is to be used on the connection is then chosen based on the strictest possible
-level of the two devices.  If one device requires encryption but the other does not support it,
-the device which requires it will disconnect with `EncryptionRequired`.  If encryption is not used,
-both devices will then immediately start accepting JSON and registration can begin.  If encryption
-is used, the requester will then begin sending TLS handshakes until successful and the target will
-wait until a handshake succeeds.  Both devices will start accepting JSON immediately after a
-handshake succeeds.
-
-By default, encryption is `required` on external connections but `enabled` on connections through localhost.
+**Warning:** It is highly recommended that DDX developers and distributors install the OpenSSL
+binaries and let daemons generate their own keys on first startup rather than attempting to
+distribute one private key to many installations in a potentially unsecure manner.  The one
+exception to this is embedded or headless devices; they may not have proper sources of entropy.
+Read [this page](https://wiki.openssl.org/index.php/Random_Numbers) for more information about
+OpenSSL entropy sources and requirements.
 
 ### Passwords
 DDX-RPC implementations can require a distinct password for each individual role in addition
