@@ -24,11 +24,12 @@
 #define RAPIDJSON_IO
 #include "rapidjson_using.h"
 
-RemDev::RemDev(DevMgr *dm, bool inbound) :
-		QObject(0), req_id_lock(QMutex::Recursive) {
+RemDev::RemDev(DevMgr *dm, bool inbound) : QObject(0) {
 	// Initializations
 	connectTime = QDateTime::currentMSecsSinceEpoch();
+	registrationTimeoutTime = connectTime + 60000;
 	connect(dm, &DevMgr::requestClose, this, &RemDev::close);
+	connect(dm->timeoutPoller, &QTimer::timeout, this, &RemDev::timeoutPoll);
 	connect(this, &RemDev::postToLogArea, dm->mw->getLogArea(), &QPlainTextEdit::appendPlainText);
 	this->dm = dm;
 	lastId = 0;
@@ -202,7 +203,8 @@ void RemDev::timeoutPoll() noexcept {
 	}
 	req_id_lock.unlock();
 	if ( ! registered && registrationTimeoutTime < time) {
-		// TODO: Disconnect for registration timeout
+		log(tr("Registration timeout"));
+		close(DevRegistrationTimeout);
 	}
 }
 
@@ -348,11 +350,13 @@ void RemDev::connectionReady() noexcept {
 
 void RemDev::connectionClosed(const QString &error, bool normalDisconnection) noexcept {
 	open = false;
-	if ( ! normalDisconnection) log(tr("Connection failed: %1").arg(error));
+	if (normalDisconnection) log(tr("Connection terminated by remote device"));
+	else log(tr("Connection failed: %1").arg(error));
 	if (registered) close(DevStreamClosed, true);
 	else {
 		dm->markDeviceConnectionFailed(this, error);
 		terminate();
+		log(tr("Connection closed"));
 		deleteLater();
 	}
 }

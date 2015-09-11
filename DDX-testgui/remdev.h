@@ -195,6 +195,9 @@ public slots:
 	 * \param fromRemote Should be true if closing on behalf of the remote device
 	 * 
 	 * _Note:_ this will schedule the called object for deletion.
+	 * 
+	 * _Warning:_ this function is **not** thread-safe and must only be called from a
+	 * thread-local slot or through queued connections.
 	 */
 	void close(int reason = DevTerminated, bool fromRemote = false) noexcept;
 	
@@ -216,7 +219,9 @@ public slots:
 	 * be disabled and are meant to inhibit non-DDX connections from sitting
 	 * unregistered forever.  Registration timeouts cause disconnection.
 	 * 
-	 * This function is called regularly by the DevMgr::timeoutPoller QTimer.
+	 * This function is queued regularly by the DevMgr::timeoutPoller QTimer.
+	 * 
+	 * _Note:_ this function is thread-safe.
 	 */
 	void timeoutPoll() noexcept;
 	
@@ -307,9 +312,7 @@ protected:
 	/*!
 	 * \brief Subclasses must reimplement this to close their connection
 	 * 
-	 * This function will be called by close().  It does not have to be thread-safe.  It
-	 * will **not** be called if connectionReady() has not been called or connectionClosed()
-	 * has been called.
+	 * This function is called by close() and connectionClosed().  It does not have to be thread-safe.
 	 */
 	virtual void terminate() noexcept =0;
 	
@@ -318,7 +321,7 @@ protected:
 	 * \param buffer The data to be written (**must** be manually freed)
 	 * 
 	 * This function should quickly write to a queue and then return.  Note
-	 * that this function may be sent even after connectionClosed().
+	 * that this function may be called even after connectionClosed().
 	 * 
 	 * _Warning:_ This function **must** be made thread-safe!
 	 */

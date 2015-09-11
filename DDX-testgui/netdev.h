@@ -29,6 +29,13 @@
 class DevMgr;
 class Network;
 
+/*!
+ * \brief TCP-based RemDev subclass
+ * 
+ * Note that no lock is placed on the socket instance.  This is because it is only accessed from
+ * within thread-local slots.  This is also why writeItem() is implemented by emitting the
+ * doWritePrivate() signal, which is connected to writePrivate().
+ */
 class NetDev : public RemDev
 {
 	Q_OBJECT
