@@ -26,6 +26,7 @@
 #include <QSettings>
 #include <QThread>
 #include <QList>
+#include <QTimer>
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QMutex>
@@ -46,6 +47,13 @@ class RemDev;
  * ## Thread Structure
  * In addition to the Daemon's primary thread, every Path and Beacon gets a
  * thread to itself.
+ * 
+ * ## Utility Timers
+ * The Daemon class manages a set of utility timers to trigger periodic maintenance
+ * actions.  Each of these timers will first fire about five minutes into DDX execution;
+ * from then on, they will only fire around their specified interval.  They are useful for
+ * actions such as cache clearing, device time setting, and triggering events at a distant
+ * time.  These timers are neither precise nor accurate and should not be used as such.
  */
 class Daemon : public QObject
 {
@@ -105,6 +113,27 @@ public:
 	QStringList args;
 
 signals:
+	
+	//! Emitted approximately every two minutes
+	void twoMinuteTimer() const;
+	
+	//! Emitted approximately every five minutes
+	void fiveMinuteTimer() const;
+	
+	//! Emitted approximately every fifteen minutes
+	void fifteenMinuteTimer() const;
+	
+	//! Emitted approximately every hour
+	void hourlyTimer() const;
+	
+	//! Emitted approximately every day
+	void dailyTimer() const;
+	
+	//! Emitted approximately every week
+	void weeklyTimer() const;
+	
+	//! Emitted approximately every month
+	void monthlyTimer() const;
 
 public slots:
 	
@@ -134,6 +163,19 @@ public slots:
 	void quit(int returnCode=0);
 	
 private slots:
+	
+	/*!
+	 * \brief Check all utility timers for timeout
+	 * 
+	 * This slot is called every UTILITY_INTERVAL for the duration of Daemon execution.
+	 * It manages the sending of timeout signals.
+	 * 
+	 * To determine if a timer has timed out, it subtracts the current time from the timer's
+	 * timeout time.  If the result is negative (meaning the timeout has already passed) or if
+	 * it is positive and less than half of the UTILITY_INTERVAL, the corresponding timeout
+	 * signal is sent and the timer is reset.
+	 */
+	void utilityTimeout();
 	
 private:
 	
@@ -166,6 +208,30 @@ private:
 	
 	//! DDX time timezone, used by #getTime
 	QTimeZone tz;
+	
+	//! Utility timer
+	QTimer *utilityTimer;
+	
+	//! The time at which the two minute timer times out
+	qint64 twoMinuteTimeout;
+	
+	//! The time at which the five minute timer times out
+	qint64 fiveMinuteTimeout;
+	
+	//! The time at which the fifteen minute timer times out
+	qint64 fifteenMinuteTimeout;
+	
+	//! The time at which the hourly timer times out
+	qint64 hourlyTimeout;
+	
+	//! The time at which the daily timer times out
+	qint64 dailyTimeout;
+	
+	//! The time at which the weekly timer times out
+	qint64 weeklyTimeout;
+	
+	//! The time at which the monthly timer times out
+	qint64 monthlyTimeout;
 	
 	bool quitting;
 	

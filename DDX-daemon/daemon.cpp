@@ -34,6 +34,7 @@ Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	sg = new Settings(this);
 	unitManager = 0;
 	quitting = false;
+	utilityTimer = new QTimer(this);
 	// TODO: Make this work with new syntax
 	connect(parent, SIGNAL(aboutToQuit()), this, SLOT(quit()));
 	QMetaObject::invokeMethod(this, "init", Qt::QueuedConnection);
@@ -117,6 +118,58 @@ void Daemon::init() {
 			"\"Min_Current\":\"0\"},{\"n\":\"Barometer\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"2\","
 			"\"Min_Voltage\":\"1\"}]}}}]}";
 	testScheme.size();
+	
+	// Trigger all utility timers in five minutes
+	twoMinuteTimeout = fiveMinuteTimeout = fifteenMinuteTimeout
+			= hourlyTimeout = dailyTimeout = weeklyTimeout = monthlyTimeout
+			= QDateTime::currentMSecsSinceEpoch() + 300000;
+	utilityTimer->setTimerType(Qt::VeryCoarseTimer);
+	utilityTimer->setInterval(UTILITY_INTERVAL);
+	connect(utilityTimer, &QTimer::timeout, this, &Daemon::utilityTimeout);
+	utilityTimer->start();
+}
+
+void Daemon::quit(int returnCode) {
+	if (quitting) return;  // Prevent recursion
+	quitting = true;
+	// TODO: make this call finishing stuff
+	n->shutdown();  // May take a while
+	if (returnCode) lg->log(tr("Terminating (%1)").arg(returnCode));
+	else lg->log(tr("Quitting"));
+	qApp->exit(returnCode);
+}
+
+void Daemon::utilityTimeout() {
+#define UTILITY_TIMEOUT_PERIOD ceil(UTILITY_INTERVAL/2)
+	qint64 time = QDateTime::currentMSecsSinceEpoch();
+	if ((twoMinuteTimeout - time) < UTILITY_TIMEOUT_PERIOD) {
+		emit twoMinuteTimer();
+		twoMinuteTimeout = time + 120000;
+	}
+	if ((fiveMinuteTimeout - time) < UTILITY_TIMEOUT_PERIOD) {
+		emit fiveMinuteTimer();
+		fiveMinuteTimeout = time + 300000;
+	}
+	if ((fifteenMinuteTimeout - time) < UTILITY_TIMEOUT_PERIOD) {
+		emit fifteenMinuteTimer();
+		fifteenMinuteTimeout = time + 900000;
+	}
+	if ((hourlyTimeout - time) < UTILITY_TIMEOUT_PERIOD) {
+		emit hourlyTimer();
+		hourlyTimeout = time + 3.6e+6;
+	}
+	if ((dailyTimeout - time) < UTILITY_TIMEOUT_PERIOD) {
+		emit dailyTimer();
+		dailyTimeout = time + 8.64e+7;
+	}
+	if ((weeklyTimeout - time) < UTILITY_TIMEOUT_PERIOD) {
+		emit weeklyTimer();
+		weeklyTimeout = time + 6.048e+8;
+	}
+	if ((monthlyTimeout - time) < UTILITY_TIMEOUT_PERIOD) {
+		emit monthlyTimer();
+		monthlyTimeout = time + 2.63e+9;
+	}
 }
 
 QString Daemon::addDevice(RemDev *dev) {
@@ -159,16 +212,6 @@ void Daemon::addPath(const QByteArray &name, int log) {
 	t->start();
 	log +=2;
 	// TODO*/
-}
-
-void Daemon::quit(int returnCode) {
-	if (quitting) return;  // Prevent recursion
-	quitting = true;
-	// TODO: make this call finishing stuff
-	n->shutdown();  // May take a while
-	if (returnCode) lg->log(tr("Terminating (%1)").arg(returnCode));
-	else lg->log(tr("Quitting"));
-	qApp->exit(returnCode);
 }
 
 PathManager* Daemon::getUnitManager() {
