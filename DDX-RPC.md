@@ -36,7 +36,7 @@ data transmission system.  So far, the DDX daemon only implements a TCP/TLS link
 HTTP/HTTPS link may eventually replace it to help with firewall issues.  Furthermore,
 SCTP may provide a more reliable (although less available) solution than TCP.
 
-### TCP Link
+### TCP Link (NetDev)
 At the low level, each DDX daemon opens a TCP server to which GUIs, other DDX
 daemons, and other data sources or sinks can connect.  By default, this server listens to
 port 4388.  Every RPC object transmitted must be separated by exactly one line feed
