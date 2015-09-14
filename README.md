@@ -32,6 +32,9 @@ DDX daemon instances, and much more.  To simplify data management, inlets are re
 respect to other modules, but modules in a path can write back to the originating devices by
 calling functions published by inlets.
 
+#### DDX-RPC Protocol
+The DDX includes an extensible communication protocol known as the [DDX-RPC](DDX-RPC.md) which can be used for data relaying, daemon management, and more.
+
 ## Path Durability
 Paths are meant to operate their primary functions whenever possible, even if a particular module
 loses functionality.  As such, module design guidelines and restrictions encourage developers to

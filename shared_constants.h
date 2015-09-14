@@ -16,7 +16,10 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-// Constants shared between various DDX implementations
+/*!
+ * \file shared_constants.h
+ * Constants shared between various DDX implementations
+ */
 
 #ifndef SHARED_CONSTANTS_H
 #define SHARED_CONSTANTS_H

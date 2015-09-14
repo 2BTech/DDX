@@ -24,6 +24,11 @@
 
 class Path;
 
+/*!
+ * \brief Example module class
+ * 
+ * \ingroup modules
+ */
 class ExampleModule final : public Module
 {
 	Q_OBJECT  // Required

@@ -46,6 +46,8 @@ class Logger;
  * 
  * Note that the "Default Settings" GUI button simply removes
  * "SettingsResetOn" and then forces a full application restart.
+ * 
+ * \ingroup daemon
  */
 class Settings : public QObject
 {

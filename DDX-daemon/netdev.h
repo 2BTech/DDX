@@ -21,7 +21,7 @@
 
 #include <QObject>
 #include <QTcpSocket>
-#include "constants.h"
+#include "daemon_constants.h"
 #ifdef ENABLE_SSL
 #include <QSsl>
 #endif

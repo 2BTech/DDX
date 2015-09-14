@@ -28,7 +28,7 @@
 #include <QtAlgorithms>
 #include <QTimer>
 #include <QNetworkAccessManager>
-#include "constants.h"
+#include "daemon_constants.h"
 #include "daemon.h"
 #include "netdev.h"
 

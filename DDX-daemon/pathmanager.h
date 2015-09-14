@@ -50,6 +50,8 @@ class Path;
  * 
  * Failing to register your Modules and Beacons properly can cause them to not
  * be seen by the UnitManager or can crash the application.
+ * 
+ * \ingroup daemon
  */
 class PathManager : public QObject
 {

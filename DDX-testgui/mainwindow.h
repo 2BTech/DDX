@@ -30,10 +30,17 @@
 #include <QMutex>
 #include "ddxrpc.h"
 
+//! \defgroup testgui Test GUI
+
 class DevMgr;
 class TestDev;
 class Network;
 
+/*!
+ * \brief Test GUI main window
+ * 
+ * \ingroup testgui
+ */
 class MainWindow : public QMainWindow
 {
 	Q_OBJECT

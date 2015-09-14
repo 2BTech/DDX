@@ -23,6 +23,13 @@
 #include <QList>
 #include <QString>
 
+/*!
+ * \file data.h
+ * Data classes for daemons
+ * 
+ * \ingroup daemon
+ */
+
 class Module;
 
 /*!

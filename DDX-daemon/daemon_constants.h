@@ -23,6 +23,13 @@
 
 #include "../shared_constants.h"
 
+/*!
+ * \file daemon_constants.h
+ * Global constants and macros for DDX daemons
+ * 
+ * \ingroup daemon
+ */
+
 // GENERAL PURPOSE INDICATIVES
 #define VERSION_FULL_TEXT "0.0"
 #define APP_NAME_SHORT "DDX"

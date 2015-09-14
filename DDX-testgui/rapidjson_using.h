@@ -26,3 +26,9 @@ using rapidjson::Writer;
 using rapidjson::StringBuffer;
 #undef RAPIDJSON_IO
 #endif
+
+/*!
+ * \file rapidjson_using.h
+ * Simplifies code utilizing RapidJSON
+ * \ingroup testgui
+ */

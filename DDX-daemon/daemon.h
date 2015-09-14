@@ -30,7 +30,7 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QMutex>
-#include "constants.h"
+#include "daemon_constants.h"
 
 class Path;
 class PathManager;
@@ -38,6 +38,9 @@ class Network;
 class Settings;
 class Logger;
 class RemDev;
+
+//! \defgroup daemon Daemon
+//! \defgroup modules Daemon modules
 
 /*!
  * \brief The main manager of the DDX
@@ -54,6 +57,8 @@ class RemDev;
  * from then on, they will only fire around their specified interval.  They are useful for
  * actions such as cache clearing, device time setting, and triggering events at a distant
  * time.  These timers are neither precise nor accurate and should not be used as such.
+ * 
+ * \ingroup daemon
  */
 class Daemon : public QObject
 {
@@ -106,7 +111,7 @@ public:
 	 * \param ignoreMinor Whether to ignore the second number
 	 * \return 0 if equivalent, 1 if A is greater, -1 if A is lesser
 	 * 
-	 * Returns VERSION_COMPARE_FAILED on error.  #versionB defaults to this DDX version.
+	 * Returns VERSION_COMPARE_FAILED on error.  \a versionB defaults to this DDX version.
 	 */
 	static int versionCompare(QString versionA, QString versionB = VERSION_FULL_TEXT, bool ignoreMinor = false);
 	

@@ -29,6 +29,11 @@
 
 class Path;
 
+/*!
+ * \brief Example inlet class
+ * 
+ * \ingroup modules
+ */
 class ExampleInlet final : public Inlet
 {
 	Q_OBJECT  // Required

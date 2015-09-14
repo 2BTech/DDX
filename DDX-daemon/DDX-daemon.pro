@@ -57,7 +57,6 @@ SOURCES += main.cpp \
     pathmanager.cpp
 
 HEADERS += \
-    constants.h \
     ../NoGit/private_constants.h \
     daemon.h \
     inlet.h \
@@ -73,13 +72,8 @@ HEADERS += \
     remdev.h \
     netdev.h \
     pathmanager.h \
-    rapidjson.h
-
-DISTFILES += \
-    DaemonCommandLineArguments.txt \
-    DevNotes.txt \
-    DataFlow.txt \
-    RemoteManagementProtocol.md
+    rapidjson.h \
+    daemon_constants.h
 
 RESOURCES += res/resources.qrc
 

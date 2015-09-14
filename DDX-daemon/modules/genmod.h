@@ -24,6 +24,12 @@
 
 class Path;
 
+
+/*!
+ * \brief Delete this class!
+ * 
+ * \ingroup modules
+ */
 class GenMod : public Module
 {
 	Q_OBJECT

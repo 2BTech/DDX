@@ -119,10 +119,14 @@ void Daemon::init() {
 			"\"Min_Voltage\":\"1\"}]}}}]}";
 	testScheme.size();
 	
-	// Trigger all utility timers in five minutes
-	twoMinuteTimeout = fiveMinuteTimeout = fifteenMinuteTimeout
-			= hourlyTimeout = dailyTimeout = weeklyTimeout = monthlyTimeout
-			= QDateTime::currentMSecsSinceEpoch() + 300000;
+	// Trigger all utility timers initially at five minute intervals
+	twoMinuteTimeout = QDateTime::currentMSecsSinceEpoch() + 300000;
+	fiveMinuteTimeout = twoMinuteTimeout + 300000;
+	fifteenMinuteTimeout = fiveMinuteTimeout + 300000;
+	hourlyTimeout = fifteenMinuteTimeout + 300000;
+	dailyTimeout = hourlyTimeout + 300000;
+	weeklyTimeout = dailyTimeout + 300000;
+	monthlyTimeout = weeklyTimeout + 300000;
 	utilityTimer->setTimerType(Qt::VeryCoarseTimer);
 	utilityTimer->setInterval(UTILITY_INTERVAL);
 	connect(utilityTimer, &QTimer::timeout, this, &Daemon::utilityTimeout);

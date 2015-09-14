@@ -30,7 +30,7 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include <rapidjson.h>
-#include "constants.h"
+#include "daemon_constants.h"
 
 class Daemon;
 class Logger;

@@ -42,13 +42,13 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     remdev.h \
-    constants.h \
     devmgr.h \
     rapidjson_using.h \
     netdev.h \
     testdev.h \
 	network.h \
-    ddxrpc.h
+    ddxrpc.h \
+    testgui_constants.h
 
 DISTFILES +=
 

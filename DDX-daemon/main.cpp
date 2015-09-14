@@ -17,7 +17,7 @@
  ******************************************************************************/
 
 #include <QCoreApplication>
-#include "constants.h"
+#include "daemon_constants.h"
 #include "daemon.h"
 #include "logger.h"
 

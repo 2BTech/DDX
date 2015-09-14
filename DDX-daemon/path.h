@@ -48,6 +48,8 @@ class Logger;
  * Paths must take this into account.  Beacons will also be run in their own
  * threads.  Any Module can start its own thread, but all functions called by a
  * Path assume synchronicity.
+ * 
+ * \ingroup daemon
  */
 class Path : public QObject
 {

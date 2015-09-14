@@ -27,6 +27,14 @@
 
 class DevMgr;
 
+/*!
+ * \brief Test device class
+ * 
+ * Tests RPC functionality by transferring various types of RPC objects and
+ * printing the output.
+ * 
+ * \ingroup testgui
+ */
 class TestDev : public RemDev
 {
 	Q_OBJECT

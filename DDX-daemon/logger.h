@@ -29,7 +29,7 @@
 #include <QMutexLocker>
 #include <QPointer>
 #include <QJsonObject>
-#include "constants.h"
+#include "daemon_constants.h"
 
 class Daemon;
 
@@ -47,6 +47,8 @@ void globalHandleMessage(QtMsgType t, const QMessageLogContext &c, const QString
  * 
  * _Note:_ With the exception of process(), all functions in this class are
  * thread-safe.
+ * 
+ * \ingroup daemon
  */
 class Logger : public QObject
 {

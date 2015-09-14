@@ -48,6 +48,8 @@ class MainWindow;
  * - Instantiate a RemDev subclass with an outbound constructor
  * - Wait until deviceRegistered() is emitted
  * - Check that deviceRegistered() is the device you want
+ * 
+ * \ingroup testgui
  */
 class DevMgr : public QObject
 {

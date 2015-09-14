@@ -19,6 +19,12 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+/*!
+ * \file testgui_constants.h
+ * Manages constants and macros for the test GUI
+ * \ingroup testgui
+ */
+
 #include "../shared_constants.h"
 
 #endif // CONSTANTS_H

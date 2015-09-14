@@ -90,6 +90,8 @@ class Path;
  * ## %Module Registration
  * Modules must be properly registered before you can use them.  Registration
  * instructions are documented with UnitManager.
+ * 
+ * \ingroup daemon
  */
 class Module : public QObject
 {

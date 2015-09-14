@@ -27,6 +27,17 @@
 
 class RemDev;
 
+/*!
+ * \file ddxrpc.h
+ * Maintains structs and types used by various parts of the DDX-RPC system
+ * \ingroup testgui
+ */
+
+/*!
+ * \brief The DevRoles enum
+ * 
+ * \ingroup testgui
+ */
 enum DevRoles {
 	DevDaemonRole = 0x1,  //!< Can execute paths
 	DevManagerRole = 0x2,  //!< An interface for a device which executes paths
@@ -35,7 +46,9 @@ enum DevRoles {
 	DevGlobalRole = 0x80  //!< A pseudo-role which indicates role-less information
 };
 
-//! Enumerates various disconnection reasons
+/*! Enumerates various disconnection reasons
+ * \ingroup testgui
+ */
 enum DevDisconnectReason {
 	DevUnknownDisconnect,  //!< Unknown disconnection
 	DevShuttingDown,  //!< The disconnecting member is shutting down by request
@@ -51,7 +64,7 @@ enum DevDisconnectReason {
  * \brief Represents an incoming RPC request or notification
  * 
  * Note that the JSON data will also be deleted when the Response is deleted, so if a copy
- * of the #mainVal is required, that copy must be built with one of RapidJSON's deep copy
+ * of #params is required, that copy must be built with one of RapidJSON's deep copy
  * operations, such as Value::CopyFrom.  Handlers **must** eventually delete the Request
  * object they are passed.
  * 
@@ -64,6 +77,7 @@ enum DevDisconnectReason {
  * when building supplemental information (as is often necessary), #alloc will return the
  * same allocator used to produce the final response object.
  * 
+ * \ingroup testgui
  */
 class Request {
 public:
@@ -140,6 +154,8 @@ Q_DECLARE_METATYPE(Request*);
  * false, #mainVal is guaranteed to be a _verified_ error object.  This means that it has a
  * "code" member for which IsInt() returns true and a "message" member for which IsString()
  * returns true; no guarantees are made towards a possible "data" member.
+ * 
+ * \ingroup testgui
  */
 class Response {
 public:
@@ -185,6 +201,7 @@ Q_DECLARE_METATYPE(Response*);
  * \brief Serialize a RapidJSON Value to its JSON text
  * \param v The value to serialize
  * \return A null-terminated version of the JSON
+ * \ingroup testgui
  */
 QByteArray serializeJson(const rapidjson::Value &v);
 // Note: defined in devmgr.cpp

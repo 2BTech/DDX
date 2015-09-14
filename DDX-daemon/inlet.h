@@ -20,12 +20,14 @@
 #define INLET_H
 
 #include <QObject>
-#include "constants.h"
+#include "daemon_constants.h"
 #include "path.h"
 #include "module.h"
 
 /*!
  * \brief A Path's first Module, responsible for producing data lines
+ * 
+ * \ingroup daemon
  */
 class Inlet : public Module
 {

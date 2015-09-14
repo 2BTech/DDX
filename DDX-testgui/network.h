@@ -29,7 +29,7 @@
 #include <QAbstractSocket>
 #include <QtAlgorithms>
 #include <QSslConfiguration>
-#include "constants.h"
+#include "testgui_constants.h"
 #include "mainwindow.h"
 #include "ddxrpc.h"
 
@@ -37,6 +37,14 @@ class EncryptedServer;
 class DevMgr;
 class NetDev;
 
+/*!
+ * \brief Network manager
+ * 
+ * Opens a TCP server with the EncryptedServer class and maintains a global
+ * QNetworkAccessManager for the whole system
+ * 
+ * \ingroup testgui
+ */
 class Network : public QObject
 {
 	Q_OBJECT
@@ -108,6 +116,11 @@ private:
 	
 };
 
+/*!
+ * \brief Opens a TCP server which instantiates NetDev for each incoming connection
+ * 
+ * \ingroup testgui
+ */
 class EncryptedServer : public QTcpServer
 {
 	Q_OBJECT
