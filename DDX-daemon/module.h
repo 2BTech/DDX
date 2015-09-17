@@ -20,8 +20,11 @@
 #define MODULE_H
 
 #include <QObject>
-#include <QJsonObject>
 #include <QStringList>
+#include "../rapidjson/include/rapidjson/document.h"
+#include "../rapidjson/include/rapidjson/stringbuffer.h"
+#include "../rapidjson/include/rapidjson/writer.h"
+#include "../rapidjson/include/rapidjson/reader.h"
 #include "data.h"
 
 class Path;
@@ -79,17 +82,26 @@ class Path;
  * Path tests.  Bad data structure should be reported and any necessary state
  * saved in handleReconfigure() so that data can pass through process() without
  * causing a crash.  process() should be able to deal with incorrect or missing
- * data safely.  Inlets should buffer asynchronous data.
+ * data safely.  Inlets should buffer asynchronous data as necessary to avoid
+ * missing incoming data because it's coming in faster than process() can
+ * handle it.
  * 
  * TODO:  Write about Path::terminate()
  * 
- * ## Module-Module Communication
+ * ## Inter-Module Communication
  * Modules can communicate with each other with the use of Path::getModule() and
  * Column#p, although the former is recommended over the latter.
  * 
  * ## %Module Registration
  * Modules must be properly registered before you can use them.  Registration
  * instructions are documented with UnitManager.
+ * 
+ * ## Memory Management
+ * Modules are required to do full memory management because they may be
+ * loaded and destroyed many times in a Daemon instance which may run
+ * autonomously for years.  Ensure to write complete destructors and set parent
+ * pointers when relying on QObject memory management.  Note that all Column
+ * instances are already fully managed.
  * 
  * \ingroup daemon
  */
@@ -98,23 +110,38 @@ class Module : public QObject
 	Q_OBJECT
 public:
 	
+	explicit Module(Path *parent, const QByteArray &name);
+	
+	/*!
+	 * \brief Module destructor
+	 * 
+	 * Modules are required to do full memory management because they may be
+	 * loaded and destroyed many times in a Daemon instance which may run
+	 * autonomously for years.  Here is the place to do so.  Note that Columns
+	 * are already fully managed.
+	 */
+	~Module();
+	
 	/*!
 	 * \brief Configure the Module for operation
-	 * \param settings The JSON settings tree
+	 * \param config The JSON config tree
 	 * 
 	 * This function can be reimplemented to offer setup space for a Module.  It
 	 * is guaranteed to be called exactly once and prior to the first call to
-	 * handleReconfigure().  _This is a virtual function which must be
-	 * reimplemented._
+	 * handleReconfigure().  This function or a later slot **must** call
+	 * Path::moduleReady() on #path when it is ready to be started.  Failure to
+	 * do so will cause path iniitialization to time out.  _This is a virtual
+	 * function which must be reimplemented._
 	 * 
 	 * ### Error Handling
 	 * See the Module class documentation for general information on error
 	 * handling.  This function should be designed to handle any possible
 	 * errors that occur without interrupting data flow.  However, this is the
 	 * one function which _can_ report fatal configuration errors which will
-	 * terminate a path before it begins.  Errors should be reported with alert().
+	 * terminate a path before it begins; see terminate().  Errors should be
+	 * reported with alert().
 	 */
-	virtual void init(const QJsonObject settings);
+	virtual void init(rapidjson::Value &config);
 	
 	/*!
 	 * \brief Handle a data line
@@ -140,6 +167,7 @@ public:
 	
 	/*!
 	 * \brief Return a JSON tree of settings for this Module
+	 * \param doc The RapidJSON document whose allocator to use
 	 * \return The settings tree
 	 * 
 	 * ### Settings Tree Format
@@ -253,13 +281,9 @@ public:
 	 * }
 	 ~~~
 	 */
-	virtual QJsonObject publishSettings() const;
+	virtual rapidjson::Value publishSettings(rapidjson::MemoryPoolAllocator<> &a) const;
 	
-	virtual QJsonObject publishActions() const;
-	
-	explicit Module(Path *parent, const QByteArray &name);
-	
-	~Module();
+	virtual rapidjson::Value publishActions(rapidjson::MemoryPoolAllocator<> &a) const;
 	
 	/*!
 	 * \brief Manages reconfiguration
@@ -271,10 +295,7 @@ public:
 	/*!
 	 * \brief Called before destruction
 	 * 
-	 * Modules are required to do full memory management because they may be
-	 * loaded and destroyed many times in a Daemon instance which may run
-	 * autonomously for years.  Here is the place to do so.  Note that Columns
-	 * are already fully managed.  _This is a virtual function which must be
+	 *   _This is a virtual function which must be
 	 * reimplemented._
 	 */
 	virtual void cleanup();
@@ -365,7 +386,7 @@ protected:
 	 * \brief Generate a new Column and add it to the output Columns
 	 * \param name A unique, case-insensitive identifier
 	 * \param index Position index in the Module's output columns
-	 * \return A pointer to the created buffer (must be saved!) or 0
+	 * \return A pointer to the created column (must be saved!) or 0
 	 * 
 	 * Generates a new column buffer, adds it to the Module's output columns,
 	 * and adds a reference to the accessor map.  This function will first
@@ -374,7 +395,7 @@ protected:
 	 * 
 	 * __Unsafe outside of reconfigure() or handleReconfigure()!__
 	 */
-	QByteArray *insertColumn(const QString name, int index);
+	Column *insertColumn(const QString name, int index);
 	
 	/*!
 	 * \brief Remove an output Column

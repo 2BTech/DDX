@@ -25,6 +25,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
+#include "data.h"
 
 class Module;
 class Inlet;
@@ -53,6 +54,8 @@ class Logger;
  */
 class Path : public QObject
 {
+	friend class Module;
+	friend class Inlet;
 	Q_OBJECT
 public:
 	
@@ -83,23 +86,6 @@ public:
 	QJsonObject publishActions() const;
 	
 	/*!
-	 * \brief Terminate this Path prior to starting
-	 * 
-	 * In the event of a configuration error which truly prevents a Module
-	 * from functioning, it can be caught in Module::init() and handled by
-	 * calling this function.
-	 */
-	void terminate();
-	
-	/*!
-	 * Execute the processing loop once
-	 * 
-	 * This function must _only_ be called by a Path's Inlet and while the Path
-	 * is running.  It loops through all Modules and calls Module::process().
-	 */
-	void process();
-	
-	/*!
 	 * Reconfigure downstream Modules
 	 * 
 	 * This function must _only_ be called by a Module's Module::process()
@@ -109,7 +95,111 @@ public:
 	 */
 	void reconfigure();
 	
+	/*!
+	 * \brief Terminate this Path prior to starting
+	 * 
+	 * In the event of a configuration error which truly prevents a Module
+	 * from functioning, it can be caught in Module::init() and handled by
+	 * calling this function.
+	 */
+	void terminate();
+	
+	/*!
+	 * \brief Tell Path a module is ready
+	 * \param m The Module which is now ready
+	 * 
+	 * This function **must** only be called once by every Module.  Failure
+	 * to call this function in a reasonable amount of time will cause the
+	 * path to timeout.
+	 */
+	void moduleReady(Module *m);
+	
 	void test(QString methodName);
+	
+	/*!
+	 * \brief Retrieve Module list
+	 * \return The list of Modules
+	 * 
+	 * Can be used so that Modules can search for companion Modules by type.
+	 */
+	const QList<Module*>* getModules() const {return &modules;}
+	
+	/*!
+	 * \brief Get the Path's name
+	 * \return The Path's name
+	 */
+	QByteArray getName() const {return name;}
+	
+signals:
+	
+	//! Emitted when \a path is ready to start
+	void ready(Path* path) const;
+	
+	//! Emitted when \a path has started
+	void running(Path* path) const;
+	
+	//! Emitted when \a path is stopped
+	void stopped(Path* path) const;
+	
+	//! Emitted when \a path has reached the end of its inlet stream
+	void finished(Path* path) const;
+	
+	//! Emitted when a new set of live actions is available for \a path
+	void updateLiveActions(Path* path, QJsonObject actions) const;
+	
+	//! Emitted when all cleanup operations have finished
+	void readyForDeletion(Path *path) const;
+	
+public slots:
+	/*!
+	 * Parse scheme and Module::init() constituents
+	 * 
+	 * ### Parsing
+	 * The scheme is parsed.  
+	 */
+	void init();
+	void start();
+	void stop();
+	void cleanup();  // Or shutdown?
+	
+protected:
+	
+private:
+	Daemon *d;  //!< Convenience pointer to Daemon instance
+	Logger *lg;  //!< Convenience pointer to Logger instance
+	
+	//! This Path's name (not editable after construction)
+	QByteArray name;
+	
+	//! This Path's scheme (will be cleared after parsing)
+	QByteArray scheme;
+	
+	//! The ordered Module list
+	ModuleList modules;
+	
+	//! Convenience pointer to Inlet
+	Inlet *inlet;
+	
+	State state;
+	
+	//! Keeps track of which modules have been initiated in case of termination
+	int lastInitIndex;
+	
+	/*! Manages the current processing index for return after reconfiguration
+	 * 
+	 * _Note:_ Prior to the emission of ready(), this variable is used to keep
+	 * track of how many modules have become ready.
+	 */
+	int processPosition;
+	
+	/*!
+	 * Execute the processing loop once
+	 * 
+	 * This function must _only_ be called by a Path's Inlet and while the Path
+	 * is running.  It loops through all Modules and calls Module::process() on
+	 * each one.
+	 */
+	void process();
 	
 	/*!
 	 * \brief Send a high-level message to the user
@@ -128,80 +218,6 @@ public:
 	 * Log events are tagged with the name of the Path they come from.
 	 */
 	void log(const QString msg, const Module *m = 0) const;
-	
-	/*!
-	 * \brief Retrieve Module list
-	 * \return The list of Modules
-	 * 
-	 * Can be used so that Modules can search for companion Modules by type.
-	 */
-	const QList<Module*>* getModules() const {return &modules;}
-	
-	/*!
-	 * \brief Get the Path's name
-	 * \return The Path's name
-	 */
-	QString getName() const {return name;}
-	
-signals:
-	
-	//! Emitted when Path is ready to start
-	void ready(QString path) const;
-	
-	//! Emitted when Path has started
-	void running(QString path) const;
-	
-	//! Emitted when Path is stopped
-	void stopped(QString path) const;
-	
-	//! Emitted when Path has reached the end of its inlet stream
-	void finished(QString path) const;
-	
-	//! Emitted when a new set of live actions is available
-	void updateLiveActions(QJsonObject actions) const;
-	
-	//! Emitted when all cleanup operations have finished
-	void readyForDeletion() const;
-	
-public slots:
-	/*!
-	 * Parse scheme and Module::init() constituents
-	 * 
-	 * Note: Daemon::um _must_ be valid while this method runs!
-	 * 
-	 * ### Parsing
-	 * The scheme is parsed.  
-	 */
-	void init();
-	void start();
-	void stop();
-	void cleanup();  // Or shutdown?
-	
-protected:
-	
-private:
-	Daemon *d;  //!< Convenience pointer to Daemon instance
-	Logger *lg;  //!< Convenience pointer to Logger instance
-	
-	//! This Path's name (not editable after construction)
-	QString name;
-	
-	//! This Path's scheme (will be cleared after initialization)
-	QByteArray scheme;
-	
-	//! The ordered Module list
-	QList<Module*> modules;
-	
-	//! Convenience pointer to Inlet
-	Inlet *inlet;
-	
-	State state;
-	
-	//! Keeps track of which modules have been initiated in case of termination
-	int lastInitIndex;
-	
-	//! Manages the current processing index for return after reconfiguration
-	int processPosition;
 };
 
 #endif // PATH_H

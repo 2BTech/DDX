@@ -37,9 +37,9 @@ Module::~Module()
 	}
 }
 
-void Module::init(const QJsonObject settings) {
+void Module::init(rapidjson::Value &config) {
 	alert("DDX bug: init() not reimplemented!");
-	settings.count();  // Suppress unused warning
+	config.count();  // Suppress unused warning
 }
 
 void Module::handleReconfigure() {
@@ -49,12 +49,12 @@ void Module::handleReconfigure() {
 void Module::cleanup() {
 }
 
-QJsonObject Module::publishSettings() const {
-	return QJsonObject();  // Return no settings
+rapidjson::Value Module::publishSettings(rapidjson::MemoryPoolAllocator<> &a) const {
+	return Value(rapidjson::kNulltype);  // Return no settings
 }
 
-QJsonObject Module::publishActions() const {
-	return QJsonObject();  // Return no actions
+rapidjson::Value Module::publishActions(rapidjson::MemoryPoolAllocator<> &a) const {
+	return Value(rapidjson::kNulltype);  // Return no actions
 }
 
 void Module::reconfigure() {
@@ -78,20 +78,19 @@ Column* Module::findColumn(const QString name) const {
 	return 0;
 }
 
-QByteArray* Module::insertColumn(const QString name, int index) {
+Column *Module::insertColumn(const QString name, int index) {
 	if (findColumn(name)) return 0;
 	if ( ! newColumns) newColumns = new DataDef();
 	Column *c = new Column(name, this);
 	newColumns->append(c);
 	outputColumns.insert(index, c);
-	return c->buffer();
+	return c;
 }
 
 void Module::removeColumn(const Column *c) {
-	// TODO:  Should this be removeOne?
-	outputColumns.removeAll((Column*) c);
+	outputColumns.removeOne((Column*) c);
 	if (c->p == this) {
-		newColumns->removeAll((Column*) c);
+		newColumns->removeOne((Column*) c);
 		delete c;
 	}
 }

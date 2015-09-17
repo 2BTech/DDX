@@ -28,9 +28,17 @@ Inlet::~Inlet()
 	// TODO
 }
 
-void Inlet::init(QJsonObject settings) {
+void Inlet::init(rapidjson::Value &config) {
 	// TODO
-	settings.size();
+	config.size();
+}
+
+void Inlet::handleReconfigure() {
+	path->reconfigure();
+}
+
+void Inlet::process() {
+	path->process();
 }
 
 bool Inlet::isSynchronous() const {
@@ -41,16 +49,4 @@ bool Inlet::isSynchronous() const {
 bool Inlet::isFinite() const {
 	// TODO
 	return false;
-}
-
-void Inlet::handleReconfigure() {
-#ifdef CAUTIOUS_ALERTS
-		alert("DDX bug: handleReconfigure() called on an inlet");
-#endif
-}
-
-void Inlet::process() {
-#ifdef CAUTIOUS_ALERTS
-		alert("DDX bug: process() called on an inlet");
-#endif
 }

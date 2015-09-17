@@ -58,7 +58,7 @@ win32 {
 }
 
 macx {
-	error(SSL not installed)
+	#error(SSL not installed)
 }
 
 INCLUDEPATH += "$$PWD/../rapidjson/include/rapidjson"

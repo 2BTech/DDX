@@ -56,4 +56,6 @@ struct Column {
  */
 typedef QList<Column*> DataDef;
 
+typedef QList<Module*> ModuleList;
+
 #endif // DATA_H

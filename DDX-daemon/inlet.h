@@ -40,10 +40,24 @@ public:
 	 * 
 	 * See Module::init() for general initiation information.  Inlets function
 	 * exactly the same but with one additional requirement.  Inlet::init()
-	 * _must_ also prepare a best-guess column structure with
+	 * _must_ also prepare a best-guess column structure with calls to
 	 * insertColumn() before returning.
 	 */
-	virtual void init(QJsonObject settings);
+	virtual void init(rapidjson::Value &config);
+	
+	/*!
+	 * \brief Trigger reconfiguration
+	 * 
+	 * Calls Path::reconfigure(); see docs for requirements
+	 */
+	void handleReconfigure() final;
+	
+	/*!
+	 * \brief Trigger processing
+	 * 
+	 * Calls Path::process(); see docs for requirements
+	 */
+	void process() final;
 	
 	/*!
 	 * \brief Determines whether the stream is synchronous or asynchronous
@@ -76,20 +90,6 @@ public:
 private:
 	bool streamIsSynchronous;
 	bool streamIsFinite;
-	
-	/*!
-	 * \brief [DISABLED IN INLETS]
-	 * 
-	 * Inlets must never utilize or reimplement this function.
-	 */
-	void handleReconfigure() final;
-	
-	/*!
-	 * \brief [DISABLED IN INLETS]
-	 * 
-	 * Inlets must never utilize or reimplement this function.
-	 */
-	void process() final;
 };
 
 #endif // INLET_H

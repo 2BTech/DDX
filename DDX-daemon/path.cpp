@@ -31,7 +31,7 @@ Path::Path(Daemon *daemon, const QByteArray &name, const QByteArray &scheme) : Q
 	d = daemon;
 	lg = Logger::get();
 	lastInitIndex = 0;
-	processPosition = 1;
+	processPosition = 0;
 	
 	// TODO:  Check the validity of this:
 	// Threading
@@ -83,31 +83,12 @@ void Path::terminate() {
 	cleanup();
 }
 
-void Path::process() {
-#ifdef CAUTIOUS_CHECKS
-	if (state != State::Running) {
-		alert("DDX bug: process() called while not running");
-		return;
+void Path::moduleReady(Module *m) {
+	processPosition++;
+	if (processPosition == modules.size()) {
+		processPosition = 1;
+		emit ready(this);
 	}
-#endif
-	QList<Module*>::const_iterator it = modules.constBegin();
-	processPosition = 1;
-	for (++it; it < modules.constEnd(); ++it) {  // Start after the inlet
-		processPosition++;
-		(*it)->process();
-	}
-	processPosition = 1;
-}
-
-void Path::reconfigure() {
-#ifdef CAUTIOUS_CHECKS
-	if (state != State::Running) {
-		alert("DDX bug: reconfigure() called while not running");
-		return;
-	}
-#endif
-	for (int i = processPosition; i < modules.size(); ++i)
-		modules.at(i)->reconfigure();
 }
 
 void Path::test(QString methodName) {
@@ -215,7 +196,35 @@ void Path::cleanup() {
 	for (int i = 0; i < modules.size(); ++i)
 		delete modules.at(i);
 	// TODO: remove
-	emit readyForDeletion();
+	//emit readyForDeletion();
+	deleteLater();
+}
+
+void Path::reconfigure() {
+#ifdef CAUTIOUS_CHECKS
+	if (state != State::Running) {
+		alert("DDX bug: reconfigure() called while not running");
+		return;
+	}
+#endif
+	for (int i = processPosition; i < modules.size(); ++i)
+		modules.at(i)->reconfigure();
+}
+
+void Path::process() {
+#ifdef CAUTIOUS_CHECKS
+	if (state != State::Running) {
+		alert("DDX bug: process() called while not running");
+		return;
+	}
+#endif
+	ModuleList::const_iterator it = modules.constBegin();
+	processPosition = 1;
+	for (++it; it < modules.constEnd(); ++it) {  // Start after the inlet
+		processPosition++;
+		(*it)->process();
+	}
+	processPosition = 1;
 }
 
 void Path::alert(const QString msg, const Module *m) const {
