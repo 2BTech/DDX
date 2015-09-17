@@ -53,6 +53,12 @@ HEADERS  += mainwindow.h \
 DISTFILES +=
 
 # Windows: download SSL from https://slproweb.com/products/Win32OpenSSL.html, copy "lib" folder to out-of-git location
-LIBS += -L"$$PWD/../NoGit/OpenSSL-Win32" -lssleay32
+win32 {
+	LIBS += -L"$$PWD/../NoGit/OpenSSL-Win32" -lssleay32
+}
+
+macx {
+	error(SSL not installed)
+}
 
 INCLUDEPATH += "$$PWD/../rapidjson/include/rapidjson"
