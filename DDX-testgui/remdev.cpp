@@ -203,7 +203,9 @@ void RemDev::timeoutPoll() noexcept {
 	}
 	req_id_lock.unlock();
 	if ( ! registered && registrationTimeoutTime < time) {
-		log(tr("Registration timeout"));
+		QString error = tr("Registration timeout");
+		log(error);
+		dm->markDeviceConnectionFailed(this, error);
 		close(DevRegistrationTimeout);
 	}
 }
@@ -284,6 +286,10 @@ void RemDev::handleItem(char *data) noexcept {
 		// Type-check method and params
 		if (methodVal->IsString() && (mainVal ? mainVal->IsObject() : true)) {
 			Request *req = new Request(methodVal->GetString(), mainVal, doc, this, idVal);
+			if ( ! registered) {
+				handleRegRequest(req);
+				return;
+			}
 			if ( ! dm->dispatchRequest(req))  // Will return false if no method was found
 				sendError(req, E_JSON_METHOD, tr("Method not found"), 0);
 			return;
@@ -323,6 +329,10 @@ void RemDev::handleItem(char *data) noexcept {
 				}
 				else successful = true;
 				Response *res = new Response(successful, id, req.method, doc, this, mainVal);
+				if ( ! registered) {
+					handleRegResponse(res);
+					return;
+				}
 				metaObject()->invokeMethod(req.handlerObj, req.handlerFn,
 										   Qt::QueuedConnection, Q_ARG(Response*, res));
 				return;
@@ -342,7 +352,7 @@ void RemDev::handleItem(char *data) noexcept {
 
 void RemDev::connectionReady() noexcept {
 	open = true;
-	// TODO: send registration
+	// TODO: send registration here
 #ifdef QT_DEBUG
 	log(tr("Connection ready"));
 #endif
@@ -376,15 +386,24 @@ void RemDev::sendDocument(rapidjson::Document *doc) {
 	writeItem(buffer);
 }
 
-void RemDev::handleRegistration(rapidjson::Document *doc) {
-	(void) doc;
+void RemDev::handleRegRequest(Request *r) {
 	// TODO
+	log("unhandled pre-reg request");
+	delete r;
+}
+
+void RemDev::handleRegResponse(Response *r) {
+	// TODO
+	log("unhandled pre-reg response");
+	delete r;
 }
 
 void RemDev::handleDisconnectNotification(rapidjson::Document *doc) {
 	(void) doc;
 	open = false;  // Suppress sending of disconnect notification
 	// TODO
+	// should simply pull out the disconnect reason and call close()
+	// OR, if registered=false, MUST call connectionClosed instead!
 }
 
 void RemDev::simulateError(int id, const RequestRef &req, int code, const QString &msg) {

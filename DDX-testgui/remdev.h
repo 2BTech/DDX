@@ -412,9 +412,19 @@ private:
 	
 	/*!
 	 * \brief TODO
-	 * \param doc Root document (will be **deleted**)
+	 * \param r The incoming Request (must be deleted)
+	 * 
+	 * **Warning:** \a r is not guaranteed to be a `register` request!
 	 */
-	void handleRegistration(rapidjson::Document *doc);
+	void handleRegRequest(Request *r);
+	
+	/*!
+	 * \brief TODO
+	 * \param r The incoming Response (must be deleted)
+	 * 
+	 * **Warning:** \a r is not guaranteed to be a response to a `register` request!
+	 */
+	void handleRegResponse(Response *r);
 	
 	/*!
 	 * \brief TODO

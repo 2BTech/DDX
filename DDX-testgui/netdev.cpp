@@ -60,6 +60,9 @@ void NetDev::sub_init() noexcept {
 			connectionClosed(tr("Socket disconnected"));
 			return;
 		}
+		// TODO:  Figure out if the connection is local or not
+		bool isLocal = false;
+		// TODO:  Check whether non-local connections are allowed
 		log(tr("Connection is from %1:%2").arg(s->peerAddress().toString(), QString::number(s->peerPort())));
 		s->startServerEncryption();
 	}

@@ -29,7 +29,6 @@ void PathManager::registerModules() {
 	// List all Modules here (1 of 2)
 	modules.insert("ExampleModule", ExampleModule::staticMetaObject);
 	modules.insert("ExampleInlet", ExampleInlet::staticMetaObject);
-	modules.insert("GenMod", GenMod::staticMetaObject);
 }
 
 QMap<QString, QString> PathManager::getModuleDescriptions() const {
@@ -38,7 +37,6 @@ QMap<QString, QString> PathManager::getModuleDescriptions() const {
 	// List all Modules here (2 of 2)
 	m.insert("ExampleModule", tr("An example module"));
 	m.insert("ExampleInlet", tr("An example inlet"));
-	m.insert("GenMod", tr("General modifications (TODO)"));
 	
 	return m;
 }

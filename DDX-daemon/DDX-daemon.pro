@@ -45,7 +45,6 @@ SOURCES += main.cpp \
     inlet.cpp \
     path.cpp \
     module.cpp \
-    modules/genmod.cpp \
     modules/examplemodule.cpp \
     modules/module_register.cpp \
     network.cpp \
@@ -63,7 +62,6 @@ HEADERS += \
     path.h \
     module.h \
     data.h \
-    modules/genmod.h \
     modules/examplemodule.h \
     network.h \
     settings.h \
