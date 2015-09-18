@@ -240,10 +240,6 @@ void RemDev::handleItem(char *data) noexcept {
 		sendError(0, E_JSON_PARSE, tr("Invalid JSON"), 0, doc);
 		return;
 	}
-	if ( ! registered) {
-		handleRegistration(doc);
-		return;
-	}
 	
 	// Find members
 	Value *methodVal = 0, *idVal = 0, *mainVal = 0;
