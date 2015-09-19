@@ -18,19 +18,17 @@
 
 #include "inlet.h"
 
-Inlet::Inlet(Path *parent, const QByteArray &name) : Module(parent, name)
-{
+Inlet::Inlet(Path *parent, const QByteArray &name) : Module(parent, name) {
 	// TODO
 }
 
-Inlet::~Inlet()
-{
+Inlet::~Inlet() {
 	// TODO
 }
 
 void Inlet::init(rapidjson::Value &config) {
 	// TODO
-	config.size();
+	(void) config;
 }
 
 void Inlet::handleReconfigure() {

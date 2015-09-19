@@ -17,6 +17,7 @@
  ******************************************************************************/
 
 #include "exampleinlet.h"
+#include "rapidjson_using.h"
 
 ExampleInlet::ExampleInlet(Path *parent, const QByteArray &name) : Inlet(parent, name) {
 	std::seed_seq ss({210, QTime::currentTime().msec(), 34});
@@ -29,11 +30,12 @@ ExampleInlet::~ExampleInlet() {
 	qDeleteAll(timers);
 }
 
-void ExampleInlet::init(const QJsonObject settings) {
-	if (settings["Fail_on_init"].toBool())
+void ExampleInlet::init(rapidjson::Value &config) {
+	// TODO: Rapidjson
+	/*if (config["Fail_on_init"].toBool())
 		terminate("Simulating a failure as requested by settings");
-	chance = settings["Reconfigure_chance"].toInt(10);
-	QVariantList tl = settings["items"].toArray().toVariantList();
+	chance = config["Reconfigure_chance"].toInt(10);
+	QVariantList tl = config["items"].toArray().toVariantList();
 	foreach (const QVariant &timerEntry, tl) {
 		QJsonObject te = timerEntry.toJsonObject();
 		QTimer *t = new QTimer(this);
@@ -44,8 +46,8 @@ void ExampleInlet::init(const QJsonObject settings) {
 	ctColumn = insertColumn("Index", 0);
 	randColumn = insertColumn("Random", 1);
 	QByteArray *dummyPtr = insertColumn("Dummy", 2);
-	QByteArray dummy = settings["Dummy_string"].toString().toUtf8();
-	*dummyPtr = dummy;
+	QByteArray dummy = config["Dummy_string"].toString().toUtf8();
+	*dummyPtr = dummy;*/
 }
 
 void ExampleInlet::start() {
@@ -58,20 +60,22 @@ void ExampleInlet::stop() {
 		timers.at(i)->stop();
 }
 
-QJsonObject ExampleInlet::publishSettings() const {
+rapidjson::Value ExampleInlet::publishSettings(rapidjson::MemoryPoolAllocator<> &a) const {
 	alert("ExampleInlet::publishSettings()");
-	QByteArray t("{\"Reconfigure_chance\":{\"t\":\"int\",\"d\":\"Probability of reconfigure on every chance\","
+	// TODO:  Rapidjson
+	/*QByteArray t("{\"Reconfigure_chance\":{\"t\":\"int\",\"d\":\"Probability of reconfigure on every chance\","
 				 "\"default\":10},\"Fail_on_init\":{\"t\":\"bool\",\"d\":\"Should the module fail in init()?\","
 				 "\"default\":false},\"Dummy_string\":{\"t\":\"string\",\"d\":\"The dummy string to insert into a column\","
 				 "\"default\":\"this is a column\"},\"Timers\":{\"t\":\"cat\",\"d\":\"Make as many timers as desirable\","
 				 "\"Timer\":{\"t\":\"item\",\"d\":\"A timer which generates a fake data line after every interval\","
 				 "\"Interval\":{\"t\":\"int\",\"d\":\"The interval, in milliseconds\",\"default\":10}}}}");
 	QJsonDocument d = QJsonDocument::fromJson(t);
-	return d.object();
+	return d.object();*/
 }
 
-QJsonObject ExampleInlet::publishActions() const {
-	return QJsonObject();
+rapidjson::Value ExampleInlet::publishActions(rapidjson::MemoryPoolAllocator<> &a) const {
+	// TODO
+	return Value(rapidjson::kNullType);
 }
 
 void ExampleInlet::cleanup() {
@@ -82,7 +86,7 @@ void ExampleInlet::trigger() {
 	int n = abs((int) rg()) % 100;
 	if (n <= chance) {
 		if (outputColumns.size() == 3) {
-			inColumn = insertColumn("Inserted",2);
+			inColumn = &insertColumn("Inserted",2)->c;
 			ct2 = 0;
 		}
 		else {
@@ -95,5 +99,5 @@ void ExampleInlet::trigger() {
 	*randColumn = QByteArray::number(rg());
 	if (inColumn)
 		*inColumn = QString("Inserted %1 lines ago").arg(ct2++).toUtf8();
-	path->process();
+	process();
 }

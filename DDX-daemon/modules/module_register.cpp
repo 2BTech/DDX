@@ -23,7 +23,6 @@
 // Include Module headers here
 #include "examplemodule.h"
 #include "exampleinlet.h"
-#include "genmod.h"
 
 void PathManager::registerModules() {
 	// List all Modules here (1 of 2)

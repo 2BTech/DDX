@@ -18,6 +18,7 @@
 
 #include "module.h"
 #include "path.h"
+#include "rapidjson_using.h"
 
 Module::Module(Path *parent, const QByteArray &name) : QObject(parent)
 {
@@ -39,7 +40,7 @@ Module::~Module()
 
 void Module::init(rapidjson::Value &config) {
 	alert("DDX bug: init() not reimplemented!");
-	config.count();  // Suppress unused warning
+	(void) config;
 }
 
 void Module::handleReconfigure() {
@@ -50,11 +51,11 @@ void Module::cleanup() {
 }
 
 rapidjson::Value Module::publishSettings(rapidjson::MemoryPoolAllocator<> &a) const {
-	return Value(rapidjson::kNulltype);  // Return no settings
+	return Value(kArrayType);  // Return no settings
 }
 
 rapidjson::Value Module::publishActions(rapidjson::MemoryPoolAllocator<> &a) const {
-	return Value(rapidjson::kNulltype);  // Return no actions
+	return Value(kArrayType);  // Return no actions
 }
 
 void Module::reconfigure() {

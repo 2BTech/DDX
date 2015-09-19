@@ -20,9 +20,9 @@
 #include "pathmanager.h"
 #include "path.h"
 #include "network.h"
-#include "modules/genmod.h"
 #include "settings.h"
 #include "logger.h"
+#include <math.h>
 
 Daemon::Daemon(QCoreApplication *parent) : QObject(parent) {
 	logReady = false;
@@ -117,7 +117,7 @@ void Daemon::init() {
 			"\"Min_Voltage\":\"0\"},{\"n\":\"Power Meter\",\"t\":\"Current_AI\",\"Max_Current\":\"20\","
 			"\"Min_Current\":\"0\"},{\"n\":\"Barometer\",\"t\":\"Voltage_AI\",\"Max_Voltage\":\"2\","
 			"\"Min_Voltage\":\"1\"}]}}}]}";
-	testScheme.size();
+	(void) testScheme;
 	
 	// Trigger all utility timers initially at five minute intervals
 	twoMinuteTimeout = QDateTime::currentMSecsSinceEpoch() + 300000;
@@ -131,6 +131,15 @@ void Daemon::init() {
 	utilityTimer->setInterval(UTILITY_INTERVAL);
 	connect(utilityTimer, &QTimer::timeout, this, &Daemon::utilityTimeout);
 	utilityTimer->start();
+	
+	/*!
+	 * ### Custom Startup Code
+	 * Developers of DDX installations can insert custom startup code at the end of this
+	 * function.  Note, however, that not all services may be available at this point.  This
+	 * is a good place to connect various "ready" signals to your own setup code which
+	 * relies on DDX delayed-ready services.
+	 */
+	
 }
 
 void Daemon::quit(int returnCode) {

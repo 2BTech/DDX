@@ -16,14 +16,19 @@
  *       <http://twobtech.com/DDX>       <https://github.com/2BTech/DDX>      *
  ******************************************************************************/
 
-// rapidjson include file
+using rapidjson::Value;
+using rapidjson::Document;
+using rapidjson::kObjectType;
+using rapidjson::kArrayType;
 
-#ifndef RAPIDJSON_H
-#define RAPIDJSON_H
+#ifdef RAPIDJSON_IO
+using rapidjson::Writer;
+using rapidjson::StringBuffer;
+#undef RAPIDJSON_IO
+#endif
 
-#include "../rapidjson/include/rapidjson/rapidjson.h"
-#include "../rapidjson/include/rapidjson/allocators.h"
-#include "../rapidjson/include/rapidjson/document.h"
-#include "../rapidjson/include/rapidjson/stringbuffer.h"
-
-#endif // RAPIDJSON_H
+/*!
+ * \file rapidjson_using.h
+ * Simplifies code utilizing RapidJSON
+ * \ingroup testgui
+ */

@@ -22,6 +22,7 @@
 #include "inlet.h"
 #include "pathmanager.h"
 #include "logger.h"
+#include "rapidjson_using.h"
 
 Path::Path(Daemon *daemon, const QByteArray &name, const QByteArray &scheme) : QObject(0)
 {
@@ -57,18 +58,12 @@ Module* Path::findModule(QString name) const {
 }
 
 QJsonObject Path::publishSettings() const {
-	QJsonObject s;
-	for (int i = 0; i < modules.size(); ++i)
-		s.insert(modules.at(i)->getName(), modules.at(i)->publishSettings());
-	return s;
+	// TODO:  Funciton needs complete rewriting
+	
 }
 
 QJsonObject Path::publishActions() const {
-	QJsonObject a;
-	// TODO:  Append start and stop actions????
-	for (int i = 0; i < modules.size(); ++i)
-		a.insert(modules.at(i)->getName(), modules.at(i)->publishActions());
-	return a;
+	// TODO:  Funciton needs complete rewriting
 }
 
 void Path::terminate() {
@@ -96,7 +91,13 @@ void Path::test(QString methodName) {
 }
 
 void Path::init() {
-	PathManager *um = d->getUnitManager();
+	// Dev passoff note:  this entire function is currently commented
+	// because it is heavily interwoven with QJson stuff and needs to be converted
+	// to rapidjson.  However, much of this code was written prior to RPC stuff,
+	// so the way I'm approaching path startup and management has changed a little
+	// bit.  I have no idea how much of this code is still usable.
+	
+	/*PathManager *um = d->getPathManager();
 	// Parse scheme
 #ifdef PATH_PARSING_CHECKS
 	QString parseError = um->verifyPathScheme(scheme);
@@ -131,13 +132,11 @@ void Path::init() {
 		alert("loop 1");
 	}
 	
-	// TODO:  Make sure this is safe here rather than at the end of the function
-	d->releaseUnitManager();
 	
 	for (lastInitIndex = 0; lastInitIndex < modules.size(); ++lastInitIndex) {
 		modules.at(lastInitIndex)->init(QJsonObject());
 		if (state == State::Terminated) return;
-	}
+	}*/
 	
 	
 	
@@ -169,7 +168,7 @@ void Path::init() {
 	// Send initial reconfigure
 	reconfigure();
 	state = State::Ready;
-	emit ready(name);
+	emit ready(this);
 	alert("finished init");
 }
 
@@ -179,14 +178,14 @@ void Path::start() {
 		return;
 	}
 	state = State::Running;
-	emit running(name);
+	emit running(this);
 	inlet->start();
 }
 
 void Path::stop() {
 	inlet->stop();
 	state = State::Ready;
-	emit stopped(name);
+	emit stopped(this);
 }
 
 void Path::cleanup() {

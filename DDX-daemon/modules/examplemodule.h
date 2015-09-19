@@ -35,10 +35,10 @@ class ExampleModule final : public Module
 public:
 	using Module::Module;  // Required
 	~ExampleModule();  // Required
-	void init(const QJsonObject settings) override;  // Required
+	void init(rapidjson::Value &config) override;  // Required
 	void process() override;  // Required
-	QJsonObject publishSettings() const override;  // Optional
-	QJsonObject publishActions() const override;  // Optional
+	rapidjson::Value publishSettings(rapidjson::MemoryPoolAllocator<> &a) const override;  // Optional
+	rapidjson::Value publishActions(rapidjson::MemoryPoolAllocator<> &a) const override;  // Optional
 	void cleanup() override;  // Required
 	void handleReconfigure() override;  // Required
 private:

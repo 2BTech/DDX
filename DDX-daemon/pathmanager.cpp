@@ -22,8 +22,6 @@
 #include "path.h"
 #include "settings.h"
 #include "logger.h"
-// TODO: Remove
-#include "modules/genmod.h"
 
 PathManager::PathManager(Daemon *parent) : QObject(parent)
 {

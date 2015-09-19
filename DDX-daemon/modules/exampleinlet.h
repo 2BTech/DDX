@@ -40,11 +40,11 @@ class ExampleInlet final : public Inlet
 public:
 	ExampleInlet(Path *parent, const QByteArray &name);
 	~ExampleInlet();  // Required
-	void init(const QJsonObject settings) override;  // Required
+	void init(rapidjson::Value &config) override;  // Required
 	void start() override;  // Required
 	void stop() override;  // Required
-	QJsonObject publishSettings() const override;  // Optional
-	QJsonObject publishActions() const override;  // Optional
+	rapidjson::Value publishSettings(rapidjson::MemoryPoolAllocator<> &a) const override;  // Optional
+	rapidjson::Value publishActions(rapidjson::MemoryPoolAllocator<> &a) const override;  // Optional
 	void cleanup() override;  // Required
 	
 	

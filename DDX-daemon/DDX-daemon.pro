@@ -70,7 +70,7 @@ HEADERS += \
     remdev.h \
     netdev.h \
     pathmanager.h \
-    rapidjson.h \
+    rapidjson_using.h \
     daemon_constants.h
 
 RESOURCES += res/resources.qrc

@@ -17,16 +17,18 @@
  ******************************************************************************/
 
 #include "examplemodule.h"
+#include "../rapidjson_using.h"
 
 ExampleModule::~ExampleModule() {
 	alert("ExampleModule::~ExampleModule()");
 }
 
-void ExampleModule::init(const QJsonObject settings) {
-	settings.size();
-	echo = settings.value("Echo_string").toString();
-	if (settings.value("Fail_on_init").toBool())
-		terminate("Simulating a failure as requested by settings");
+void ExampleModule::init(rapidjson::Value &config) {
+	(void) config;
+	// TODO:  rapidjson
+	/*echo = config.value("Echo_string").toString();
+	if (config.value("Fail_on_init").toBool())
+		terminate("Simulating a failure as requested by settings");*/
 	alert("ExampleModule::init()");
 }
 
@@ -35,9 +37,10 @@ void ExampleModule::process() {
 	alert(echo);
 }
 
-QJsonObject ExampleModule::publishSettings() const {
+rapidjson::Value ExampleModule::publishSettings(rapidjson::MemoryPoolAllocator<> &a) const {
 	alert("ExampleModule::publishSettings()");
-	QJsonObject s;
+	// TODO:  rapidjson this
+	/*QJsonObject s;
 	QJsonObject x;
 	x.insert("t","S");
 	x.insert("d","This string will be echoed by process()");
@@ -46,13 +49,13 @@ QJsonObject ExampleModule::publishSettings() const {
 	x.insert("d","Should the module fail in init()?");
 	x.insert("default",false);
 	s.insert("Fail_on_init", x);
-	return s;
+	return s;*/
 }
 
-QJsonObject ExampleModule::publishActions() const {
+rapidjson::Value ExampleModule::publishActions(rapidjson::MemoryPoolAllocator<> &a) const {
 	alert("ExampleModule::publishActions()");
 	// TODO
-	return QJsonObject();
+	return Value(rapidjson::kNullType);
 }
 
 void ExampleModule::cleanup() {

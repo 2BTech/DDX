@@ -29,7 +29,10 @@
 #include <QFlags>
 #include <QMutex>
 #include <QMutexLocker>
-#include <rapidjson.h>
+#include "../rapidjson/include/rapidjson/document.h"
+#include "../rapidjson/include/rapidjson/stringbuffer.h"
+#include "../rapidjson/include/rapidjson/writer.h"
+#include "../rapidjson/include/rapidjson/reader.h"
 #include "daemon_constants.h"
 
 class Daemon;
