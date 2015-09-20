@@ -87,15 +87,7 @@ by users.  The JSON format which describes the settings is called the `Settings`
 and the format of the complete configurations is scalled the `Config` format.  
 
 #### `Settings` Format
-
-The settings tree is a JSON object with a key of "A", "I", or "C"
-depending on the type of element.  All elements, regardless of type, are
-required to have an "n" string, which is the unique name of the element.
-When displayed in the GUI, underscores in names will be replaced with
-spaces.  All elements, regardless of type, can optionally have a "d"
-string, which is a description.  Descriptions are translatable with tr(),
-but names should remain consistent between platforms.  The tree can have
-any combination of the following elements:
+The settings tree is a JSON array.  Each entry in the array is one of the following:
 - _Attribute_:  A string setting.  Attributes can have a "default"
 string, otherwise the default will be an empty string.  When reported to
 init(), they will be string members of their parent object with their
