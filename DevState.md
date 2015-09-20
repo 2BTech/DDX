@@ -26,7 +26,7 @@ There's a part of DevMgr::dispatchRequest() which says "custom dispatching rules
 In the Daemon, code here can dispatch requests/notifications to different subsystems based
 on the beginning of the method string.  For example, you can simply write a function in the
 Settings class with the prototype `void Settings::handleRequest(Request *req)` that is called whenever
-the method starts with "settings.".  This can avoid expensive calls to invokeMethod(), which are required by handlers registered with addHandler.  However, note that this does lose the threading advantage to invokeMethod, so direct request handling should be reserved for operations which will complete fairly quickly.
+the method starts with "settings.".  This can avoid expensive calls to invokeMethod(), which are required by handlers registered with addHandler.  However, note that this does lose the threading advantage to invokeMethod, so direct request handling should be reserved for operations which will complete fairly quickly and are thread-safe.
 
 ### Eventual things
 Setting up proxy usage, possibly implementing UPnP.  We probably don't need to worry about either of these for now.
@@ -54,4 +54,7 @@ Daemon installations should have
 ## Process Support
 If using a local GUI process, there should be a daemon setting which allows the daemon to keep an eye on the GUI process.  GUI processes by default should be watching local daemons.  If either shuts down, the other should try to resurrect the previous by executing the command.
 
-## Test everything you've just done!
+## Random Documentation Stuff
+There have been many instances where I wrote a function, documented it, and then completely rewrote the function without updating the documentation.  So take a lot of function documentation with a grain of salt - it might not be accurate.  If something sounds weird, either the documentation is old, the function needs to be updated to fit in with other parts of the system which have changed, or, equally likely, I wrote it horribly and it needs to be fixed.
+
+Also, I have not really updated the `Settings` or `Config` formats here
