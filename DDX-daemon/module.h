@@ -167,7 +167,7 @@ public:
 	
 	/*!
 	 * \brief Return a JSON tree of settings for this Module
-	 * \param doc The RapidJSON document whose allocator to use
+	 * \param a The RapidJSON allocator to use
 	 * \return The settings tree
 	 * 
 	 * See DDX-RPC.md for information on settings trees.

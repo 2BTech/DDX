@@ -36,7 +36,7 @@ public:
 	
 	/*!
 	 * \brief Configure the Inlet for operation
-	 * \param settings The JSON settings tree
+	 * \param config The JSON config tree
 	 * 
 	 * See Module::init() for general initiation information.  Inlets function
 	 * exactly the same but with one additional requirement.  Inlet::init()
