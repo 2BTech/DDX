@@ -31,7 +31,7 @@
 #include <QJsonObject>
 #include "daemon_constants.h"
 
-class Daemon;
+class Daemon; 
 
 //! For use by Qt's internal messages only
 void globalHandleMessage(QtMsgType t, const QMessageLogContext &c, const QString &m);
