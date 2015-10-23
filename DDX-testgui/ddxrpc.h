@@ -72,7 +72,7 @@ enum DevDisconnectReason {
  * Incoming DDX-RPC requests and notifications are passed to their handlers with the
  * Request class.  This class and RemDev provide a convenient API for using RapidJSON
  * to produce and send a corresponding response or error response.  The simplest way to
- * respond to requests is using the overloads of RemDev::sendRequest and  RemDev::sendError
+ * respond to requests is using the overloads of RemDev::sendResponse and  RemDev::sendError
  * which take in a pointer to a Request.  If you need a reference to a RapidJSON allocator
  * when building supplemental information (as is often necessary), #alloc will return the
  * same allocator used to produce the final response object.
@@ -100,7 +100,7 @@ public:
 	
 	/*!
 	 * \brief Whether this is a notification or request
-	 * \return True if notification
+	 * \return True if request
 	 */
 	bool isRequest() const {
 		return (bool) id;

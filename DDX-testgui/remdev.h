@@ -105,6 +105,8 @@ public:
 	 * 
 	 * Note that if this is called immediately before termination, it will return -1
 	 * and no request will be sent.
+	 * 
+	 * This function is thread-safe.
 	 */
 	int sendRequest(QObject *self, const char *handler, const char *method, rapidjson::Value *params = 0,
 					rapidjson::Document *doc = 0, qint64 timeout = DEFAULT_REQUEST_TIMEOUT);
@@ -116,6 +118,8 @@ public:
 	 * 
 	 * If \a req is a notification, it will still be deleted but no response will be sent.
 	 * 
+	 * This function is thread-safe.
+	 * 
 	 * This is an overloaded function.
 	 */
 	void sendResponse(Request *req, rapidjson::Value *result = 0);
@@ -125,6 +129,8 @@ public:
 	 * \param id The remote-generated transaction ID (will be **nullified, not deleted**)
 	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
 	 * \param result The result (0 -> true, will be **nullified, not deleted**)
+	 * 
+	 * This function is thread-safe.
 	 */
 	void sendResponse(rapidjson::Value &id, rapidjson::Document *doc = 0, rapidjson::Value *result = 0);
 	
@@ -136,6 +142,8 @@ public:
 	 * \param data Pointer to any data (0 to omit, will be **nullified, not deleted**)
 	 * 
 	 * If \a req is a notification, it will still be deleted but no response will be sent.
+	 * 
+	 * This function is thread-safe.
 	 * 
 	 * This is an overloaded function.
 	 */
@@ -155,6 +163,8 @@ public:
 	 * 
 	 * If \a req is a notification, it will still be deleted but no response will be sent.
 	 * 
+	 * This function is thread-safe.
+	 * 
 	 * This is an overloaded function.
 	 */
 	void sendError(Request *req, int code = E_JSON_INTERNAL) noexcept;
@@ -166,6 +176,8 @@ public:
 	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
 	 * \param msg The error message
 	 * \param data Pointer to any data (0 to omit, will be **nullified, not deleted**)
+	 * 
+	 * This function is thread-safe.
 	 */
 	void sendError(rapidjson::Value *id, int code, const QString &msg, rapidjson::Value *data = 0,
 				   rapidjson::Document *doc = 0) noexcept;
@@ -175,6 +187,8 @@ public:
 	 * \param method The method name (UTF8)
 	 * \param doc Pointer to RapidJSON Document (0 if none, will be **deleted**)
 	 * \param params Any parameters (0 to omit, will be **nullified, not deleted**)
+	 * 
+	 * This function is thread-safe.
 	 */
 	void sendNotification(const char *method, rapidjson::Document *doc = 0,
 						  rapidjson::Value *params = 0) noexcept;
