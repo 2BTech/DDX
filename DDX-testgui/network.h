@@ -29,6 +29,7 @@
 #include <QAbstractSocket>
 #include <QtAlgorithms>
 #include <QSslConfiguration>
+#include <QSslEllipticCurve>
 #include "testgui_constants.h"
 #include "mainwindow.h"
 #include "ddxrpc.h"

@@ -96,7 +96,7 @@ void ExampleInlet::trigger() {
 		path->reconfigure();
 	}
 	*ctColumn = QByteArray::number(++ct);
-	*randColumn = QByteArray::number(rg());
+    *randColumn = QByteArray::number((int)rg());
 	if (inColumn)
 		*inColumn = QString("Inserted %1 lines ago").arg(ct2++).toUtf8();
 	process();

@@ -196,6 +196,8 @@ QList<Settings::SetEnt> Settings::registerSettings() const {
 		  4384, QMetaType::Int);
 	b.add("UnencryptedPort", tr("The port for unencrypted connections (0 to disable)"),
 		  4388, QMetaType::Int);
+    b.add("GUIPort", tr("Adding this because it is broken without it."),
+          4388, QMetaType::Int);
 	b.add("UseIPv6Localhost", tr("Whether to use IPv6 localhost rather than IPv4"),
 		  false, QMetaType::Bool);
 	b.add("AllowExternal", tr("Whether to allow foreign devices to connect"),
