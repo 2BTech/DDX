@@ -60,7 +60,7 @@ void Network::init() {
 	// Connections
 	//connect(server, &QTcpServer::acceptError, this, &Network::handleNetworkError);
 	//connect(server, &QTcpServer::newConnection, this, &Network::handleConnection);
-	int port = sg->v("GUIPort", SG_NETWORK).toInt();
+	int port = sg->v("UnencryptedPort", SG_NETWORK).toInt();
 	// Filter listening addresses
 	QHostAddress a;
 	if (sg->v("AllowExternal", SG_NETWORK).toBool())
